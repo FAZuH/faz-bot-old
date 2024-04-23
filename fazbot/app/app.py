@@ -1,0 +1,19 @@
+from __future__ import annotations
+from typing import TYPE_CHECKING, Protocol
+
+if TYPE_CHECKING:
+    from fazbot import Bot, Config, Heartbeat, Logger
+
+
+class App(Protocol):
+    """<<interface>>"""
+    def start(self) -> None: ...
+    def stop(self) -> None: ...
+    @property
+    def bot(self) -> Bot: ...
+    @property
+    def config(self) -> Config: ...
+    @property
+    def heartbeat(self) -> Heartbeat: ...
+    @property
+    def logger(self) -> Logger: ...

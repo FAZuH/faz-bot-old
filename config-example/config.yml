@@ -1,0 +1,24 @@
+application:
+  debug: false
+  admin_discord_id: 0
+
+logging:
+  error_log_file: ""
+  error_log_webhook: ""
+  status_report_webhook: ""
+
+secret:
+  discord:
+    bot_client_secret: ""
+    bot_client_id: 0
+    bot_token: ""
+  fazbot:
+    db_username: ""
+    db_password: ""
+    db_max_retries: 3
+    db_schema_name: ""
+  wynndb:
+    db_username: ""
+    db_password: ""
+    db_max_retries: 3
+    db_schema_name: ""
