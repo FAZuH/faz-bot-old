@@ -1,5 +1,6 @@
 from __future__ import annotations
 from json import load as json_load
+from pathlib import Path
 from typing import TYPE_CHECKING, Any
 
 from yaml import load as yaml_load, Loader
@@ -10,8 +11,8 @@ if TYPE_CHECKING:
 
 class Config:
 
-    def __init__(self, config_dir_fp: Path) -> None:
-        self._config_fp = config_dir_fp
+    def __init__(self, config_dir_fp: Path | str) -> None:
+        self._config_fp = config_dir_fp if isinstance(config_dir_fp, Path) else Path(config_dir_fp)
         self._application: Config._Application
         self._logging: Config._Logging
         self._secret: Config._Secret

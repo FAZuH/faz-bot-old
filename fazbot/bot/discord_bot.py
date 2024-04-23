@@ -25,7 +25,7 @@ class DiscordBot(Bot):
         self._command_tree = CommandTree(self.client)
         self._cogs = Cogs(self, self._app)
 
-        self._discord_bot_thread = Thread(target=self._client.run, args=(self._app.config.secret.discord.bot_token), daemon=True)
+        self._discord_bot_thread = Thread(target=self._client.run, args=(self._app.config.secret.discord.bot_token,), daemon=True)
         self._event_loop = asyncio.new_event_loop()
 
     def start(self) -> None:
