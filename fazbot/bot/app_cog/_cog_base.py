@@ -1,8 +1,7 @@
+# pyright: reportMissingTypeStubs=false
 from __future__ import annotations
 from abc import abstractmethod
 from typing import TYPE_CHECKING, Any
-
-from discord.ext.commands import Cog
 
 if TYPE_CHECKING:
     from discord import Guild
@@ -10,7 +9,7 @@ if TYPE_CHECKING:
     from fazbot import App, Bot
 
 
-class CogBase(Cog):
+class CogBase:
 
     def __init__(self, bot: Bot, app: App) -> None:
         self._bot = bot
