@@ -19,10 +19,13 @@ if TYPE_CHECKING:
 
 class CraftedProbabilityCommand(CommandBase):
 
+    INGSTR_DEFAULT = "0,0,0"
+
     def __init__(self, ctx: Context[Any], ing_strs: list[str]) -> None:
         super().__init__(ctx)
         self._ing_strs = ing_strs
         self._crafted_util = CraftedUtil(self._parse_ings_str(ing_strs))
+        self._crafted_util.run()
 
     async def run(self):
         embed_resp = self._get_embed(self._ctx, self._crafted_util)
@@ -30,7 +33,8 @@ class CraftedProbabilityCommand(CommandBase):
 
         try:
             view = self._View(self)
-            await self._respond(embed=embed_resp, view=view)
+            message = await self._respond(embed=embed_resp, view=view)
+            view.message = message
         except errors.HTTPException as e:
             # fallback to sending plot if embed size exceeds maximum size
             if e.code == 50035:
@@ -39,6 +43,7 @@ class CraftedProbabilityCommand(CommandBase):
                 await self._ctx.send(embed=embed_resp, file=distribution_plot)
             else:
                 raise e
+
 
     @staticmethod
     def _get_embed(ctx: Context[Any], crafted_util: CraftedUtil) -> Embed:
@@ -64,10 +69,12 @@ class CraftedProbabilityCommand(CommandBase):
     def _parse_ings_str(ing_strs: list[str]) -> list[WynnIngredientValue]:
         res: list[WynnIngredientValue] = []
         for ing_str in ing_strs:
+            if ing_str == CraftedProbabilityCommand.INGSTR_DEFAULT:
+                continue
             ing_str = ing_str.strip()
             ing_vals = ing_str.split(",")
             if len(ing_vals) not in {1, 3}:
-                raise ValueError("Invalid ingredient format. Must be in format of 'min,max[,boost]'")
+                raise ValueError("Invalid ingredient format. Must be in format of 'min,max[,efficiency]'")
             parsed_ing_vals: list[int] = []
             for val in ing_vals:
                 try:
@@ -137,8 +144,7 @@ class CraftedProbabilityCommand(CommandBase):
     class _View(View):
         def __init__(self, craft_prob_cmd: CraftedProbabilityCommand):
             super().__init__(timeout=60)
-            self._crafted_prob_cmd = craft_prob_cmd
-            self._message: Message
+            self._cmd = craft_prob_cmd
 
         # @override
         async def on_timeout(self) -> None:
@@ -155,49 +161,46 @@ class CraftedProbabilityCommand(CommandBase):
         def message(self, message: Message) -> None:
             self._message = message
 
-        async def _click_button(self, button: Button[CraftedProbabilityCommand._View]) -> None:
+        @button(label="Distribution", style=ButtonStyle.green, emoji="🎲", disabled=True)
+        async def button_distribution(self, interaction: Interaction, button: Button[Any]) -> None:
+            embed = self.message.embeds[0]
+            embed.clear_fields()
+            self._click_button(button)
+            self._cmd._modify_embed_craftprobs(self._cmd._crafted_util.craft_probs, embed)
+            await self._respond(interaction, embed, self, [])
+
+        @button(label="Atleast", style=ButtonStyle.green, emoji="📉")
+        async def button_atleast(self, interaction: Interaction, button: Button[Any]) -> None:
+            embed = self.message.embeds[0]
+            embed.clear_fields()
+            self._click_button(button)
+            self._modify_atleast_embed(self._cmd._crafted_util.craft_probs, embed)
+            await self._respond(interaction, embed, self, [])
+
+        @button(label="Atmost", style=ButtonStyle.green, emoji="📈")
+        async def button_atmost_callback(self, interaction: Interaction, button: Button[Any]) -> None:
+            embed = self.message.embeds[0]
+            embed.clear_fields()
+            self._click_button(button)
+            self._modify_atmost_embed(self._cmd._crafted_util.craft_probs, embed)
+            await self._respond(interaction, embed, self, [])
+
+        @button(label="Plot", style=ButtonStyle.green, emoji="📊")
+        async def button_plot_callback(self, interaction: Interaction, button: Button[Any]) -> None:
+            self._click_button(button)
+            dist_plot = self._cmd._get_plot(self._cmd._crafted_util.craft_probs)
+            await self._respond(interaction, None, self, [dist_plot])
+
+
+        def _click_button(self, button: Button[CraftedProbabilityCommand._View]) -> None:
             for item in self.children:
                 if isinstance(item, Button):
                     item.disabled = False
             button.disabled = True
-            await self.message.edit(view=self)
 
-        @button(label="Distribution", style=ButtonStyle.green, emoji="🎲", disabled=True)
-        async def button_distribution(self, interaction: Interaction, button: Button[Any]) -> None:
-            embed = (await self._get_original_embeds(interaction))[0]
-            embed.clear_fields()
-            self._crafted_prob_cmd._modify_embed_craftprobs(self._crafted_prob_cmd._crafted_util.craft_probs, embed)
-            await self._click_button(button)
-            await interaction.edit_original_response(embed=embed, view=self)
-
-        @button(label="Atleast", style=ButtonStyle.green, emoji="📉")
-        async def button_atleast(self, interaction: Interaction, button: Button[Any]) -> None:
-            embed = (await self._get_original_embeds(interaction))[0]
-            embed.clear_fields()
-            self._modify_atleast_embed(self._crafted_prob_cmd._crafted_util.craft_probs, embed)
-            await self._click_button(button)
-            await interaction.edit_original_response(embed=embed, view=self)
-
-        @button(label="Atmost", style=ButtonStyle.green, emoji="📈")
-        async def button_atmost_callback(self, interaction: Interaction, button: Button[Any]) -> None:
-            embed = (await self._get_original_embeds(interaction))[0]
-            embed.clear_fields()
-            self._modify_atmost_embed(self._crafted_prob_cmd._crafted_util.craft_probs, embed)
-            await self._click_button(button)
-            await interaction.edit_original_response(embed=embed, view=self)
-
-        @button(label="Plot", style=ButtonStyle.green, emoji="📊")
-        async def button_plot_callback(self, interaction: Interaction, button: Button[Any]) -> None:
-            await self._click_button(button)
-            await interaction.response.edit_message(
-                    embed=None,
-                    attachments=[self._crafted_prob_cmd._get_plot(self._crafted_prob_cmd._crafted_util.craft_probs)]
-            )
-
-
-        async def _get_original_embeds(self, interaction: Interaction) -> list[Embed]:
-            response = await interaction.original_response()
-            return response.embeds
+        async def _respond(self, interaction: Interaction, embed: Embed | None, view: View, attachments: list[Any]) -> None:
+            await interaction.response.defer()
+            await self.message.edit(embed=embed, view=view, attachments=attachments)
 
         def _modify_atleast_embed(self, craft_probs: dict[int, Decimal], embed: Embed) -> None:
             embed_cmlr_field_values = ""

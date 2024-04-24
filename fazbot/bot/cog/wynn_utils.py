@@ -18,12 +18,12 @@ class WynnUtils(CogBase):
     async def _crafted_probability(
             self,
             ctx: Context[Any],
-            ingredient1: str = "0,0,0",
-            ingredient2: str = "0,0,0",
-            ingredient3: str = "0,0,0",
-            ingredient4: str = "0,0,0",
-            ingredient5: str = "0,0,0",
-            ingredient6: str = "0,0,0",
+            ingredient1: str = CraftedProbabilityCommand.INGSTR_DEFAULT,
+            ingredient2: str = CraftedProbabilityCommand.INGSTR_DEFAULT,
+            ingredient3: str = CraftedProbabilityCommand.INGSTR_DEFAULT,
+            ingredient4: str = CraftedProbabilityCommand.INGSTR_DEFAULT,
+            ingredient5: str = CraftedProbabilityCommand.INGSTR_DEFAULT,
+            ingredient6: str = CraftedProbabilityCommand.INGSTR_DEFAULT,
     ) -> None:
         """Calculates crafted roll probabilities.
         improved with help from afterfive.
@@ -52,7 +52,7 @@ class WynnUtils(CogBase):
         await ConvertEmeraldCommand(ctx, emerald_string).run()
 
     @commands.hybrid_command(name="ingredient_probability")
-    async def _ingredient_probability(self, ctx: Context[Any], base_chance: str, loot_bonus: int, loot_quality: int) -> None:
+    async def _ingredient_probability(self, ctx: Context[Any], base_chance: str, loot_bonus: int = 0, loot_quality: int = 0) -> None:
         """Calculates ingredient drop probability after loot bonus and loot quality.
 
         Parameters

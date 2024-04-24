@@ -25,6 +25,8 @@ class ConvertEmeraldCommand(CommandBase):
 
     def _get_embed(self) -> Embed:
         set_price_tm, set_price_silverbull = EmeraldUtil.get_set_price(self._emeralds)
+        set_price_tm.simplify()
+        set_price_silverbull.simplify()
         embed_resp = Embed(title="Emerald Convertor", color=8894804)
 
         embed_resp.set_thumbnail(url="https://i.ibb.co/2q4KtP2/image-removebg-preview.png")

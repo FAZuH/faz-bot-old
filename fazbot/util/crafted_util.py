@@ -15,28 +15,26 @@ class CraftedUtil:
         self._ingredients = ingredients
 
         self._ing_prob_dists = []
-        self._crafted_roll_min = None
-        self._crafted_roll_max = None
-        self._craft_probs = None
+        self._crafted_roll_min = np.int32(0)
+        self._crafted_roll_max = np.int32(0)
+        self._craft_probs = {}
+
+    def run(self):
+        self._calculate_ingredient_probabilities()
+        self._calculate_crafted_probabilities()
 
     @property
     def crafted_roll_min(self) -> np.int32:
-        if self._crafted_roll_min is None:
-            self._calculate_ingredient_probabilities()
         assert isinstance(self._crafted_roll_min, np.number)
         return self._crafted_roll_min
 
     @property
     def crafted_roll_max(self) -> np.int32:
-        if self._crafted_roll_max is None:
-            self._calculate_ingredient_probabilities()
         assert isinstance(self._crafted_roll_max, np.number)
         return self._crafted_roll_max
 
     @property
     def craft_probs(self) -> dict[int, Decimal]:
-        if self._craft_probs is None:
-            self._calculate_crafted_probabilities()
         assert isinstance(self._craft_probs, dict)
         return self._craft_probs
 
@@ -47,9 +45,6 @@ class CraftedUtil:
 
     def _calculate_ingredient_probabilities(self):
         """ Gets ingredient_rolls_list and ingredient_probDist_list from command arguments """
-        self._crafted_roll_min = np.int32(0)
-        self._crafted_roll_max = np.int32(0)
-
         for ing in self._ingredients:
             ing_stat_eff = (ing.boost + 100) * 0.01
 
@@ -68,8 +63,6 @@ class CraftedUtil:
 
     def _calculate_crafted_probabilities(self):
         # Calculate crafted roll probabilities
-        self._craft_probs = {}
-
         convolution = [1]
         for prob_dist in self._ing_prob_dists:
             convolution = np.convolve(convolution, prob_dist)
