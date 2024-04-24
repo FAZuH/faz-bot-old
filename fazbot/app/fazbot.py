@@ -30,6 +30,8 @@ class FazBot(App):
     def stop(self) -> None:
         self._logger.console_logger.info("Stopping Heartbeat...")
         self.heartbeat.stop()
+        self._logger.console_logger.info("Stopping DiscordBot...")
+        self.bot.stop()
 
     @property
     def bot(self) -> Bot:
