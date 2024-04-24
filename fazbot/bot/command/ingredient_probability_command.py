@@ -3,7 +3,7 @@ from decimal import Decimal
 import re
 from typing import TYPE_CHECKING, Any
 
-from discord import Embed
+from discord import Embed, File
 
 from . import CommandBase
 from fazbot.util import IngredientUtil
@@ -20,26 +20,30 @@ class IngredientProbabilityCommand(CommandBase):
         self._loot_bonus = loot_bonus
         self._loot_quality = loot_quality
         self._ing_util = IngredientUtil(self._base_chance, self._loot_quality, self._loot_bonus)
+        self._assetfile = File("asset/image/decayingheart.png", filename="decayingheart.png")
 
     async def run(self) -> None:
-        one_in_n = 1 / self._ing_util.boosted_probability
+        embed_resp = self._get_embed(self._ing_util, self._ctx)
+        await self._ctx.send(embed=embed_resp, file=self._assetfile)
+
+    @staticmethod
+    def _get_embed(ing_util: IngredientUtil, ctx: commands.Context[Any]) -> Embed:
+        one_in_n = 1 / ing_util.boosted_probability
 
         embed_resp = Embed(title="Ingredient Chance Calculator", color=472931)
-        embed_resp.set_thumbnail(url="https://www.wynndata.tk/assets/images/items/v4//ingredients/heads/50d8ba53402f4cb0455067d068973b3d.png")
+        embed_resp.set_thumbnail(url="attachment://decayingheart.png")
         embed_resp.description =(
-                f"Drop Chance: **{self._ing_util.base_probability:.2%}**\n"
-                f"Loot Bonus: **{self._ing_util.loot_bonus}%**\n"
-                f"Loot Quality: **{self._ing_util.loot_quality}%**\n"
-                f"Loot Boost: **{self._ing_util.loot_boost}%**"
+                f"Drop Chance: **{ing_util.base_probability:.2%}**\n"
+                f"Loot Bonus: **{ing_util.loot_bonus}%**\n"
+                f"Loot Quality: **{ing_util.loot_quality}%**\n"
+                f"Loot Boost: **{ing_util.loot_boost}%**"
         )
         embed_resp.add_field(
                 name="Boosted Drop Chance",
-                value=f"Drop Chance: \n**{self._ing_util.boosted_probability:.2%}** OR **1 in {one_in_n:.2f}** mobs"
+                value=f"Drop Chance: \n**{ing_util.boosted_probability:.2%}** OR **1 in {one_in_n:.2f}** mobs"
         )
-        embed_resp.set_author(name=self._ctx.author.display_name, icon_url=self._ctx.author.display_avatar.url)
-
-        await self._ctx.send(embed=embed_resp)
-
+        embed_resp.set_author(name=ctx.author.display_name, icon_url=ctx.author.display_avatar.url)
+        return embed_resp
 
     @staticmethod
     def _parse_base_chance(base_chance: str) -> Decimal:

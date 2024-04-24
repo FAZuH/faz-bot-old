@@ -26,6 +26,7 @@ class CraftedProbabilityCommand(CommandBase):
         self._ing_strs = ing_strs
         self._crafted_util = CraftedUtil(self._parse_ings_str(ing_strs))
         self._crafted_util.run()
+        self._assetfile = File("asset/image/craftingtable.png", filename="craftingtable.png")
 
     async def run(self):
         embed_resp = self._get_embed(self._ctx, self._crafted_util)
@@ -33,14 +34,14 @@ class CraftedProbabilityCommand(CommandBase):
 
         try:
             view = self._View(self)
-            message = await self._respond(embed=embed_resp, view=view)
+            message = await self._respond(embed=embed_resp, view=view, file=self._assetfile)
             view.message = message
         except errors.HTTPException as e:
             # fallback to sending plot if embed size exceeds maximum size
             if e.code == 50035:
                 embed_resp = self._get_plot_embed(self._crafted_util.craft_probs)
-                distribution_plot = self._get_plot(self._crafted_util.craft_probs)
-                await self._ctx.send(embed=embed_resp, file=distribution_plot)
+                dist_plot = self._get_plot(self._crafted_util.craft_probs)
+                await self._ctx.send(embed=embed_resp, file=dist_plot)
             else:
                 raise e
 
@@ -48,7 +49,7 @@ class CraftedProbabilityCommand(CommandBase):
     @staticmethod
     def _get_embed(ctx: Context[Any], crafted_util: CraftedUtil) -> Embed:
         embed_resp = Embed(title="Crafteds Probabilites Calculator", color=8894804)
-        embed_resp.set_thumbnail(url="https://i.ibb.co/jTQtJGb/favpng-square-text-pattern.png")
+        embed_resp.set_thumbnail(url="attachment://craftingtable.png")
         embed_resp.set_author(
                 name=ctx.author.display_name,
                 icon_url=ctx.author.display_avatar.url

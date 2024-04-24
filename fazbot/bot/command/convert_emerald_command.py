@@ -1,7 +1,8 @@
 # pyright: reportMissingTypeStubs=false
 from __future__ import annotations
 from typing import TYPE_CHECKING, Any
-from discord import Embed
+
+from discord import Embed, File
 
 from . import CommandBase
 from fazbot.object import WynnEmeralds
@@ -18,10 +19,11 @@ class ConvertEmeraldCommand(CommandBase):
         self._emerald_string = emerald_string
         self._emeralds = WynnEmeralds.from_string(emerald_string)
         self._emeralds.simplify()
+        self._assetfile = File("asset/image/liquidemerald.png", filename="liquidemerald.png")
 
     async def run(self):
         embed_resp = self._get_embed()
-        await self._respond(embed=embed_resp)
+        await self._respond(embed=embed_resp, file=self._assetfile)
 
     def _get_embed(self) -> Embed:
         set_price_tm, set_price_silverbull = EmeraldUtil.get_set_price(self._emeralds)
@@ -29,7 +31,7 @@ class ConvertEmeraldCommand(CommandBase):
         set_price_silverbull.simplify()
         embed_resp = Embed(title="Emerald Convertor", color=8894804)
 
-        embed_resp.set_thumbnail(url="https://i.ibb.co/2q4KtP2/image-removebg-preview.png")
+        embed_resp.set_thumbnail(url="attachment://liquidemerald.png")
         embed_resp.description = (f"Converted: **{self._emeralds}**\n" f"Emeralds Total: **{self._emeralds.total}e**")
         embed_resp.add_field(name="TM Set Price", value=f"{set_price_tm}", inline=True)
         embed_resp.add_field(name="Silverbull Set Price", value=f"{set_price_silverbull}", inline=True)
