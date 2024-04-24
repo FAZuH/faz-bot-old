@@ -1,10 +1,10 @@
-# pyright: reportUnknownMemberType=false, reportUnknownArgumentType=false, reportUnknownVariableType=false
+# pyright: reportUnknownMemberType=false, reportUnknownArgumentType=false, reportUnknownVariableType=false, reportMissingTypeStubs=false
 from __future__ import annotations
 from decimal import Decimal
 from io import BytesIO
 from typing import TYPE_CHECKING, Any
 
-from discord import ButtonStyle, Colour, Embed, InteractionMessage, errors, File
+from discord import ButtonStyle, Colour, Embed, Message, errors, File
 from discord.ui import button, Button, View
 import matplotlib.pyplot as plt
 
@@ -14,48 +14,38 @@ from fazbot.util import CraftedUtil
 
 if TYPE_CHECKING:
     from discord import Interaction
+    from discord.ext.commands import Context
 
 
 class CraftedProbabilityCommand(CommandBase):
 
-    def __init__(self, interaction: Interaction, ing_strs: list[str]) -> None:
-        self._interaction = interaction
+    def __init__(self, ctx: Context[Any], ing_strs: list[str]) -> None:
+        super().__init__(ctx)
         self._ing_strs = ing_strs
         self._crafted_util = CraftedUtil(self._parse_ings_str(ing_strs))
 
     async def run(self):
-        embed_resp = self._get_embed(self._interaction, self._crafted_util)
+        embed_resp = self._get_embed(self._ctx, self._crafted_util)
+        self._modify_embed_craftprobs(self._crafted_util.craft_probs, embed_resp)
+
         try:
             view = self._View(self)
             await self._respond(embed=embed_resp, view=view)
         except errors.HTTPException as e:
+            # fallback to sending plot if embed size exceeds maximum size
             if e.code == 50035:
-                embed_resp = Embed(title="Error", color=Colour.red())
-
-                min_roll = min(self._crafted_util.craft_probs)
-                min_prob = self._crafted_util.craft_probs[min_roll]
-                one_in_n_min = round(Decimal(1 / self._crafted_util.craft_probs[min_roll]), 2)
-
-                max_roll = max(self._crafted_util.craft_probs)
-                max_prob = self._crafted_util.craft_probs[max_roll]
-                one_in_n_max = round(Decimal(1 / self._crafted_util.craft_probs[max_roll]), 2)
-
-                embed_resp.description = (
-                        f"**Embed size exceeds maximum size of 6000. Attaching plot instead.**\n"
-                        f"- Min Roll: **{min_roll}**, Probability: **{min_prob * 100:.2f}%** (1 in {one_in_n_min:,})\n"
-                        f"- Max Roll: **{max_roll}**, Probability: **{max_prob * 100:.2f}%** (1 in {one_in_n_max:,})"
-                )
-
-                await self._interaction.response.send_message(embed=embed_resp, file=self._get_plot(self._crafted_util.craft_probs))
+                embed_resp = self._get_plot_embed(self._crafted_util.craft_probs)
+                await self._ctx.send(embed=embed_resp, file=self._get_plot(self._crafted_util.craft_probs))
             else:
                 raise e
 
-    def _get_embed(self, interaction: Interaction, crafted_util: CraftedUtil) -> Embed:
+    @staticmethod
+    def _get_embed(ctx: Context[Any], crafted_util: CraftedUtil) -> Embed:
         embed_resp = Embed(title="Crafteds Probabilites Calculator", color=8894804)
         embed_resp.set_thumbnail(url="https://i.ibb.co/jTQtJGb/favpng-square-text-pattern.png")
         embed_resp.set_author(
-            name=interaction.user.display_name,
-            icon_url=interaction.user.display_avatar.url
+                name=ctx.author.display_name,
+                icon_url=ctx.author.display_avatar.url
         )
 
         # Embed descriptions
@@ -67,10 +57,10 @@ class CraftedProbabilityCommand(CommandBase):
         embed_resp.description = "\n".join(embed_desc)
 
         # Embed fields
-        self._modify_embed_craftprobs(crafted_util.craft_probs, embed_resp)
         return embed_resp
 
-    def _parse_ings_str(self, ing_strs: list[str]) -> list[WynnIngredientValue]:
+    @staticmethod
+    def _parse_ings_str(ing_strs: list[str]) -> list[WynnIngredientValue]:
         res: list[WynnIngredientValue] = []
         for ing_str in ing_strs:
             ing_str = ing_str.strip()
@@ -86,7 +76,8 @@ class CraftedProbabilityCommand(CommandBase):
             res.append(WynnIngredientValue(*parsed_ing_vals))
         return res
 
-    def _modify_embed_craftprobs(self, craft_probs: dict[int, Decimal], embed: Embed) -> None:
+    @staticmethod
+    def _modify_embed_craftprobs(craft_probs: dict[int, Decimal], embed: Embed) -> None:
         embed_fields_values = ""
         is_first_embed = True
         for value, probability in craft_probs.items():
@@ -100,6 +91,25 @@ class CraftedProbabilityCommand(CommandBase):
             embed_fields_values += f"{result}\n"
 
         embed.add_field(name="Probabilities" if is_first_embed else "", value=embed_fields_values, inline=False)
+
+    @staticmethod
+    def _get_plot_embed(craft_probs: dict[int, Decimal]) -> Embed:
+        embed = Embed(title="Error", color=Colour.red())
+
+        min_roll = min(craft_probs)
+        min_prob = craft_probs[min_roll]
+        one_in_n_min = round(Decimal(1 / craft_probs[min_roll]), 2)
+
+        max_roll = max(craft_probs)
+        max_prob = craft_probs[max_roll]
+        one_in_n_max = round(Decimal(1 / craft_probs[max_roll]), 2)
+
+        embed.description = (
+                f"**Embed size exceeds maximum size of 6000. Attaching plot instead.**\n"
+                f"- Min Roll: **{min_roll}**, Probability: **{min_prob * 100:.2f}%** (1 in {one_in_n_min:,})\n"
+                f"- Max Roll: **{max_roll}**, Probability: **{max_prob * 100:.2f}%** (1 in {one_in_n_max:,})"
+        )
+        return embed
 
     @staticmethod
     def _get_plot(craft_probs: dict[int, Decimal]) -> File:
@@ -127,27 +137,36 @@ class CraftedProbabilityCommand(CommandBase):
         def __init__(self, craft_prob_cmd: CraftedProbabilityCommand):
             super().__init__(timeout=60)
             self._crafted_prob_cmd = craft_prob_cmd
+            self._message: Message
 
         # @override
         async def on_timeout(self) -> None:
             # Disable all items on timeout
             for item in self.children:
                 self.remove_item(item)
-            await self._crafted_prob_cmd._interaction.edit_original_response(view=self)
+            await self.message.edit(view=self)
 
-        async def _click_button(self, button: Button[CraftedProbabilityCommand._View], interaction: Interaction) -> None:
+        @property
+        def message(self) -> Message:
+            return self._message
+
+        @message.setter
+        def message(self, message: Message) -> None:
+            self._message = message
+
+        async def _click_button(self, button: Button[CraftedProbabilityCommand._View]) -> None:
             for item in self.children:
                 if isinstance(item, Button):
                     item.disabled = False
             button.disabled = True
-            await interaction.edit_original_response(view=self)
+            await self.message.edit(view=self)
 
         @button(label="Distribution", style=ButtonStyle.green, emoji="🎲", disabled=True)
         async def button_distribution(self, interaction: Interaction, button: Button[Any]) -> None:
             embed = (await self._get_original_embeds(interaction))[0]
             embed.clear_fields()
             self._crafted_prob_cmd._modify_embed_craftprobs(self._crafted_prob_cmd._crafted_util.craft_probs, embed)
-            await self._click_button(button, interaction)
+            await self._click_button(button)
             await interaction.edit_original_response(embed=embed, view=self)
 
         @button(label="Atleast", style=ButtonStyle.green, emoji="📉")
@@ -155,7 +174,7 @@ class CraftedProbabilityCommand(CommandBase):
             embed = (await self._get_original_embeds(interaction))[0]
             embed.clear_fields()
             self._modify_atleast_embed(self._crafted_prob_cmd._crafted_util.craft_probs, embed)
-            await self._click_button(button, interaction)
+            await self._click_button(button)
             await interaction.edit_original_response(embed=embed, view=self)
 
         @button(label="Atmost", style=ButtonStyle.green, emoji="📈")
@@ -163,12 +182,12 @@ class CraftedProbabilityCommand(CommandBase):
             embed = (await self._get_original_embeds(interaction))[0]
             embed.clear_fields()
             self._modify_atmost_embed(self._crafted_prob_cmd._crafted_util.craft_probs, embed)
-            await self._click_button(button, interaction)
+            await self._click_button(button)
             await interaction.edit_original_response(embed=embed, view=self)
 
         @button(label="Plot", style=ButtonStyle.green, emoji="📊")
         async def button_plot_callback(self, interaction: Interaction, button: Button[Any]) -> None:
-            await self._click_button(button, interaction)
+            await self._click_button(button)
             await interaction.response.edit_message(
                     embed=None,
                     attachments=[self._crafted_prob_cmd._get_plot(self._crafted_prob_cmd._crafted_util.craft_probs)]

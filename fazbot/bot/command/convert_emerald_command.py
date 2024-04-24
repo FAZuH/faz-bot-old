@@ -1,5 +1,6 @@
+# pyright: reportMissingTypeStubs=false
 from __future__ import annotations
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 from discord import Embed
 
 from . import CommandBase
@@ -7,13 +8,13 @@ from fazbot.object import WynnEmeralds
 from fazbot.util import EmeraldUtil
 
 if TYPE_CHECKING:
-    from discord import Interaction
+    from discord.ext.commands import Context
 
 
 class ConvertEmeraldCommand(CommandBase):
 
-    def __init__(self, interaction: Interaction, emerald_string: str) -> None:
-        super().__init__(interaction)
+    def __init__(self, ctx: Context[Any], emerald_string: str) -> None:
+        super().__init__(ctx)
         self._emerald_string = emerald_string
         self._emeralds = WynnEmeralds.from_string(emerald_string)
         self._emeralds.simplify()
@@ -30,5 +31,5 @@ class ConvertEmeraldCommand(CommandBase):
         embed_resp.description = (f"Converted: **{self._emeralds}**\n" f"Emeralds Total: **{self._emeralds.total}e**")
         embed_resp.add_field(name="TM Set Price", value=f"{set_price_tm}", inline=True)
         embed_resp.add_field(name="Silverbull Set Price", value=f"{set_price_silverbull}", inline=True)
-        embed_resp.set_author(name=self._interaction.user.display_name, icon_url=self._interaction.user.display_avatar.url)
+        embed_resp.set_author(name=self._ctx.author.display_name, icon_url=self._ctx.author.display_avatar.url)
         return embed_resp
