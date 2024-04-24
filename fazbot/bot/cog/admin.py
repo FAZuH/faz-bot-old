@@ -30,7 +30,7 @@ class Admin(CogBase):
             self._app.logger.console_logger.success(f"Synchronized {len(cmds)} commands in {guild.name} ({guild.id}).")
             guilds_len += 1
 
-        await ctx.send(f"Synchronized app commands across {guilds_len}.")
+        await ctx.send(f"Synchronized app commands across {guilds_len} guilds.")
 
     @commands.hybrid_command(name="shutdown", description="Shuts down the bot.")
     async def _shutdown(self, ctx: Context[Any]) -> None:
