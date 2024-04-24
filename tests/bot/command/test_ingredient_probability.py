@@ -3,7 +3,7 @@ from decimal import Decimal
 from unittest import TestCase
 from unittest.mock import MagicMock
 
-from fazbot.bot.app_command import IngredientProbabilityCommand
+from fazbot.bot.command import IngredientProbabilityCommand
 
 
 class TestIngredientProbability(TestCase):

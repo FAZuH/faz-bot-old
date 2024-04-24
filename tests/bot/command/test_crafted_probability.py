@@ -2,7 +2,7 @@
 from unittest import TestCase
 from unittest.mock import MagicMock
 
-from fazbot.bot.app_command import CraftedProbabilityCommand
+from fazbot.bot.command import CraftedProbabilityCommand
 
 
 class TestCraftedProbability(TestCase):

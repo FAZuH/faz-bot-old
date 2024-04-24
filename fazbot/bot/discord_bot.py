@@ -3,10 +3,10 @@ import asyncio
 from threading import Thread
 from typing import TYPE_CHECKING
 
-from discord import Activity, ActivityType, Client, Intents
+from discord import Activity, ActivityType, Client, Guild, Intents
 from discord.app_commands import CommandTree
 
-from . import Bot, Cogs
+from . import Bot, Groups
 
 if TYPE_CHECKING:
     from fazbot import App
@@ -23,7 +23,8 @@ class DiscordBot(Bot):
 
         self._client = Client(intents=intents)
         self._command_tree = CommandTree(self.client)
-        self._cogs = Cogs(self, self._app)
+        self._cogs = Groups(self, self._app)
+        self._synced_guilds: list[Guild] = []
 
         self._discord_bot_thread = Thread(target=self._client.run, args=(self._app.config.secret.discord.bot_token,), daemon=True)
         self._event_loop = asyncio.new_event_loop()
@@ -43,9 +44,9 @@ class DiscordBot(Bot):
     def command_tree(self) -> CommandTree:
         return self._command_tree
 
-    # @property
-    # def registered_guilds(self) -> list[Guild]:
-    #     return self._registered_guilds
+    @property
+    def synced_guilds(self) -> list[Guild]:
+        return self._synced_guilds
 
 
     def _setup(self) -> None:
@@ -58,18 +59,17 @@ class DiscordBot(Bot):
 
             await self.client.change_presence(activity=Activity(type=ActivityType.playing, name="/help"))
 
-            # TODO: create appdata folder for stuffs like these
-            # # Fetch guilds before Cogs.setup()
-            # guilds: list[Guild] = []
-            # for id_ in self._app.registered_guild_ids:
-            #     guild = self.client.get_guild(id_)
-            #     if guild is not None:
-            #         guilds.append(guild)
+            # Fetch guilds before Cogs.setup()
+            for id_ in self._app.config.authorized_guilds:
+                guild = self.client.get_guild(id_)
+                if guild:
+                    self._synced_guilds.append(guild)
 
-            # self._cogs.setup(guilds)  # Loads all cogs and commands
+            self._cogs.setup(self._synced_guilds)  # Loads all cogs and commands
 
-            # # Synchronizes commands
-            # for guild in guilds:
-            #     self._app.logger.console_logger.debug(f"Synchronizing commands for guild {guild.name} ({guild.id}).")
-            #     cmds = await self._command_tree.sync(guild=guild)
-            #     self._app.logger.console_logger.success(f"Synchronized {len(cmds)} commands in {guild.name} ({guild.id}).")
+            # Synchronizes commands
+            for guild in self._synced_guilds:
+                self._app.logger.console_logger.debug(f"Synchronizing commands for guild {guild.name} ({guild.id}).")
+                cmds = await self._command_tree.sync(guild=guild)
+                self._app.logger.console_logger.success(f"Synchronized {len(cmds)} commands in {guild.name} ({guild.id}).")
+

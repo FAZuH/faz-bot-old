@@ -1,7 +1,7 @@
 from unittest import TestCase
 from unittest.mock import MagicMock
 
-from fazbot.bot.app_command import ConvertEmeraldCommand
+from fazbot.bot.command import ConvertEmeraldCommand
 
 
 class TestConvertEmerald(TestCase):
