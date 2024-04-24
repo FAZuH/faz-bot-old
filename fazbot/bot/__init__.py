@@ -1,5 +1,5 @@
 # type: ignore
 from .bot import Bot
-from ._groups import Groups
+from ._cog_core import CogCore
 
 from .discord_bot import DiscordBot
