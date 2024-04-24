@@ -35,7 +35,8 @@ class CraftedProbabilityCommand(CommandBase):
             # fallback to sending plot if embed size exceeds maximum size
             if e.code == 50035:
                 embed_resp = self._get_plot_embed(self._crafted_util.craft_probs)
-                await self._ctx.send(embed=embed_resp, file=self._get_plot(self._crafted_util.craft_probs))
+                distribution_plot = self._get_plot(self._crafted_util.craft_probs)
+                await self._ctx.send(embed=embed_resp, file=distribution_plot)
             else:
                 raise e
 

@@ -1,4 +1,3 @@
-# pyright: reportMissingTypeStubs=false
 from __future__ import annotations
 from decimal import Decimal
 import re
@@ -10,12 +9,12 @@ from . import CommandBase
 from fazbot.util import IngredientUtil
 
 if TYPE_CHECKING:
-    from discord.ext.commands import Context
+    from discord.ext import commands
 
 
 class IngredientProbabilityCommand(CommandBase):
 
-    def __init__(self, ctx: Context[Any], base_chance: str, loot_bonus: int, loot_quality: int) -> None:
+    def __init__(self, ctx: commands.Context[Any], base_chance: str, loot_bonus: int, loot_quality: int) -> None:
         super().__init__(ctx)
         self._base_chance = self._parse_base_chance(base_chance)
         self._loot_bonus = loot_bonus
@@ -40,8 +39,7 @@ class IngredientProbabilityCommand(CommandBase):
                 value=f"Drop Chance: \n**{self._ing_util.boosted_probability:.2%}** OR **1 in {one_in_n:.2f}** mobs"
         )
         embed_resp.set_author(
-                name=self._ctx.author.display_name,
-                icon_url=self._ctx.author.display_avatar.url
+                name=self._ctx.author.display_name, icon_url=self._ctx.author.display_avatar.url
         )
 
         await self._ctx.send(embed=embed_resp)

@@ -1,21 +1,19 @@
 from __future__ import annotations
-from typing import TYPE_CHECKING
+from typing import Any
 
-from discord.app_commands import Command, command
+from discord.app_commands import Command
+from discord.ext import commands
 
 from ..command import HelpCommand
 from . import CogBase
 
-if TYPE_CHECKING:
-    from discord import Interaction
-
 
 class Help(CogBase):
 
-    @command(name="help", description="Help command")
-    async def _help(self, interaction: Interaction) -> None:
+    @commands.hybrid_command(name="help", description="Help command")
+    async def _help(self, ctx: commands.Context[Any]) -> None:
         cmds = [
-                cmd for cmd in self._bot.bot.tree.get_commands(guild=interaction.guild)
+                cmd for cmd in self._bot.bot.tree.get_commands(guild=ctx.guild)
                 if isinstance(cmd, Command)
         ]
-        await HelpCommand(interaction, cmds).run()
+        await HelpCommand(ctx, cmds).run()
