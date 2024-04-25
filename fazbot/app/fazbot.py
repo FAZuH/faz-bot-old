@@ -1,9 +1,8 @@
 from __future__ import annotations
 from typing import TYPE_CHECKING
 
-
 from .app import App
-from fazbot import Config
+from fazbot import ImageAsset, Config, Userdata
 from fazbot.bot import DiscordBot
 from fazbot.heartbeat import SimpleHeartbeat
 from fazbot.logger import FazBotLogger
@@ -16,12 +15,20 @@ class FazBot(App):
 
     def __init__(self) -> None:
         self._config = Config()
-        self._config.load_config()
-        self._logger = FazBotLogger(self._config.logging.error_log_webhook, self._config.application.debug, self._config.application.admin_discord_id)
+        self._config.load()
+        self._asset = ImageAsset()
+        self._userdata = Userdata()
+        self._logger = FazBotLogger(
+                self._config.logging.error_log_webhook,
+                self._config.application.debug,
+                self._config.application.admin_discord_id
+        )
         self._heartbeat = SimpleHeartbeat(self)
         self._bot = DiscordBot(self)
 
     def start(self) -> None:
+        self._asset.load()
+        self._userdata.load()
         self._logger.console_logger.info("Starting Heartbeat...")
         self.heartbeat.start()
         self._logger.console_logger.info("Starting DiscordBot...")
@@ -32,6 +39,10 @@ class FazBot(App):
         self.heartbeat.stop()
         self._logger.console_logger.info("Stopping DiscordBot...")
         self.bot.stop()
+
+    @property
+    def asset(self) -> ImageAsset:
+        return self._asset
 
     @property
     def bot(self) -> Bot:
@@ -48,3 +59,7 @@ class FazBot(App):
     @property
     def logger(self) -> Logger:
         return self._logger
+
+    @property
+    def userdata(self) -> Userdata:
+        return self._userdata

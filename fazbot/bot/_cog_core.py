@@ -10,6 +10,7 @@ from .cog import (
     WynnTrack,
     WynnUtils
 )
+from .command import CommandBase
 
 if TYPE_CHECKING:
     from discord import  Guild
@@ -24,7 +25,6 @@ class CogCore:
 
     async def setup(self, guilds: list[Guild]) -> None:
         args = (self._bot, self._app, guilds)
-
         self._admin = Admin(*args)
         self._help = Help(*args)
         self._info = Info(*args)
@@ -40,3 +40,7 @@ class CogCore:
         await self._wynn_stat.load_commands()
         await self._wynn_track.load_commands()
         await self._wynn_utils.load_commands()
+
+    def load_assets(self) -> None:
+        self._app.asset.load()
+        CommandBase.set_asset(self._app.asset)

@@ -5,7 +5,7 @@ from typing import TYPE_CHECKING, Any
 
 from yaml import dump, load, Dumper, Loader
 
-from fazbot.constants import Constants
+from fazbot import Constants
 
 if TYPE_CHECKING:
     from pathlib import Path
@@ -19,18 +19,18 @@ class _ConfigNode(ABC):
 class Config:
 
     def __init__(self) -> None:
-        self._config_fp = Path(Constants.CONFIG_FP)
+        self._fp = Path(Constants.CONFIG_FP)
         self._config: dict[str, Any] = {}
 
-    def load_config(self) -> None:
-        with open(self._config_fp, "r") as stream:
+    def load(self) -> None:
+        with open(self._fp, "r") as stream:
             self._config = load(stream, Loader=Loader)
         self._application = Config._Application(self._config["application"])
         self._logging = Config._Logging(self._config["logging"])
         self._secret = Config._Secret(self._config["secret"])
 
-    def save_config(self) -> None:
-        with open(self._config_fp, "w") as stream:
+    def save(self) -> None:
+        with open(self._fp, "w") as stream:
             dump(self._config, stream, Dumper)
 
     @property

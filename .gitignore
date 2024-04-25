@@ -160,5 +160,6 @@ cython_debug/
 #.idea/
 .vscode/
 .VSCodeCounter/
+userdata/
 .logs
 config.yml

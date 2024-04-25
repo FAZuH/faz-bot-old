@@ -4,8 +4,10 @@ import asyncio
 from threading import Thread
 from typing import TYPE_CHECKING
 
-from discord import Activity, ActivityType, Guild, Intents
+from discord import Activity, ActivityType, errors, Guild, Intents
 from discord.ext.commands import Bot as Bot_
+
+from fazbot.enum.userdata_file import UserdataFile
 
 from . import Bot, CogCore
 
@@ -17,17 +19,24 @@ class DiscordBot(Bot):
 
     def __init__(self, app: App) -> None:
         self._app = app
+
+        self._synced_guilds: list[Guild] = []
+        self._event_loop = asyncio.new_event_loop()
+
+        # set intents
         intents = Intents.default()
         intents.message_content = True
         intents.members = True
         intents.presences = True
 
+        # create bot instance
         self._bot = Bot_('/', intents=intents, help_command=None)
+
+        # create & load cogs
         self._cogs = CogCore(self, self._app)
-        self._synced_guilds: list[Guild] = []
+        self._cogs.load_assets()
 
         self._discord_bot_thread = Thread(target=self._bot.run, args=(self._app.config.secret.discord.bot_token,), daemon=True)
-        self._event_loop = asyncio.new_event_loop()
 
     def start(self) -> None:
         self._setup()
@@ -56,9 +65,18 @@ class DiscordBot(Bot):
             await self.bot.change_presence(activity=Activity(type=ActivityType.playing, name="/help"))
 
             # Fetch guilds before Cogs.setup()
-            for id_ in self._app.config.authorized_guilds:
+            for id_ in self._app.userdata.get(UserdataFile.AUTHORIZED_GUILDS):  # type: ignore
+                id_: int
                 guild = self.bot.get_guild(id_)
-                if guild:
-                    self._synced_guilds.append(guild)
+                try:
+                    if not guild:
+                        guild = await self.bot.fetch_guild(id_)
+                except errors.Forbidden as e:
+                    await self._app.logger.discord_logger.exception(f"An error occurred while fetching guild with ID: {id_}: {e}")
+                    continue
+                except errors.HTTPException as e:
+                    await self._app.logger.discord_logger.exception(f"An HTTP exception occurred while fetching guild with ID: {id_}: {e}")
+                    continue
+                self._synced_guilds.append(guild)
 
             await self._cogs.setup(self._synced_guilds)  # Loads all cogs and commands to the client
