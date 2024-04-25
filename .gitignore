@@ -161,4 +161,4 @@ cython_debug/
 .vscode/
 .VSCodeCounter/
 .logs
-config/
+config.yml

@@ -15,7 +15,7 @@ if TYPE_CHECKING:
 class FazBot(App):
 
     def __init__(self) -> None:
-        self._config = Config("config")
+        self._config = Config()
         self._config.load_config()
         self._logger = FazBotLogger(self._config.logging.error_log_webhook, self._config.application.debug, self._config.application.admin_discord_id)
         self._heartbeat = SimpleHeartbeat(self)
