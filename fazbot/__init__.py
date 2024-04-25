@@ -1,5 +1,5 @@
 # type: ignore
-from .constants import __version__, __author__
+from .constants import Constants
 from .config import Config
 from .errors import *
 from .logger import Logger
