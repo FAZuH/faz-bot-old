@@ -25,11 +25,11 @@ class CogBase(Cog):
     async def load_commands(self) -> None:
         """
         Setup method to be called in setup() method on subclasses.
-        Adds commands to self._command_tree.
+        Adds commands to bot's CommandTree.
         """
         cmds = {*self.walk_hybrid_app_commands(), *self.walk_app_commands()}
         for cmd in cmds:
-            self._bot.bot.tree.add_command(cmd, guilds=self._guilds)
+            self._bot.bot.tree.add_command(cmd, guilds=self._guilds, override=True)
             self._app.logger.console_logger.info(f"Added hybrid command: {cmd.qualified_name}")
 
         await self._bot.bot.add_cog(self)
