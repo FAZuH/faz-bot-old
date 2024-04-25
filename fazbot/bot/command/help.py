@@ -19,7 +19,7 @@ if TYPE_CHECKING:
     from discord.app_commands import Parameter
 
 
-class HelpCommand(CommandBase):
+class Help(CommandBase):
 
     def __init__(self, ctx: commands.Context[Any], commands: list[Command[Any, Any, Any]]) -> None:
         super().__init__(ctx)
@@ -74,7 +74,7 @@ class HelpCommand(CommandBase):
     class _View(View):
         def __init__(
             self,
-            command: HelpCommand,
+            command: Help,
             ctx: commands.Context[Any],
             help_embed_max_page: int,
             commands: list[Command[Any, ..., Any]]

@@ -2,7 +2,7 @@
 from unittest import TestCase
 from unittest.mock import MagicMock
 
-from fazbot.bot.command import CraftedProbabilityCommand
+from fazbot.bot.command import CraftedProbability
 
 
 class TestCraftedProbability(TestCase):
@@ -15,7 +15,7 @@ class TestCraftedProbability(TestCase):
             "1,2,50",
             "1,2,50"
         ]
-        craftedprob = CraftedProbabilityCommand(interaction, ing_strs)
+        craftedprob = CraftedProbability(interaction, ing_strs)
         for ing in craftedprob._crafted_util.ingredients:
             self.assertEqual(ing.min_value, 1)
             self.assertEqual(ing.max_value, 2)

@@ -4,7 +4,7 @@ from typing import Any
 from discord.app_commands import Command
 from discord.ext import commands
 
-from ..command import HelpCommand
+from ..command import Help as HelpCommand
 from . import CogBase
 
 

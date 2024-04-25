@@ -12,7 +12,7 @@ if TYPE_CHECKING:
     from discord.ext import commands
 
 
-class IngredientProbabilityCommand(CommandBase):
+class IngredientProbability(CommandBase):
 
     def __init__(self, ctx: commands.Context[Any], base_chance: str, loot_bonus: int, loot_quality: int) -> None:
         super().__init__(ctx)
@@ -26,8 +26,8 @@ class IngredientProbabilityCommand(CommandBase):
         embed_resp = self._get_embed(self._ing_util, self._ctx)
         await self._ctx.send(embed=embed_resp, file=self._assetfile)
 
-    @staticmethod
-    def _get_embed(ing_util: IngredientUtil, ctx: commands.Context[Any]) -> Embed:
+
+    def _get_embed(self, ing_util: IngredientUtil, ctx: commands.Context[Any]) -> Embed:
         one_in_n = 1 / ing_util.boosted_probability
 
         embed_resp = Embed(title="Ingredient Chance Calculator", color=472931)
@@ -45,8 +45,7 @@ class IngredientProbabilityCommand(CommandBase):
         embed_resp.set_author(name=ctx.author.display_name, icon_url=ctx.author.display_avatar.url)
         return embed_resp
 
-    @staticmethod
-    def _parse_base_chance(base_chance: str) -> Decimal:
+    def _parse_base_chance(self, base_chance: str) -> Decimal:
         if base_chance.endswith('%'):
             return Decimal(base_chance[:-1])
         elif '/' in base_chance:

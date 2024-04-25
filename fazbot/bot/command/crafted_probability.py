@@ -14,21 +14,21 @@ from fazbot.util import CraftedUtil
 
 if TYPE_CHECKING:
     from discord import Interaction
-    from discord.ext.commands import Context
+    from discord.ext import commands
 
 
-class CraftedProbabilityCommand(CommandBase):
+class CraftedProbability(CommandBase):
 
     INGSTR_DEFAULT = "0,0,0"
 
-    def __init__(self, ctx: Context[Any], ing_strs: list[str]) -> None:
+    def __init__(self, ctx: commands.Context[Any], ing_strs: list[str]) -> None:
         super().__init__(ctx)
         self._ing_strs = ing_strs
         self._crafted_util = CraftedUtil(self._parse_ings_str(ing_strs))
         self._crafted_util.run()
         self._assetfile = File("asset/image/craftingtable.png", filename="craftingtable.png")
 
-    async def run(self):
+    async def run(self) -> None:
         embed_resp = self._get_embed(self._ctx, self._crafted_util)
         self._modify_embed_craftprobs(self._crafted_util.craft_probs, embed_resp)
 
@@ -46,8 +46,7 @@ class CraftedProbabilityCommand(CommandBase):
                 raise e
 
 
-    @staticmethod
-    def _get_embed(ctx: Context[Any], crafted_util: CraftedUtil) -> Embed:
+    def _get_embed(self, ctx: commands.Context[Any], crafted_util: CraftedUtil) -> Embed:
         embed_resp = Embed(title="Crafteds Probabilites Calculator", color=8894804)
         embed_resp.set_thumbnail(url="attachment://craftingtable.png")
         embed_resp.set_author(
@@ -66,11 +65,10 @@ class CraftedProbabilityCommand(CommandBase):
         # Embed fields
         return embed_resp
 
-    @staticmethod
-    def _parse_ings_str(ing_strs: list[str]) -> list[WynnIngredientValue]:
+    def _parse_ings_str(self, ing_strs: list[str]) -> list[WynnIngredientValue]:
         res: list[WynnIngredientValue] = []
         for ing_str in ing_strs:
-            if ing_str == CraftedProbabilityCommand.INGSTR_DEFAULT:
+            if ing_str == CraftedProbability.INGSTR_DEFAULT:
                 continue
             ing_str = ing_str.strip()
             ing_vals = ing_str.split(",")
@@ -85,8 +83,7 @@ class CraftedProbabilityCommand(CommandBase):
             res.append(WynnIngredientValue(*parsed_ing_vals))
         return res
 
-    @staticmethod
-    def _modify_embed_craftprobs(craft_probs: dict[int, Decimal], embed: Embed) -> None:
+    def _modify_embed_craftprobs(self, craft_probs: dict[int, Decimal], embed: Embed) -> None:
         embed_fields_values = ""
         is_first_embed = True
         for value, probability in craft_probs.items():
@@ -101,8 +98,7 @@ class CraftedProbabilityCommand(CommandBase):
 
         embed.add_field(name="Probabilities" if is_first_embed else "", value=embed_fields_values, inline=False)
 
-    @staticmethod
-    def _get_plot_embed(craft_probs: dict[int, Decimal]) -> Embed:
+    def _get_plot_embed(self, craft_probs: dict[int, Decimal]) -> Embed:
         embed = Embed(title="Error", color=Colour.red())
 
         min_roll = min(craft_probs)
@@ -120,8 +116,7 @@ class CraftedProbabilityCommand(CommandBase):
         )
         return embed
 
-    @staticmethod
-    def _get_plot(craft_probs: dict[int, Decimal]) -> File:
+    def _get_plot(self, craft_probs: dict[int, Decimal]) -> File:
         if len(craft_probs) > 200:
             plt.plot(list(craft_probs.keys()), list(craft_probs.values()), marker='o')  # type: ignore
         else:
@@ -143,7 +138,7 @@ class CraftedProbabilityCommand(CommandBase):
 
 
     class _View(View):
-        def __init__(self, craft_prob_cmd: CraftedProbabilityCommand):
+        def __init__(self, craft_prob_cmd: CraftedProbability):
             super().__init__(timeout=60)
             self._cmd = craft_prob_cmd
 
@@ -193,7 +188,7 @@ class CraftedProbabilityCommand(CommandBase):
             await self._respond(interaction, None, self, [dist_plot])
 
 
-        def _click_button(self, button: Button[CraftedProbabilityCommand._View]) -> None:
+        def _click_button(self, button: Button[CraftedProbability._View]) -> None:
             for item in self.children:
                 if isinstance(item, Button):
                     item.disabled = False
@@ -201,38 +196,38 @@ class CraftedProbabilityCommand(CommandBase):
 
         async def _respond(self, interaction: Interaction, embed: Embed | None, view: View, attachments: list[Any]) -> None:
             await interaction.response.defer()
-            await self.message.edit(embed=embed, view=view, attachments=attachments)
+            await interaction.response.edit_message(embed=embed, view=view, attachments=attachments)
 
         def _modify_atleast_embed(self, craft_probs: dict[int, Decimal], embed: Embed) -> None:
-            embed_cmlr_field_values = ""
-            cmlr_probability = 1
-            is_first_embed = True
-            for IDValue, probability in craft_probs.items():
-                one_in_n = round(Decimal(1 / cmlr_probability), 2)
-                result = f"Roll: **atleast {IDValue}**, Chance: **{cmlr_probability * 100:.2f}%** (1 in {one_in_n:,})"
-                if len(embed_cmlr_field_values + f"{result}\n") > 1024:
-                    embed.add_field(name="Probabilities" if is_first_embed else "", value=embed_cmlr_field_values, inline=False)
-                    embed_cmlr_field_values = ""
-                    is_first_embed = False
-
-                cmlr_probability -= probability
-                embed_cmlr_field_values += f"{result}\n"
-
-            embed.add_field(name="Probabilities" if is_first_embed else "", value=embed_cmlr_field_values, inline=False)
-
-        def _modify_atmost_embed(self, craft_probs: dict[int, Decimal], embed: Embed) -> None:
-            embed_cml_field_values = ""
-            cml_probability = 0
+            field_value = ""
+            cmlr_prob = 1
             is_first_embed = True
             for val, prob in craft_probs.items():
-                cml_probability += prob
-                one_in_n = round(Decimal(1 / cml_probability), 2)
-                result = f"Roll: **atmost {val}**, Chance: **{cml_probability * 100:.2f}%** (1 in {one_in_n:,})"
-                if len(embed_cml_field_values + f"{result}\n") > 1024:
-                    embed.add_field(name="Probabilities" if is_first_embed else "", value=embed_cml_field_values, inline=False)
-                    embed_cml_field_values = ""
+                one_in_n = round(Decimal(1 / cmlr_prob), 2)
+                line = f"Roll: **atleast {val}**, Chance: **{cmlr_prob * 100:.2f}%** (1 in {one_in_n:,})"
+                if len(field_value + f"{line}\n") > 1024:
+                    embed.add_field(name="Probabilities" if is_first_embed else "", value=field_value, inline=False)
+                    field_value = ""
                     is_first_embed = False
 
-                embed_cml_field_values += f"{result}\n"
+                cmlr_prob -= prob
+                field_value += f"{line}\n"
 
-            embed.add_field(name="Probabilities" if is_first_embed else "", value=embed_cml_field_values, inline=False)
+            embed.add_field(name="Probabilities" if is_first_embed else "", value=field_value, inline=False)
+
+        def _modify_atmost_embed(self, craft_probs: dict[int, Decimal], embed: Embed) -> None:
+            field_value = ""
+            cml_prob = 0
+            is_first_embed = True
+            for val, prob in craft_probs.items():
+                cml_prob += prob
+                one_in_n = round(Decimal(1 / cml_prob), 2)
+                line = f"Roll: **atmost {val}**, Chance: **{cml_prob * 100:.2f}%** (1 in {one_in_n:,})"
+                if len(field_value + f"{line}\n") > 1024:
+                    embed.add_field(name="Probabilities" if is_first_embed else "", value=field_value, inline=False)
+                    field_value = ""
+                    is_first_embed = False
+
+                field_value += f"{line}\n"
+
+            embed.add_field(name="Probabilities" if is_first_embed else "", value=field_value, inline=False)

@@ -3,13 +3,13 @@ from decimal import Decimal
 from unittest import TestCase
 from unittest.mock import MagicMock
 
-from fazbot.bot.command import IngredientProbabilityCommand
+from fazbot.bot.command import IngredientProbability
 
 
 class TestIngredientProbability(TestCase):
 
     def setUp(self) -> None:
-       self._type = IngredientProbabilityCommand
+       self._type = IngredientProbability
 
     async def test_run(self) -> None:
         intr = MagicMock()
