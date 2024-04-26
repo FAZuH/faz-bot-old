@@ -16,6 +16,7 @@ class CogBase(Cog):
         self._bot = bot
         self._app = app
         self._guilds = guilds
+        self._setup()
 
     def walk_hybrid_app_commands(self) -> Generator[HybridAppCommand[Self, ..., Any], None, None]:
         for cmd in self.walk_commands():
@@ -30,6 +31,12 @@ class CogBase(Cog):
         cmds = {*self.walk_hybrid_app_commands(), *self.walk_app_commands()}
         for cmd in cmds:
             self._bot.bot.tree.add_command(cmd, guilds=self._guilds, override=True)
-            self._app.logger.console_logger.info(f"Added hybrid command: {cmd.qualified_name}")
+            self._app.logger.console_logger.info(f"Added app command: {cmd.qualified_name}")
 
         await self._bot.bot.add_cog(self)
+
+    def _setup(self) -> None:
+        """
+        Method to be run on cog initialization.
+        """
+        pass

@@ -2,12 +2,13 @@
 from __future__ import annotations
 import asyncio
 from threading import Thread
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 
 from discord import Activity, ActivityType, errors, Guild, Intents
-from discord.ext.commands import Bot as Bot_
+from discord.ext import commands
 
-from fazbot.enum.userdata_file import UserdataFile
+from fazbot.enum import UserdataFile
+from fazbot.util import DiscordChecks
 
 from . import Bot, CogCore
 
@@ -20,6 +21,7 @@ class DiscordBot(Bot):
     def __init__(self, app: App) -> None:
         self._app = app
 
+        self._checks = DiscordChecks(self._app)
         self._synced_guilds: list[Guild] = []
         self._event_loop = asyncio.new_event_loop()
 
@@ -29,13 +31,8 @@ class DiscordBot(Bot):
         intents.members = True
         intents.presences = True
 
-        # create bot instance
-        self._bot = Bot_('/', intents=intents, help_command=None)
-
-        # create & load cogs
+        self._bot = commands.Bot('/', intents=intents, help_command=None)
         self._cogs = CogCore(self, self._app)
-        self._cogs.load_assets()
-
         self._discord_bot_thread = Thread(target=self._bot.run, args=(self._app.config.secret.discord.bot_token,), daemon=True)
 
     def start(self) -> None:
@@ -46,8 +43,12 @@ class DiscordBot(Bot):
         self._event_loop.run_until_complete(self._bot.close())
 
     @property
-    def bot(self) -> Bot_:
+    def bot(self) -> commands.Bot:
         return self._bot
+
+    @property
+    def checks(self) -> DiscordChecks:
+        return self._checks
 
     @property
     def synced_guilds(self) -> list[Guild]:
@@ -55,28 +56,41 @@ class DiscordBot(Bot):
 
 
     def _setup(self) -> None:
-        """ Method to be run on discord bot thread. """
-        @self.bot.event
-        async def on_ready() -> None:  # type: ignore
-            if self.bot.user is not None:
-                # TODO: success webhook
-                await self._app.logger.discord_logger.success(f"{self.bot.user.display_name} has successfully started.")
+        """ Method to be run on start. """
+        self._cogs.load_assets()
+        self._bot.add_check(self._checks.is_not_banned)
+        self._bot.add_listener(self._on_ready, "on_ready")
+        self._bot.add_listener(self._on_command_error, "on_command_error")
 
-            await self.bot.change_presence(activity=Activity(type=ActivityType.playing, name="/help"))
+    async def _on_ready(self) -> None:  # type: ignore
+        if self.bot.user is not None:
+            # TODO: success webhook
+            await self._app.logger.discord_logger.success(f"{self.bot.user.display_name} has successfully started.")
 
-            # Fetch guilds before Cogs.setup()
-            for id_ in self._app.userdata.get(UserdataFile.AUTHORIZED_GUILDS):  # type: ignore
-                id_: int
-                guild = self.bot.get_guild(id_)
-                try:
-                    if not guild:
-                        guild = await self.bot.fetch_guild(id_)
-                except errors.Forbidden as e:
-                    await self._app.logger.discord_logger.exception(f"An error occurred while fetching guild with ID: {id_}: {e}")
-                    continue
-                except errors.HTTPException as e:
-                    await self._app.logger.discord_logger.exception(f"An HTTP exception occurred while fetching guild with ID: {id_}: {e}")
-                    continue
-                self._synced_guilds.append(guild)
+        await self.bot.change_presence(activity=Activity(type=ActivityType.playing, name="/help"))
 
-            await self._cogs.setup(self._synced_guilds)  # Loads all cogs and commands to the client
+        # Fetch guilds before Cogs.setup()
+        for id_ in self._app.userdata.get(UserdataFile.AUTHORIZED_GUILDS):  # type: ignore
+            id_: int
+            guild = self.bot.get_guild(id_)
+            try:
+                if not guild:
+                    guild = await self.bot.fetch_guild(id_)
+            except errors.Forbidden as e:
+                await self._app.logger.discord_logger.exception(f"An error occurred while fetching guild with ID: {id_}: {e}")
+                continue
+            except errors.HTTPException as e:
+                await self._app.logger.discord_logger.exception(f"An HTTP exception occurred while fetching guild with ID: {id_}: {e}")
+                continue
+            self._synced_guilds.append(guild)
+
+        await self._cogs.setup(self._synced_guilds)  # Loads all cogs and commands to the client
+
+    async def _on_command_error(self, ctx: commands.Context[Any], error: commands.CommandError) -> None:  # type: ignore
+        if isinstance(error, commands.CheckFailure):
+            pass
+        if isinstance(error, commands.CommandNotFound):
+            await ctx.send("Command not found.")
+        else:
+            # TODO: send out proper error message to context author
+            pass

@@ -20,16 +20,20 @@ class Userdata:
             with open(self._get_fp(fp), "r") as file:
                 self._files[fp] = load(file)
 
-    def save(self) -> None:
+    def save(self, userdata: UserdataFile | None = None) -> None:
+        if userdata:
+            with open(self._get_fp(userdata), "w") as file:
+                dump(self._files[userdata], file)
+            return
         for fp, data in self._files.items():
             with open(self._get_fp(fp), "w") as file:
                 dump(data, file)
 
-    def get(self, asset: UserdataFile) -> FromJson:
-        return self._files[asset]
+    def get(self, userdata: UserdataFile) -> FromJson:
+        return self._files[userdata]
 
-    def set(self, asset: UserdataFile, data: FromJson) -> None:
-        self._files[asset] = data
+    def set(self, userdata: UserdataFile, data: FromJson) -> None:
+        self._files[userdata] = data
 
     @property
     def files(self) -> dict[UserdataFile, FromJson]:

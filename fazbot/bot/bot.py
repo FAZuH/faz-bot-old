@@ -5,6 +5,7 @@ from typing import TYPE_CHECKING, Protocol
 if TYPE_CHECKING:
     from discord import Guild
     from discord.ext.commands import Bot as Bot_
+    from fazbot.util import DiscordChecks
 
 
 class Bot(Protocol):
@@ -12,5 +13,7 @@ class Bot(Protocol):
     def stop(self) -> None: ...
     @property
     def bot(self) -> Bot_: ...
+    @property
+    def checks(self) -> DiscordChecks: ...
     @property
     def synced_guilds(self) -> list[Guild]: ...

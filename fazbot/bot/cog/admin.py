@@ -4,6 +4,7 @@ from typing import TYPE_CHECKING, Any
 import discord
 from discord.ext import commands
 
+from fazbot.enum import UserdataFile
 from fazbot.util import DiscordUtil
 
 from . import CogBase
@@ -14,15 +15,47 @@ if TYPE_CHECKING:
 
 class Admin(CogBase):
 
+    def _setup(self) -> None:
+        self.admin.add_check(self._bot.checks.is_admin)
+
     @commands.hybrid_group(description="Admin commands.")
-    @commands.check(DiscordUtil.is_admin)
     async def admin(self, ctx: commands.Context[Any]) -> None:
         if ctx.invoked_subcommand is None:
             await ctx.send("Invalid command.")
 
-    # @_admin.command(description="Echoes a message.")
-    # async def _ban(self, ctx: commands.Context[Any], server_id: int, from_: str, ) -> None:
-    #     await ctx.send(message)
+    @admin.command(description="Bans an user from using the bot.")
+    async def ban(self, ctx: commands.Context[Any], user_id: str) -> None:
+        user_id_ = await DiscordUtil.parse_big_int(ctx, user_id)
+        if not user_id_:
+            return
+        user = self._bot.bot.get_user(user_id_)
+        if not user:
+            await ctx.send(f"Uer with ID `{user_id}` not found.")
+            return
+        banned_users = self._app.userdata.get(UserdataFile.BANNED_USERS)
+        if user_id_ in banned_users:
+            await ctx.send(f"User `{user.name}` (`{user.id}`) is already banned.")
+            return
+        banned_users.append(user_id_)  # type: ignore
+        self._app.userdata.save(UserdataFile.BANNED_USERS)
+        await ctx.send(f"Banned user `{user.name}` (`{user.id}`).")
+
+    @admin.command()
+    async def unban(self, ctx: commands.Context[Any], user_id: str) -> None:
+        user_id_ = await DiscordUtil.parse_big_int(ctx, user_id)
+        if not user_id_:
+            return
+        user = self._bot.bot.get_user(user_id_)
+        if not user:
+            await ctx.send(f"User with ID `{user_id}` not found.")
+            return
+        banned_users = self._app.userdata.get(UserdataFile.BANNED_USERS)
+        if user_id_ not in banned_users:
+            await ctx.send(f"User `{user.name}` (`{user.id}`) is not banned.")
+            return
+        banned_users.remove(user_id_)  # type: ignore
+        self._app.userdata.save(UserdataFile.BANNED_USERS)
+        await ctx.send(f"Unbanned user `{user.name}` (`{user.id}`).")
 
     @admin.command(description="Echoes a message.")
     async def echo(self, ctx: commands.Context[Any], message: str) -> None:
@@ -48,7 +81,6 @@ class Admin(CogBase):
         channel_id_ = await DiscordUtil.parse_big_int(ctx, channel_id)
         if not channel_id_:
             return
-
         channel = self._bot.bot.get_channel(channel_id_)
         if not hasattr(channel, "send"):
             await ctx.send(f"Channel of type `{type(channel)}` does not support sending messages.")
@@ -65,11 +97,11 @@ class Admin(CogBase):
         guild_id_ = await DiscordUtil.parse_big_int(ctx, guild_id)
         if not guild_id_:
             return
-
         guild = self._bot.bot.get_guild(guild_id_)
         if not guild:
             await ctx.send(f"Guild with ID `{guild_id_}` not found.")
             return
+
         await self._bot.bot.tree.sync(guild=guild)
         await ctx.send(f"Synchronized app commands for guild `{guild.name}` (`{guild.id}`).")
 
