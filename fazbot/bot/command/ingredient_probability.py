@@ -3,7 +3,9 @@ from decimal import Decimal
 import re
 from typing import TYPE_CHECKING, Any
 
-from discord import Embed, File
+from discord import Embed
+
+from fazbot.enum import AssetImageFile
 
 from . import CommandBase
 from fazbot.util import IngredientUtil
@@ -20,18 +22,17 @@ class IngredientProbability(CommandBase):
         self._loot_bonus = loot_bonus
         self._loot_quality = loot_quality
         self._ing_util = IngredientUtil(self._base_chance, self._loot_quality, self._loot_bonus)
-        self._assetfile = File("asset/image/decayingheart.png", filename="decayingheart.png")
 
     async def run(self) -> None:
         embed_resp = self._get_embed(self._ing_util, self._ctx)
-        await self._ctx.send(embed=embed_resp, file=self._assetfile)
+        await self._ctx.send(embed=embed_resp, file=self.get_asset_file(AssetImageFile.DECAYINGHEART))
 
 
     def _get_embed(self, ing_util: IngredientUtil, ctx: commands.Context[Any]) -> Embed:
         one_in_n = 1 / ing_util.boosted_probability
 
         embed_resp = Embed(title="Ingredient Chance Calculator", color=472931)
-        embed_resp.set_thumbnail(url="attachment://decayingheart.png")
+        self.set_embed_thumbnail_with_asset(embed_resp, AssetImageFile.DECAYINGHEART)
         embed_resp.description =(
                 f"Drop Chance: **{ing_util.base_probability:.2%}**\n"
                 f"Loot Bonus: **{ing_util.loot_bonus}%**\n"

@@ -8,6 +8,8 @@ from discord import ButtonStyle, Colour, Embed, Message, errors, File
 from discord.ui import button, Button, View
 import matplotlib.pyplot as plt
 
+from fazbot.enum import AssetImageFile
+
 from . import CommandBase
 from fazbot.object import WynnIngredientValue
 from fazbot.util import CraftedUtil
@@ -26,7 +28,6 @@ class CraftedProbability(CommandBase):
         self._ing_strs = ing_strs
         self._crafted_util = CraftedUtil(self._parse_ings_str(ing_strs))
         self._crafted_util.run()
-        self._assetfile = File("asset/image/craftingtable.png", filename="craftingtable.png")
 
     async def run(self) -> None:
         embed_resp = self._get_embed(self._ctx, self._crafted_util)
@@ -34,7 +35,7 @@ class CraftedProbability(CommandBase):
 
         try:
             view = self._View(self)
-            message = await self._respond(embed=embed_resp, view=view, file=self._assetfile)
+            message = await self._respond(embed=embed_resp, view=view, file=self.get_asset_file(AssetImageFile.CRAFTINGTABLE))
             view.message = message
         except errors.HTTPException as e:
             # fallback to sending plot if embed size exceeds maximum size
@@ -48,7 +49,7 @@ class CraftedProbability(CommandBase):
 
     def _get_embed(self, ctx: commands.Context[Any], crafted_util: CraftedUtil) -> Embed:
         embed_resp = Embed(title="Crafteds Probabilites Calculator", color=8894804)
-        embed_resp.set_thumbnail(url="attachment://craftingtable.png")
+        self.set_embed_thumbnail_with_asset(embed_resp, AssetImageFile.CRAFTINGTABLE)
         embed_resp.set_author(
                 name=ctx.author.display_name,
                 icon_url=ctx.author.display_avatar.url
