@@ -1,7 +1,7 @@
 from __future__ import annotations
 from typing import TYPE_CHECKING
 
-from .app import App
+from .core import Core
 from fazbot import ImageAsset, Config, Userdata
 from fazbot.bot import DiscordBot
 from fazbot.heartbeat import SimpleHeartbeat
@@ -11,7 +11,7 @@ if TYPE_CHECKING:
     from fazbot import Bot, Heartbeat, Logger
 
 
-class FazBot(App):
+class FazBot(Core):
 
     def __init__(self) -> None:
         self._config = Config()

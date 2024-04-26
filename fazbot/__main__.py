@@ -3,16 +3,16 @@ import asyncio
 from time import sleep
 from typing import TYPE_CHECKING
 
-from fazbot.app import FazBot
+from fazbot.core import FazBot
 
 if TYPE_CHECKING:
-    from fazbot import App
+    from fazbot import Core
 
 
 class Main:
     """ <<public static>> """
 
-    app: App = FazBot()
+    app: Core = FazBot()
 
     @staticmethod
     def main() -> None:

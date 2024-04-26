@@ -13,12 +13,12 @@ from fazbot.util import DiscordChecks
 from . import Bot, CogCore
 
 if TYPE_CHECKING:
-    from fazbot import App
+    from fazbot import Core
 
 
 class DiscordBot(Bot):
 
-    def __init__(self, app: App) -> None:
+    def __init__(self, app: Core) -> None:
         self._app = app
 
         self._checks = DiscordChecks(self._app)

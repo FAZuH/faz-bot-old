@@ -7,6 +7,6 @@ from .errors import *
 from .logger import Logger
 from .userdata import Userdata
 
-from .app import App
+from .core import Core
 from .bot import Bot
 from .heartbeat import Heartbeat

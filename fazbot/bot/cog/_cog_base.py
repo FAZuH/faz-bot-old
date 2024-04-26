@@ -7,12 +7,12 @@ from discord.ext.commands.hybrid import HybridAppCommand, HybridCommand
 
 if TYPE_CHECKING:
     from discord import Guild
-    from fazbot import App, Bot
+    from fazbot import Core, Bot
 
 
 class CogBase(Cog):
 
-    def __init__(self, bot: Bot, app: App, guilds: list[Guild]) -> None:
+    def __init__(self, bot: Bot, app: Core, guilds: list[Guild]) -> None:
         self._bot = bot
         self._app = app
         self._guilds = guilds

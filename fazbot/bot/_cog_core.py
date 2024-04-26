@@ -14,12 +14,12 @@ from .command import CommandBase
 
 if TYPE_CHECKING:
     from discord import  Guild
-    from fazbot import App, Bot
+    from fazbot import Core, Bot
 
 
 class CogCore:
 
-    def __init__(self, bot: Bot, app: App) -> None:
+    def __init__(self, bot: Bot, app: Core) -> None:
         self._bot = bot
         self._app = app
 

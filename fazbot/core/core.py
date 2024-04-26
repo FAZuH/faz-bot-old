@@ -5,7 +5,7 @@ if TYPE_CHECKING:
     from fazbot import ImageAsset, Bot, Config, Heartbeat, Logger, Userdata
 
 
-class App(Protocol):
+class Core(Protocol):
     """<<interface>>"""
     def start(self) -> None: ...
     def stop(self) -> None: ...
