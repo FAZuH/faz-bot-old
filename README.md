@@ -14,6 +14,9 @@ Wynncraft's Utility and Statistics Bot.
 *usage guide*
 
 ## Todo
+- refactor app -> core
+- refactor authorized_guilds -> whitelisted_guilds
+- subclass DiscordBot with protocol subclassed by discord.py's Bot
 - command description
 - improve help command
 - improve docker
@@ -24,6 +27,7 @@ Wynncraft's Utility and Statistics Bot.
   - admin commands
     - ban `<user>` `<reason>`
     - unban `<user>`
+    - whitelist `<guild_id>`
     - traceback `<bool>`
     - log_commands `<channel_id>`
   - wynnanalyze
