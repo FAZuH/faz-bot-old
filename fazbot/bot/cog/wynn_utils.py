@@ -4,7 +4,7 @@ from typing import TYPE_CHECKING, Any
 
 from discord.ext import commands
 
-from fazbot.bot.command import ConvertEmerald, CraftedProbability, IngredientProbability
+from fazbot.bot.invoked import ConvertEmerald, CraftedProbability, IngredientProbability
 
 from . import CogBase
 

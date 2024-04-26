@@ -13,13 +13,13 @@ from discord.app_commands import Command
 from discord.ext import commands
 from discord.ui import Button, View, button
 
-from . import CommandBase
+from . import InvokedBase
 
 if TYPE_CHECKING:
     from discord.app_commands import Parameter
 
 
-class Help(CommandBase):
+class Help(InvokedBase):
 
     def __init__(self, ctx: commands.Context[Any], commands: list[Command[Any, Any, Any]]) -> None:
         super().__init__(ctx)

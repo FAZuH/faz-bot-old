@@ -5,7 +5,7 @@ from discord import Embed
 
 from fazbot.enum import AssetImageFile
 
-from . import CommandBase
+from . import InvokedBase
 from fazbot.object import WynnEmeralds
 from fazbot.util import EmeraldUtil
 
@@ -13,7 +13,7 @@ if TYPE_CHECKING:
     from discord.ext import commands
 
 
-class ConvertEmerald(CommandBase):
+class ConvertEmerald(InvokedBase):
 
     def __init__(self, ctx: commands.Context[Any], emerald_string: str) -> None:
         super().__init__(ctx)

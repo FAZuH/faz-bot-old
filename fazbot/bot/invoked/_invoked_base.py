@@ -12,7 +12,7 @@ if TYPE_CHECKING:
     from fazbot.enum import AssetImageFile
 
 
-class CommandBase(ABC):
+class InvokedBase(ABC):
 
     _asset: ImageAsset
 

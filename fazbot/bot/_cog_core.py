@@ -10,7 +10,7 @@ from .cog import (
     WynnTrack,
     WynnUtils
 )
-from .command import CommandBase
+from .invoked import InvokedBase
 
 if TYPE_CHECKING:
     from discord import  Guild
@@ -43,4 +43,4 @@ class CogCore:
 
     def load_assets(self) -> None:
         self._app.asset.load()
-        CommandBase.set_asset(self._app.asset)
+        InvokedBase.set_asset(self._app.asset)

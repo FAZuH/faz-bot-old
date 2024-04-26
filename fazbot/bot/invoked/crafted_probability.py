@@ -8,9 +8,9 @@ from discord import ButtonStyle, Colour, Embed, Message, errors, File
 from discord.ui import button, Button, View
 import matplotlib.pyplot as plt
 
-from fazbot.enum import AssetImageFile
 
-from . import CommandBase
+from . import InvokedBase
+from fazbot.enum import AssetImageFile
 from fazbot.object import WynnIngredientValue
 from fazbot.util import CraftedUtil
 
@@ -19,7 +19,7 @@ if TYPE_CHECKING:
     from discord.ext import commands
 
 
-class CraftedProbability(CommandBase):
+class CraftedProbability(InvokedBase):
 
     INGSTR_DEFAULT = "0,0,0"
 

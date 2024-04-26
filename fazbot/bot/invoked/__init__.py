@@ -1,6 +1,5 @@
 # type: ignore
-from ._command_args import *
-from ._command_base import CommandBase
+from ._invoked_base import InvokedBase
 
 from .convert_emerald import ConvertEmerald
 from .crafted_probability import CraftedProbability

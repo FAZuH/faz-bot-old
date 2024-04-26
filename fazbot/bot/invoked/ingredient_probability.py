@@ -5,16 +5,15 @@ from typing import TYPE_CHECKING, Any
 
 from discord import Embed
 
+from . import InvokedBase
 from fazbot.enum import AssetImageFile
-
-from . import CommandBase
 from fazbot.util import IngredientUtil
 
 if TYPE_CHECKING:
     from discord.ext import commands
 
 
-class IngredientProbability(CommandBase):
+class IngredientProbability(InvokedBase):
 
     def __init__(self, ctx: commands.Context[Any], base_chance: str, loot_bonus: int, loot_quality: int) -> None:
         super().__init__(ctx)
