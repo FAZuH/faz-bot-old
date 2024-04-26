@@ -70,7 +70,7 @@ class DiscordBot(Bot):
         await self.bot.change_presence(activity=Activity(type=ActivityType.playing, name="/help"))
 
         # Fetch guilds before Cogs.setup()
-        for id_ in self._app.userdata.get(UserdataFile.AUTHORIZED_GUILDS):  # type: ignore
+        for id_ in self._app.userdata.get(UserdataFile.WHITELISTED_GUILDS):  # type: ignore
             id_: int
             guild = self.bot.get_guild(id_)
             try:
