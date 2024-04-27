@@ -4,7 +4,7 @@ import asyncio
 from threading import Thread
 from typing import TYPE_CHECKING, Any
 
-from discord import Activity, ActivityType, errors, Guild, Intents
+from discord import Activity, ActivityType, ChannelType, errors, Guild, Intents
 from discord.ext import commands
 
 from fazbot.enum import UserdataFile
@@ -36,12 +36,13 @@ class DiscordBot(Bot):
         self._discord_bot_thread = Thread(target=self._bot.run, args=(self._app.config.secret.discord.bot_token,), daemon=True)
 
     def start(self) -> None:
-        self._app.logger.console_logger.info("Starting DiscordBot...")
+        self._app.logger.console_logger.info(f"Starting {self.__class__.__qualname__}...")
         self._setup()
         self._discord_bot_thread.start()
+        self._app.logger.console_logger.info(f"Started {self.__class__.__qualname__}.")
 
     def stop(self) -> None:
-        self._app.logger.console_logger.info("Stopping DiscordBot...")
+        self._app.logger.console_logger.info(f"Stopping {self.__class__.__qualname__}...")
         self._event_loop.run_until_complete(self._bot.close())
 
     @property
@@ -61,12 +62,12 @@ class DiscordBot(Bot):
         """ Method to be run on start. """
         self._cogs.load_assets()
         self._bot.add_check(self._checks.is_not_banned)
-        self._bot.add_listener(self._on_ready, "on_ready")
-        self._bot.add_listener(self._on_command_error, "on_command_error")
+        self._bot.add_listener(self.on_ready)
+        self._bot.add_listener(self.on_command_error)
+        self._bot.add_listener(self.on_command_completion)
 
-    async def _on_ready(self) -> None:  # type: ignore
+    async def on_ready(self) -> None:
         if self.bot.user is not None:
-            # TODO: success webhook
             await self._app.logger.discord_logger.success(f"{self.bot.user.display_name} has successfully started.")
 
         await self.bot.change_presence(activity=Activity(type=ActivityType.playing, name="/help"))
@@ -88,11 +89,20 @@ class DiscordBot(Bot):
 
         await self._cogs.setup(self._synced_guilds)  # Loads all cogs and commands to the client
 
-    async def _on_command_error(self, ctx: commands.Context[Any], error: commands.CommandError) -> None:  # type: ignore
+    async def on_command_error(self, ctx: commands.Context[Any], error: commands.CommandError) -> None:
         if isinstance(error, commands.CheckFailure):
-            pass
+            await ctx.send("You do not have permission to use this command.")
+            # TODO: log to admin
         if isinstance(error, commands.CommandNotFound):
             await ctx.send("Command not found.")
-        else:
-            # TODO: send out proper error message to context author
-            pass
+        # command error response should be handled by the command itself, not here
+
+    async def on_command_completion(self, ctx: commands.Context[Any]) -> None:
+        # TODO: log to admin
+        if not ctx.command:
+            return
+        message = f"fired event on_command_completion name={ctx.command.name}, author={ctx.author.display_name}"
+        if ctx.guild and ctx.channel and ctx.channel.type != ChannelType.private:
+            message += f", guild={ctx.guild.name}, channel={ctx.channel.name}"  # type: ignore
+        message += f", args={ctx.args}, kwargs={ctx.kwargs}"
+        self._app.logger.console_logger.debug(message)
