@@ -1,5 +1,6 @@
 from __future__ import annotations
 from abc import ABC
+from io import BytesIO
 from typing import TYPE_CHECKING, Any
 
 from discord import Embed, File
@@ -25,7 +26,9 @@ class InvokedBase(ABC):
 
     @classmethod
     def get_asset_file(cls, file: AssetImageFile) -> File:
-        return File(cls._asset.get(file), file.value)
+        filebytes = cls._asset.get(file)
+        fileio = BytesIO(filebytes)
+        return File(fileio, file.value, spoiler=False)
 
     @classmethod
     def set_asset(cls, asset: ImageAsset) -> None:
