@@ -16,7 +16,6 @@ Wynncraft's Utility and Statistics Bot.
 ## Todo
 - command description
 - improve help command
-- improve docker
 - tests (pain)
 - embed responses
 - init script. first time setup
