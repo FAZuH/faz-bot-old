@@ -8,8 +8,7 @@ from discord import Embed, File
 from fazbot import ImageAsset
 
 if TYPE_CHECKING:
-    from discord import Message
-    from discord.ext import commands
+    from discord import Interaction, InteractionMessage
     from fazbot.enum import AssetImageFile
 
 
@@ -17,8 +16,11 @@ class InvokedBase(ABC):
 
     _asset: ImageAsset
 
-    def __init__(self, ctx: commands.Context[Any]) -> None:
-        self._ctx = ctx
+    def __init__(self, interaction: Interaction[Any]) -> None:
+        self._interaction = interaction
+
+    async def get_original_response(self) -> InteractionMessage:
+        return await self.interaction.original_response()
 
     @staticmethod
     def set_embed_thumbnail_with_asset(embed: Embed, file: AssetImageFile) -> None:
@@ -34,5 +36,10 @@ class InvokedBase(ABC):
     def set_asset(cls, asset: ImageAsset) -> None:
         cls._asset = asset
 
-    async def _respond(self, *args: Any, **kwargs: Any) -> Message:
-        return await self._ctx.send(*args, **kwargs)
+    @property
+    def interaction(self) -> Interaction:
+        return self._interaction
+
+
+    async def _respond(self, *args: Any, **kwargs: Any) -> None:
+        await self.interaction.response.send_message(*args, **kwargs)

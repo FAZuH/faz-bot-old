@@ -6,23 +6,21 @@ from discord import (
     ButtonStyle,
     Colour,
     Embed,
-    Interaction,
     Message,
 )
-from discord.app_commands import Command
-from discord.ext import commands
 from discord.ui import Button, View, button
 
 from . import InvokedBase
 
 if TYPE_CHECKING:
-    from discord.app_commands import Parameter
+    from discord import Interaction
+    from discord.app_commands import Command, Parameter
 
 
 class Help(InvokedBase):
 
-    def __init__(self, ctx: commands.Context[Any], commands: list[Command[Any, Any, Any]]) -> None:
-        super().__init__(ctx)
+    def __init__(self, interaction: Interaction[Any], commands: list[Command[Any, Any, Any]]) -> None:
+        super().__init__(interaction)
         self._commands = commands
         self._cmds_per_page = 5
         self._embed_total_pages = 0
@@ -30,7 +28,7 @@ class Help(InvokedBase):
     async def run(self) -> None:
         self._embed_total_pages = self._get_embed_total_pages(self._commands)
         embed = self._get_embed_page(self._commands, 1)
-        view = self._View(self, self._ctx, self._embed_total_pages, self._commands)
+        view = self._View(self, self.interaction, self._embed_total_pages, self._commands)
         await self._respond(embed=embed, view=view)
 
     def _get_embed_page(self, commands: list[Command[Any, ..., Any]], page: int) -> Embed:
@@ -75,12 +73,12 @@ class Help(InvokedBase):
         def __init__(
             self,
             command: Help,
-            ctx: commands.Context[Any],
+            interaction: Interaction[Any],
             help_embed_max_page: int,
             commands: list[Command[Any, ..., Any]]
         ) -> None:
             super().__init__(timeout=120)
-            self._ctx = ctx
+            self._interaction = interaction
             self._help_embed_max_page = help_embed_max_page
             self._commands = commands
 

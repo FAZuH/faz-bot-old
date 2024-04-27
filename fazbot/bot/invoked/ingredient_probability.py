@@ -10,24 +10,24 @@ from fazbot.enum import AssetImageFile
 from fazbot.util import IngredientUtil
 
 if TYPE_CHECKING:
-    from discord.ext import commands
+    from discord import Interaction
 
 
 class IngredientProbability(InvokedBase):
 
-    def __init__(self, ctx: commands.Context[Any], base_chance: str, loot_bonus: int, loot_quality: int) -> None:
-        super().__init__(ctx)
+    def __init__(self, interaction: Interaction[Any], base_chance: str, loot_bonus: int, loot_quality: int) -> None:
+        super().__init__(interaction)
         self._base_chance = self._parse_base_chance(base_chance)
         self._loot_bonus = loot_bonus
         self._loot_quality = loot_quality
         self._ing_util = IngredientUtil(self._base_chance, self._loot_quality, self._loot_bonus)
 
     async def run(self) -> None:
-        embed_resp = self._get_embed(self._ing_util, self._ctx)
-        await self._ctx.send(embed=embed_resp, file=self.get_asset_file(AssetImageFile.DECAYINGHEART))
+        embed_resp = self._get_embed(self._ing_util, self._interaction)
+        await self._interaction.response.send_message(embed=embed_resp, file=self.get_asset_file(AssetImageFile.DECAYINGHEART))
 
 
-    def _get_embed(self, ing_util: IngredientUtil, ctx: commands.Context[Any]) -> Embed:
+    def _get_embed(self, ing_util: IngredientUtil, interaction: Interaction[Any]) -> Embed:
         one_in_n = 1 / ing_util.boosted_probability
 
         embed_resp = Embed(title="Ingredient Chance Calculator", color=472931)
@@ -42,7 +42,7 @@ class IngredientProbability(InvokedBase):
                 name="Boosted Drop Chance",
                 value=f"Drop Chance: \n**{ing_util.boosted_probability:.2%}** OR **1 in {one_in_n:.2f}** mobs"
         )
-        embed_resp.set_author(name=ctx.author.display_name, icon_url=ctx.author.display_avatar.url)
+        embed_resp.set_author(name=interaction.user.display_name, icon_url=interaction.user.display_avatar.url)
         return embed_resp
 
     def _parse_base_chance(self, base_chance: str) -> Decimal:

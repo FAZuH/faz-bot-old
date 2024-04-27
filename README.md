@@ -14,15 +14,13 @@ Wynncraft's Utility and Statistics Bot.
 *usage guide*
 
 ## Todo
-- refactor app -> core
-- refactor authorized_guilds -> whitelisted_guilds
-- subclass DiscordBot with protocol subclassed by discord.py's Bot
 - command description
 - improve help command
 - improve docker
 - tests (pain)
 - embed responses
 - init script. first time setup
+- user ratelimit
 - commands
   - admin commands
     - ban `<user>` `<reason>`

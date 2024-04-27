@@ -4,10 +4,9 @@ from decimal import Decimal
 from io import BytesIO
 from typing import TYPE_CHECKING, Any
 
-from discord import ButtonStyle, Colour, Embed, Message, errors, File
+from discord import ButtonStyle, Colour, Embed, errors, File
 from discord.ui import button, Button, View
 import matplotlib.pyplot as plt
-
 
 from . import InvokedBase
 from fazbot.enum import AssetImageFile
@@ -16,44 +15,39 @@ from fazbot.util import CraftedUtil
 
 if TYPE_CHECKING:
     from discord import Interaction
-    from discord.ext import commands
 
 
 class CraftedProbability(InvokedBase):
 
     INGSTR_DEFAULT = "0,0,0"
 
-    def __init__(self, ctx: commands.Context[Any], ing_strs: list[str]) -> None:
-        super().__init__(ctx)
+    def __init__(self, interaction: Interaction[Any], ing_strs: list[str]) -> None:
+        super().__init__(interaction)
         self._ing_strs = ing_strs
         self._crafted_util = CraftedUtil(self._parse_ings_str(ing_strs))
         self._crafted_util.run()
 
     async def run(self) -> None:
-        embed_resp = self._get_embed(self._ctx, self._crafted_util)
+        embed_resp = self._get_embed(self._interaction, self._crafted_util)
         self._modify_embed_craftprobs(self._crafted_util.craft_probs, embed_resp)
 
         try:
             view = self._View(self)
-            message = await self._respond(embed=embed_resp, view=view, file=self.get_asset_file(AssetImageFile.CRAFTINGTABLE))
-            view.message = message
+            await self._respond(embed=embed_resp, view=view, file=self.get_asset_file(AssetImageFile.CRAFTINGTABLE))
         except errors.HTTPException as e:
             # fallback to sending plot if embed size exceeds maximum size
             if e.code == 50035:
                 embed_resp = self._get_plot_embed(self._crafted_util.craft_probs)
                 dist_plot = self._get_plot(self._crafted_util.craft_probs)
-                await self._ctx.send(embed=embed_resp, file=dist_plot)
+                await self._interaction.response.send_message(embed=embed_resp, file=dist_plot)
             else:
                 raise e
 
 
-    def _get_embed(self, ctx: commands.Context[Any], crafted_util: CraftedUtil) -> Embed:
+    def _get_embed(self, interaction: Interaction[Any], crafted_util: CraftedUtil) -> Embed:
         embed_resp = Embed(title="Crafteds Probabilites Calculator", color=8894804)
         self.set_embed_thumbnail_with_asset(embed_resp, AssetImageFile.CRAFTINGTABLE)
-        embed_resp.set_author(
-                name=ctx.author.display_name,
-                icon_url=ctx.author.display_avatar.url
-        )
+        embed_resp.set_author(name=interaction.user.display_name, icon_url=interaction.user.display_avatar.url)
 
         # Embed descriptions
         embed_desc = [f"Ingredients:"]
@@ -148,45 +142,37 @@ class CraftedProbability(InvokedBase):
             # Disable all items on timeout
             for item in self.children:
                 self.remove_item(item)
-            await self.message.edit(view=self)
-
-        @property
-        def message(self) -> Message:
-            return self._message
-
-        @message.setter
-        def message(self, message: Message) -> None:
-            self._message = message
+            await self._cmd.interaction.edit_original_response(view=self)
 
         @button(label="Distribution", style=ButtonStyle.green, emoji="🎲", disabled=True)
         async def button_distribution(self, interaction: Interaction, button: Button[Any]) -> None:
-            embed = self.message.embeds[0]
+            embed = (await self._cmd.get_original_response()).embeds[0]
             embed.clear_fields()
             self._click_button(button)
             self._cmd._modify_embed_craftprobs(self._cmd._crafted_util.craft_probs, embed)
-            await self._respond(interaction, embed, self, [])
+            await self._defer_respond(interaction, embed, self, [])
 
         @button(label="Atleast", style=ButtonStyle.green, emoji="📉")
         async def button_atleast(self, interaction: Interaction, button: Button[Any]) -> None:
-            embed = self.message.embeds[0]
+            embed = (await self._cmd.get_original_response()).embeds[0]
             embed.clear_fields()
             self._click_button(button)
             self._modify_atleast_embed(self._cmd._crafted_util.craft_probs, embed)
-            await self._respond(interaction, embed, self, [])
+            await self._defer_respond(interaction, embed, self, [])
 
         @button(label="Atmost", style=ButtonStyle.green, emoji="📈")
         async def button_atmost_callback(self, interaction: Interaction, button: Button[Any]) -> None:
-            embed = self.message.embeds[0]
+            embed = (await self._cmd.get_original_response()).embeds[0]
             embed.clear_fields()
             self._click_button(button)
             self._modify_atmost_embed(self._cmd._crafted_util.craft_probs, embed)
-            await self._respond(interaction, embed, self, [])
+            await self._defer_respond(interaction, embed, self, [])
 
         @button(label="Plot", style=ButtonStyle.green, emoji="📊")
         async def button_plot_callback(self, interaction: Interaction, button: Button[Any]) -> None:
             self._click_button(button)
             dist_plot = self._cmd._get_plot(self._cmd._crafted_util.craft_probs)
-            await self._respond(interaction, None, self, [dist_plot])
+            await self._defer_respond(interaction, None, self, [dist_plot])
 
 
         def _click_button(self, button: Button[CraftedProbability._View]) -> None:
@@ -195,7 +181,7 @@ class CraftedProbability(InvokedBase):
                     item.disabled = False
             button.disabled = True
 
-        async def _respond(self, interaction: Interaction, embed: Embed | None, view: View, attachments: list[Any]) -> None:
+        async def _defer_respond(self, interaction: Interaction, embed: Embed | None, view: View, attachments: list[Any]) -> None:
             await interaction.response.defer()
             await interaction.response.edit_message(embed=embed, view=view, attachments=attachments)
 

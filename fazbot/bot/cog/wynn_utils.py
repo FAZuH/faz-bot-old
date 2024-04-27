@@ -2,22 +2,21 @@
 from __future__ import annotations
 from typing import TYPE_CHECKING, Any
 
-from discord.ext import commands
-
-from fazbot.bot.invoked import ConvertEmerald, CraftedProbability, IngredientProbability
+from discord import app_commands
 
 from . import CogBase
+from fazbot.bot.invoked import ConvertEmerald, CraftedProbability, IngredientProbability
 
 if TYPE_CHECKING:
-    from discord.ext.commands import Context
+    from discord import Interaction
 
 
 class WynnUtils(CogBase):
 
-    @commands.hybrid_command(name="crafted_probability")
+    @app_commands.command(name="crafted_probability")
     async def _crafted_probability(
             self,
-            ctx: Context[Any],
+            interaction: Interaction[Any],
             ingredient1: str = CraftedProbability.INGSTR_DEFAULT,
             ingredient2: str = CraftedProbability.INGSTR_DEFAULT,
             ingredient3: str = CraftedProbability.INGSTR_DEFAULT,
@@ -44,15 +43,15 @@ class WynnUtils(CogBase):
             min,max[,efficiency]
         """
         await CraftedProbability(
-                ctx, [ingredient1, ingredient2, ingredient3, ingredient4, ingredient5, ingredient6]
+                interaction, [ingredient1, ingredient2, ingredient3, ingredient4, ingredient5, ingredient6]
         ).run()
 
-    @commands.hybrid_command(name="convert_emerald")
-    async def _convert_emerald(self, ctx: Context[Any], emerald_string: str = "") -> None:
-        await ConvertEmerald(ctx, emerald_string).run()
+    @app_commands.command(name="convert_emerald")
+    async def convert_emerald(self, interaction: Interaction[Any], emerald_string: str = "") -> None:
+        await ConvertEmerald(interaction, emerald_string).run()
 
-    @commands.hybrid_command(name="ingredient_probability")
-    async def _ingredient_probability(self, ctx: Context[Any], base_chance: str, loot_bonus: int = 0, loot_quality: int = 0) -> None:
+    @app_commands.command(name="ingredient_probability")
+    async def ingredient_probability(self, interaction: Interaction[Any], base_chance: str, loot_bonus: int = 0, loot_quality: int = 0) -> None:
         """Calculates ingredient drop probability after loot bonus and loot quality.
 
         Parameters
@@ -64,4 +63,4 @@ class WynnUtils(CogBase):
         loot_quality: int
             Loot quality value.
         """
-        await IngredientProbability(ctx, base_chance, loot_bonus, loot_quality).run()
+        await IngredientProbability(interaction, base_chance, loot_bonus, loot_quality).run()
