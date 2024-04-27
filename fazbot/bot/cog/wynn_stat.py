@@ -1,9 +1,12 @@
 from __future__ import annotations
-from typing import Any
+from typing import TYPE_CHECKING
 
-from discord.ext import commands
+from discord import app_commands
 
 from . import CogBase
+
+if TYPE_CHECKING:
+    from discord import Interaction
 
 
 class WynnStat(CogBase):
@@ -11,9 +14,8 @@ class WynnStat(CogBase):
     def setup(self) -> None:
         pass
 
-
-    @commands.hybrid_command(name="worldlist")
-    async def worldlist(self, ctx: commands.Context[Any], worlds: int = 10) -> None:
+    @app_commands.command(name="worldlist")
+    async def worldlist(self, interaction: Interaction, worlds: int = 10) -> None:
         return
 
     # @commands.hybrid_command(name="activity")
