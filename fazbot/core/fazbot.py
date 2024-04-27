@@ -29,15 +29,11 @@ class FazBot(Core):
     def start(self) -> None:
         self._asset.load()
         self._userdata.load()
-        self._logger.console_logger.info("Starting Heartbeat...")
         self.heartbeat.start()
-        self._logger.console_logger.info("Starting DiscordBot...")
         self.bot.start()
 
     def stop(self) -> None:
-        self._logger.console_logger.info("Stopping Heartbeat...")
         self.heartbeat.stop()
-        self._logger.console_logger.info("Stopping DiscordBot...")
         self.bot.stop()
 
     @property

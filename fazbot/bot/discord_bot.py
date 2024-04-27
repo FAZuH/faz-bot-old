@@ -36,10 +36,12 @@ class DiscordBot(Bot):
         self._discord_bot_thread = Thread(target=self._bot.run, args=(self._app.config.secret.discord.bot_token,), daemon=True)
 
     def start(self) -> None:
+        self._app.logger.console_logger.info("Starting DiscordBot...")
         self._setup()
         self._discord_bot_thread.start()
 
     def stop(self) -> None:
+        self._app.logger.console_logger.info("Stopping DiscordBot...")
         self._event_loop.run_until_complete(self._bot.close())
 
     @property
