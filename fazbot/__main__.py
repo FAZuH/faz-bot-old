@@ -17,13 +17,8 @@ class Main:
     @staticmethod
     def main() -> None:
         Main.app.start()
-
-        while True:
-            inp = input()
-            if inp == "exit":
-                Main.app.stop()
-                exit(0)
-            sleep(0.1)
+        while True:  # keep-alive
+           sleep(69_420)
 
 
 if __name__ == "__main__":
