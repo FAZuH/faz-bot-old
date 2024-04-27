@@ -1,4 +1,5 @@
 from __future__ import annotations
+from math import floor
 import re
 
 
@@ -9,43 +10,52 @@ class WynnEmeralds:
         self._blocks = blocks
         self._liquids = liquids
         self._stacks = stacks
-        self._compute_total()
+        self._total = self._get_total(emeralds, blocks, liquids, stacks)
 
     def simplify(self) -> None:
-        self._compute_total()
-        if self._emeralds > 64:
+        if self._emeralds >= 64:
             self._blocks += self._emeralds // 64
             self._emeralds %= 64
 
-        if self._blocks > 64:
+        if self._blocks >= 64:
             self._liquids += self._blocks // 64
             self._blocks %= 64
 
-        if self._liquids > 64:
+        if self._liquids >= 64:
             self._stacks += self._liquids // 64
             self._liquids %= 64
 
-
     @classmethod
     def from_string(cls, emerald_string: str) -> WynnEmeralds:
-        stx = re.findall(r'\b(\d+)stx\b', emerald_string)
-        le = re.findall(r'\b(\d+)le\b', emerald_string)
-        eb = re.findall(r'\b(\d+)eb\b', emerald_string)
-        e = re.findall(r'\b(\d+)e\b', emerald_string)
-        x = re.findall(r'\b(\d+)\bx\b', emerald_string)
-        if len(x) > 1:
-            raise ValueError("Max occurence of amount argument 'x' is once.")
-        x = int(x[0]) if len(x) == 1 else 1
-        try:
-            ret = cls(
-                    sum(map(int, e)),
-                    sum(map(int, eb)),
-                    sum(map(int, le)),
-                    sum(map(int, stx)),
-            )
-        except ValueError as e:
-            raise ValueError(f"An exception occured while trying to convert emerald string into integers: {e}.")
-        return ret
+        strings = emerald_string.split()
+        if len(strings) == 1 and strings[0].isnumeric():
+            return cls(emeralds=int(strings[0]))
+
+        e = eb = le = stx = 0
+        multiplier = 1
+        for str_ in strings:
+            input_split = re.match(r'^(.*?)([A-Za-z]+)$', str_)
+            if not input_split:
+                raise ValueError("Invalid emerald string.")
+            amount = input_split.group(1)
+            unit = input_split.group(2)
+
+            parsed_amount = cls._parse_number_string(amount)
+            if unit == 'e':
+                e += int(parsed_amount)
+            elif unit == 'eb':
+                eb += int(parsed_amount)
+            elif unit == 'le':
+                le  += int(parsed_amount)
+            elif unit == 'stx':
+                stx += int(parsed_amount)
+            elif unit == 'x':
+                multiplier = parsed_amount
+            else:
+                raise ValueError(f"Invalid unit {unit} in emerald string.")
+
+        total = floor(cls._get_total(e, eb, le, stx) * multiplier)
+        return cls(emeralds=total)
 
     @property
     def total(self) -> int:
@@ -68,8 +78,18 @@ class WynnEmeralds:
         return self._stacks
 
 
-    def _compute_total(self) -> None:
-        self._total = self._emeralds + self._blocks * 64 + self._liquids * 64 * 64 + self._stacks * 64 * 64 * 64
+    @staticmethod
+    def _get_total(emeralds: int, blocks: int, liquids: int, stacks: int) -> int:
+        return emeralds + blocks * 64 + liquids * 64 * 64 + stacks * 64 * 64 * 64
+
+    @staticmethod
+    def _parse_number_string(number_string: str) -> float:
+        if '/' in number_string:
+            num, den = number_string.split('/')
+            return int(num) / int(den)
+        if '%' in number_string:
+            return float(number_string.strip('%')) / 100
+        return float(number_string)
 
     def __repr__(self) -> str:
         return f"{self._stacks}stx {self._liquids}le {self._blocks}eb {self._emeralds}e"
