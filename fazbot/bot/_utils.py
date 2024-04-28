@@ -5,7 +5,7 @@ from dateparser import parse
 from discord.ext import commands
 
 
-class DiscordUtil:
+class Utils:
 
     @staticmethod
     async def parse_big_int(ctx: commands.Context[Any], value: str) -> int | None:

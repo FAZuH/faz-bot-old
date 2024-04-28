@@ -7,8 +7,8 @@ from typing import TYPE_CHECKING, Any
 from discord import Activity, ActivityType, ChannelType, errors, Guild, Intents
 from discord.ext import commands
 
+from . import Checks
 from fazbot.enum import UserdataFile
-from fazbot.util import DiscordChecks
 
 from . import Bot, CogCore
 
@@ -21,7 +21,7 @@ class DiscordBot(Bot):
     def __init__(self, app: Core) -> None:
         self._app = app
 
-        self._checks = DiscordChecks(self._app)
+        self._checks = Checks(self._app)
         self._synced_guilds: list[Guild] = []
         self._event_loop = asyncio.new_event_loop()
 
@@ -50,7 +50,7 @@ class DiscordBot(Bot):
         return self._bot
 
     @property
-    def checks(self) -> DiscordChecks:
+    def checks(self) -> Checks:
         return self._checks
 
     @property

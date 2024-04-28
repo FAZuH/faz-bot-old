@@ -4,8 +4,8 @@ from typing import TYPE_CHECKING, Any
 import discord
 from discord.ext import commands
 
+from .. import Utils
 from fazbot.enum import UserdataFile
-from fazbot.util import DiscordUtil
 
 from . import CogBase
 
@@ -25,7 +25,7 @@ class Admin(CogBase):
 
     @admin.command(description="Bans an user from using the bot.")
     async def ban(self, ctx: commands.Context[Any], user_id: str) -> None:
-        user_id_ = await DiscordUtil.parse_big_int(ctx, user_id)
+        user_id_ = await Utils.parse_big_int(ctx, user_id)
         if not user_id_:
             return
         user = self._bot.bot.get_user(user_id_)
@@ -42,7 +42,7 @@ class Admin(CogBase):
 
     @admin.command()
     async def unban(self, ctx: commands.Context[Any], user_id: str) -> None:
-        user_id_ = await DiscordUtil.parse_big_int(ctx, user_id)
+        user_id_ = await Utils.parse_big_int(ctx, user_id)
         if not user_id_:
             return
         user = self._bot.bot.get_user(user_id_)
@@ -78,7 +78,7 @@ class Admin(CogBase):
 
     @admin.command(description="Sends a message to a channel.")
     async def send(self, ctx: commands.Context[Any], channel_id: str, message: str) -> None:
-        channel_id_ = await DiscordUtil.parse_big_int(ctx, channel_id)
+        channel_id_ = await Utils.parse_big_int(ctx, channel_id)
         if not channel_id_:
             return
         channel = self._bot.bot.get_channel(channel_id_)
@@ -94,7 +94,7 @@ class Admin(CogBase):
 
     @admin.command(description="Synchronizes commands with Discord for a guild.")
     async def sync_guild(self, ctx: commands.Context[Any], guild_id: str) -> None:
-        guild_id_ = await DiscordUtil.parse_big_int(ctx, guild_id)
+        guild_id_ = await Utils.parse_big_int(ctx, guild_id)
         if not guild_id_:
             return
         guild = self._bot.bot.get_guild(guild_id_)
@@ -120,7 +120,7 @@ class Admin(CogBase):
 
     @admin.command(description="Whispers a message to a user.")
     async def whisper(self, ctx: commands.Context[Any], user_id: str, message: str) -> None:
-        user_id_ = await DiscordUtil.parse_big_int(ctx, user_id)
+        user_id_ = await Utils.parse_big_int(ctx, user_id)
         if not user_id_:
             return
 

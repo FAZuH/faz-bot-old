@@ -8,7 +8,7 @@ if TYPE_CHECKING:
     from fazbot import Core
 
 
-class DiscordChecks:
+class Checks:
 
     def __init__(self, app: Core) -> None:
         self._app = app
