@@ -18,7 +18,7 @@ class Main:
     def main() -> None:
         Main.app.start()
         while True:  # keep-alive
-           sleep(69_420)
+            sleep(69_420)
 
 
 if __name__ == "__main__":
