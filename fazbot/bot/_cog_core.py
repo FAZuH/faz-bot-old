@@ -33,14 +33,6 @@ class CogCore:
         self._wynn_track = WynnTrack(*args)
         self._wynn_utils = WynnUtils(*args)
 
-        await self._admin.load_commands()
-        await self._help.load_commands()
-        await self._info.load_commands()
-        await self._wynn_analyze.load_commands()
-        await self._wynn_stat.load_commands()
-        await self._wynn_track.load_commands()
-        await self._wynn_utils.load_commands()
-
     def load_assets(self) -> None:
         self._app.asset.load()
         InvokedBase.set_asset(self._app.asset)

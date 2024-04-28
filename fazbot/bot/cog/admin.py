@@ -12,10 +12,7 @@ from .. import Utils
 from . import GroupCogBase
 
 
-class Admin(GroupCogBase, name="Admin", description="Admin commands."):
-
-    def setup(self) -> None:
-        pass
+class Admin(GroupCogBase):
 
     @app_commands.command(description="Bans an user from using the bot.")
     async def ban(self, interaction: Interaction[Any], user_id: str) -> None:

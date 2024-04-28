@@ -1,4 +1,5 @@
 # type: ignore
+from ._command_loder import CommandLoader
 from ._cog_base import CogBase
 from ._group_cog_base import GroupCogBase
 
