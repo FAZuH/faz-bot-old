@@ -10,7 +10,6 @@ if TYPE_CHECKING:
 
 
 class Main:
-    """ <<public static>> """
 
     app: Core = FazBot()
 
