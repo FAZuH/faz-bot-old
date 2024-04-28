@@ -5,14 +5,14 @@ from typing import TYPE_CHECKING, Protocol
 if TYPE_CHECKING:
     from discord import Guild
     from discord.ext.commands import Bot as Bot_
-    from fazbot.util import Checks
+    from . import Checks
 
 
 class Bot(Protocol):
     def start(self) -> None: ...
     def stop(self) -> None: ...
     @property
-    def bot(self) -> Bot_: ...
+    def bot(self) -> Bot_:...
     @property
     def checks(self) -> Checks: ...
     @property

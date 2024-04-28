@@ -1,4 +1,3 @@
-# pyright: reportMissingTypeStubs=false
 from __future__ import annotations
 import asyncio
 from threading import Thread
@@ -22,8 +21,9 @@ class DiscordBot(Bot):
         self._app = app
 
         self._checks = Checks(self._app)
-        self._synced_guilds: list[Guild] = []
+        self._cooldown = commands.CooldownMapping.from_cooldown(1, 3, commands.BucketType.user)
         self._event_loop = asyncio.new_event_loop()
+        self._synced_guilds: list[Guild] = []
 
         # set intents
         intents = Intents.default()
@@ -57,12 +57,12 @@ class DiscordBot(Bot):
     def synced_guilds(self) -> list[Guild]:
         return self._synced_guilds
 
-
     def _setup(self) -> None:
         """ Method to be run on start. """
         self._cogs.load_assets()
-        self._bot.add_check(self._checks.is_not_banned)
+        self._bot.add_check(self.checks.is_not_banned)
         self._bot.add_listener(self.on_ready)
+        self._bot.add_listener(self.on_command)
         self._bot.add_listener(self.on_command_error)
         self._bot.add_listener(self.on_command_completion)
 
@@ -88,6 +88,13 @@ class DiscordBot(Bot):
             self._synced_guilds.append(guild)
 
         await self._cogs.setup(self._synced_guilds)  # Loads all cogs and commands to the client
+
+    async def on_command(self, ctx: commands.Context[Any]) -> None:
+        bucket: commands.Cooldown = self._cooldown.get_bucket(ctx.message)  # type: ignore
+        retry_after = bucket.update_rate_limit()
+        if retry_after:
+            await ctx.channel.send(f"Please wait {retry_after:.2f} seconds before using this command again.")
+            return
 
     async def on_command_error(self, ctx: commands.Context[Any], error: commands.CommandError) -> None:
         if isinstance(error, commands.CheckFailure):
