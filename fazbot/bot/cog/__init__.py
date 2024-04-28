@@ -1,5 +1,6 @@
 # type: ignore
 from ._cog_base import CogBase
+from ._group_cog_base import GroupCogBase
 
 from .admin import Admin
 from .help import Help

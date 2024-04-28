@@ -1,22 +1,22 @@
 from typing import Any
-
 from datetime import datetime
 from dateparser import parse
-from discord.ext import commands
+
+from discord import Interaction
 
 
 class Utils:
 
     @staticmethod
-    async def parse_big_int(ctx: commands.Context[Any], value: str) -> int | None:
+    async def parse_big_int(interaction: Interaction[Any], value: str) -> int | None:
         try:
             return int(value)
         except ValueError:
-            await ctx.send(f"Failed parsing {value} into an integer.")
+            await interaction.response.send_message(f"Failed parsing {value} into an integer.")
 
     @staticmethod
-    async def parse_date(ctx: commands.Context[Any], value: str) -> datetime | None:
+    async def parse_date(interaction: Interaction[Any], value: str) -> datetime | None:
         try:
             return parse(value)
         except ValueError:
-            await ctx.send(f"Failed parsing {value} into a date.")
+            await interaction.response.send_message(f"Failed parsing {value} into a date.")
