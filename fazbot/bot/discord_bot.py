@@ -3,7 +3,8 @@ import asyncio
 from threading import Thread
 from typing import TYPE_CHECKING, Any
 
-from nextcord import Activity, ActivityType, ChannelType, errors, Guild, Intents
+from discord import Interaction
+from nextcord import Activity, ActivityType, ApplicationError, errors, Guild, Intents
 from nextcord.ext import commands
 
 from . import Checks
@@ -69,6 +70,8 @@ class DiscordBot(Bot):
         self._bot.add_listener(self.on_command)
         self._bot.add_listener(self.on_command_error)
         self._bot.add_listener(self.on_command_completion)
+        self._bot.add_listener(self.on_application_command_error)
+        self._bot.add_listener(self.on_application_command_completion)
 
     async def on_ready(self) -> None:
         if self.bot.user is not None:
@@ -112,17 +115,51 @@ class DiscordBot(Bot):
             await ctx.send("Command not found.")
         elif isinstance(error, commands.CommandOnCooldown):
             await ctx.send(f"Please wait {error.retry_after:.2f} seconds before using this command again.")
-        # command error response should be handled by the command itself, not here
+        else:
+            await ctx.send(f"An error occurred while executing the command: {error}")
 
     async def on_command_completion(self, ctx: commands.Context[Any]) -> None:
         self._log_event_to_console(ctx, self.on_command_completion.__name__)
         # TODO: log to admin
 
-    def _log_event_to_console(self, ctx: commands.Context[Any], event: str = '') -> None:
-        if not ctx.command:
-            return
-        message = f"fired event {event}. name={ctx.command.name}, author={ctx.author.display_name}"
-        if ctx.guild and ctx.channel and ctx.channel.type != ChannelType.private:
-            message += f", guild={ctx.guild.name}, channel={ctx.channel.name}"  # type: ignore
-        message += f", args={ctx.args}, kwargs={ctx.kwargs}"
+    async def on_application_command_completion(self, interaction: Interaction[Any]) -> None:
+        self._log_event_to_console(interaction, self.on_application_command_completion.__name__)
+
+    async def on_application_command_error(self, interaction: Interaction[Any], error: ApplicationError) -> None:
+        self._log_event_to_console(interaction, self.on_application_command_error.__name__)
+        if isinstance(error, errors.ApplicationCheckFailure):
+            await interaction.send("You do not have permission to use this command.")
+        else:
+            await interaction.send(f"An error occurred while executing the command: {error}")
+
+    def _log_event_to_console(self, ctx: commands.Context[Any] | Interaction[Any], event: str = '') -> None:
+        if isinstance(ctx, commands.Context):
+            if not ctx.command:
+                return
+            cmdname = ctx.command.name
+            author = ctx.author.display_name
+            guildname = ctx.guild.name if ctx.guild else None
+            channelname = ctx.channel.name if ctx.channel and hasattr(ctx.channel, "name") else None  # type: ignore
+            args = ctx.args, ctx.kwargs
+        else:
+            if not ctx.application_command:
+                return
+            cmdname = ctx.application_command.name
+            author = ctx.user.display_name if ctx.user else None
+            guildname = ctx.guild.name if ctx.guild else None
+            channelname = ctx.channel.name if ctx.channel and hasattr(ctx.channel, "name") else None  # type: ignore
+            data = ctx.data
+            args = []
+            if data:
+                if "options" in data:
+                    opts = data["options"]
+                    for opt in opts:
+                        if "options" in opt:
+                            args.append(opt["options"])
+        message = f"fired event {event}. name={cmdname}, author={author}"
+        if guildname:
+            message += f", guild={guildname}"
+        if channelname:
+            message += f", channel={channelname}"
+        message += f", args={args}"
         self._app.logger.console_logger.debug(message)
