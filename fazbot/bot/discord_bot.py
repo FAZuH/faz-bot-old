@@ -22,7 +22,7 @@ class DiscordBot(Bot):
         self._app = app
 
         self._checks = Checks(self._app)
-        self._cooldown = commands.CooldownMapping.from_cooldown(1, 3, commands.BucketType.user)
+        self._cooldown = commands.CooldownMapping(commands.Cooldown(1, 3.), commands.BucketType.user)
         self._event_loop = asyncio.new_event_loop()
         self._ready = False
         self._synced_guilds: list[Guild] = []
@@ -72,6 +72,8 @@ class DiscordBot(Bot):
         self._bot.add_listener(self.on_command_completion)
         self._bot.add_listener(self.on_application_command_error)
         self._bot.add_listener(self.on_application_command_completion)
+        self._bot.before_invoke(self.before_invoke)
+        self._bot.application_command_before_invoke(self.before_application_invoke)
 
     async def on_ready(self) -> None:
         if self.bot.user is not None:
@@ -100,11 +102,6 @@ class DiscordBot(Bot):
 
     async def on_command(self, ctx: commands.Context[Any]) -> None:
         self._log_event_to_console(ctx, self.on_command.__name__)
-        bucket: commands.Cooldown = self._cooldown.get_bucket(ctx.message)  # type: ignore
-        retry_after = bucket.update_rate_limit()
-        if retry_after:
-            await ctx.channel.send(f"Please wait {retry_after:.2f} seconds before using this command again.")
-            return
 
     async def on_command_error(self, ctx: commands.Context[Any], error: commands.CommandError) -> None:
         self._log_event_to_console(ctx, self.on_command_error.__name__)
@@ -122,6 +119,10 @@ class DiscordBot(Bot):
         self._log_event_to_console(ctx, self.on_command_completion.__name__)
         # TODO: log to admin
 
+    async def before_invoke(self, ctx: commands.Context[Any]) -> None:
+        self._log_event_to_console(ctx, self.before_invoke.__name__)
+        self._ratelimit(ctx)
+
     async def on_application_command_completion(self, interaction: Interaction[Any]) -> None:
         self._log_event_to_console(interaction, self.on_application_command_completion.__name__)
 
@@ -131,6 +132,18 @@ class DiscordBot(Bot):
             await interaction.send("You do not have permission to use this command.")
         else:
             await interaction.send(f"An error occurred while executing the command: {error}")
+
+    async def before_application_invoke(self, interaction: Interaction[Any]) -> None:
+        self._log_event_to_console(interaction, self.before_application_invoke.__name__)
+        self._ratelimit(interaction)
+
+    def _ratelimit(self, ctx: commands.Context[Any] | Interaction[Any]) -> None:
+        if not ctx.message:
+            return
+        bucket: commands.Cooldown = self._cooldown.get_bucket(ctx.message)
+        retry_after = bucket.update_rate_limit()
+        if retry_after:
+            raise commands.CommandOnCooldown(bucket, retry_after, self._cooldown.type)  # type: ignore
 
     def _log_event_to_console(self, ctx: commands.Context[Any] | Interaction[Any], event: str = '') -> None:
         if isinstance(ctx, commands.Context):
