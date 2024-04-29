@@ -1,16 +1,15 @@
 from __future__ import annotations
-from decimal import Decimal
+
 import re
-from typing import TYPE_CHECKING, Any
+from decimal import Decimal
+from typing import Any
 
-from discord import Embed
+from nextcord import Embed, Interaction
 
-from . import InvokedBase
 from fazbot.enum import AssetImageFile
 from fazbot.util import IngredientUtil
 
-if TYPE_CHECKING:
-    from discord import Interaction
+from . import InvokedBase
 
 
 class IngredientProbability(InvokedBase):
@@ -42,7 +41,8 @@ class IngredientProbability(InvokedBase):
                 name="Boosted Drop Chance",
                 value=f"Drop Chance: \n**{ing_util.boosted_probability:.2%}** OR **1 in {one_in_n:.2f}** mobs"
         )
-        embed_resp.set_author(name=interaction.user.display_name, icon_url=interaction.user.display_avatar.url)
+        if interaction.user:
+            embed_resp.set_author(name=interaction.user.display_name, icon_url=interaction.user.display_avatar.url)
         return embed_resp
 
     def _parse_base_chance(self, base_chance: str) -> Decimal:

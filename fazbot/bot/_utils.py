@@ -2,7 +2,7 @@ from typing import Any
 from datetime import datetime
 from dateparser import parse
 
-from discord import Interaction
+from nextcord import Interaction
 
 
 class Utils:

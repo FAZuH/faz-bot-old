@@ -3,8 +3,8 @@ import asyncio
 from threading import Thread
 from typing import TYPE_CHECKING, Any
 
-from discord import Activity, ActivityType, ChannelType, errors, Guild, Intents
-from discord.ext import commands
+from nextcord import Activity, ActivityType, ChannelType, errors, Guild, Intents
+from nextcord.ext import commands
 
 from . import Checks
 from fazbot.enum import UserdataFile
@@ -23,6 +23,7 @@ class DiscordBot(Bot):
         self._checks = Checks(self._app)
         self._cooldown = commands.CooldownMapping.from_cooldown(1, 3, commands.BucketType.user)
         self._event_loop = asyncio.new_event_loop()
+        self._ready = False
         self._synced_guilds: list[Guild] = []
 
         # set intents
@@ -33,7 +34,7 @@ class DiscordBot(Bot):
 
         self._bot = commands.Bot('/', intents=intents, help_command=None)
         self._cogs = CogCore(self, self._app)
-        self._discord_bot_thread = Thread(target=self._bot.run, args=(self._app.config.secret.discord.bot_token,), daemon=True)
+        self._discord_bot_thread = Thread(target=self._start, daemon=True, name=self.__class__.__qualname__)
 
     def start(self) -> None:
         self._app.logger.console_logger.info(f"Starting {self.__class__.__qualname__}...")
@@ -56,6 +57,9 @@ class DiscordBot(Bot):
     @property
     def synced_guilds(self) -> list[Guild]:
         return self._synced_guilds
+
+    def _start(self) -> None:
+        self._event_loop.run_until_complete(self._bot.start(self._app.config.secret.discord.bot_token))
 
     def _setup(self) -> None:
         """ Method to be run on start. """
@@ -87,9 +91,12 @@ class DiscordBot(Bot):
                 continue
             self._synced_guilds.append(guild)
 
-        await self._cogs.setup(self._synced_guilds)  # Loads all cogs and commands to the client
+        if not self._ready:  # on_ready can be called multiple times. don't setup cogs more than once
+            await self._cogs.setup(self._synced_guilds)  # Loads all cogs and commands to the client
+        self._ready = True
 
     async def on_command(self, ctx: commands.Context[Any]) -> None:
+        self._log_event_to_console(ctx, self.on_command.__name__)
         bucket: commands.Cooldown = self._cooldown.get_bucket(ctx.message)  # type: ignore
         retry_after = bucket.update_rate_limit()
         if retry_after:
@@ -97,18 +104,24 @@ class DiscordBot(Bot):
             return
 
     async def on_command_error(self, ctx: commands.Context[Any], error: commands.CommandError) -> None:
+        self._log_event_to_console(ctx, self.on_command_error.__name__)
         if isinstance(error, commands.CheckFailure):
             await ctx.send("You do not have permission to use this command.")
             # TODO: log to admin
-        if isinstance(error, commands.CommandNotFound):
+        elif isinstance(error, commands.CommandNotFound):
             await ctx.send("Command not found.")
+        elif isinstance(error, commands.CommandOnCooldown):
+            await ctx.send(f"Please wait {error.retry_after:.2f} seconds before using this command again.")
         # command error response should be handled by the command itself, not here
 
     async def on_command_completion(self, ctx: commands.Context[Any]) -> None:
+        self._log_event_to_console(ctx, self.on_command_completion.__name__)
         # TODO: log to admin
+
+    def _log_event_to_console(self, ctx: commands.Context[Any], event: str = '') -> None:
         if not ctx.command:
             return
-        message = f"fired event on_command_completion name={ctx.command.name}, author={ctx.author.display_name}"
+        message = f"fired event {event}. name={ctx.command.name}, author={ctx.author.display_name}"
         if ctx.guild and ctx.channel and ctx.channel.type != ChannelType.private:
             message += f", guild={ctx.guild.name}, channel={ctx.channel.name}"  # type: ignore
         message += f", args={ctx.args}, kwargs={ctx.kwargs}"

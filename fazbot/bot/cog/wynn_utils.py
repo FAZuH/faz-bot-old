@@ -1,19 +1,15 @@
-# pyright: reportMissingTypeStubs=false
-from __future__ import annotations
-from typing import TYPE_CHECKING, Any
+from typing import Any
 
-from discord import app_commands
+import nextcord
+from nextcord import Interaction
 
 from . import CogBase
 from fazbot.bot.invoked import ConvertEmerald, CraftedProbability, IngredientProbability
 
-if TYPE_CHECKING:
-    from discord import Interaction
-
 
 class WynnUtils(CogBase):
 
-    @app_commands.command(name="crafted_probability")
+    @nextcord.slash_command(name="crafted_probability")
     async def _crafted_probability(
             self,
             interaction: Interaction[Any],
@@ -46,11 +42,11 @@ class WynnUtils(CogBase):
                 interaction, [ingredient1, ingredient2, ingredient3, ingredient4, ingredient5, ingredient6]
         ).run()
 
-    @app_commands.command(name="convert_emerald")
+    @nextcord.slash_command(name="convert_emerald")
     async def convert_emerald(self, interaction: Interaction[Any], emerald_string: str = "") -> None:
         await ConvertEmerald(interaction, emerald_string).run()
 
-    @app_commands.command(name="ingredient_probability")
+    @nextcord.slash_command(name="ingredient_probability")
     async def ingredient_probability(self, interaction: Interaction[Any], base_chance: str, loot_bonus: int = 0, loot_quality: int = 0) -> None:
         """Calculates ingredient drop probability after loot bonus and loot quality.
 

@@ -16,7 +16,7 @@ class TestCraftedProbability(TestCase):
             "1,2,50"
         ]
         craftedprob = CraftedProbability(interaction, ing_strs)
-        for ing in craftedprob._crafted_util.ingredients:
+        for ing in craftedprob._craftutil.ingredients:
             self.assertEqual(ing.min_value, 1)
             self.assertEqual(ing.max_value, 2)
             self.assertEqual(ing.boost, 50)

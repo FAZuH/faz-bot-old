@@ -1,26 +1,29 @@
 from __future__ import annotations
-from abc import ABC
-from io import BytesIO
-from typing import TYPE_CHECKING, Any
 
-from discord import Embed, File
+from io import BytesIO
+from typing import Any, TYPE_CHECKING, TypeVar
+
+from nextcord import Embed, File, Interaction
 
 from fazbot import ImageAsset
 
 if TYPE_CHECKING:
-    from discord import Interaction, InteractionMessage
+    from nextcord import InteractionMessage
     from fazbot.enum import AssetImageFile
 
+T = TypeVar('T')
 
-class InvokedBase(ABC):
+
+class InvokedBase:
 
     _asset: ImageAsset
 
     def __init__(self, interaction: Interaction[Any]) -> None:
+        super().__init__()
         self._interaction = interaction
 
-    async def get_original_response(self) -> InteractionMessage:
-        return await self.interaction.original_response()
+    async def get_original_message(self) -> InteractionMessage:
+        return await self.interaction.original_message()
 
     @staticmethod
     def set_embed_thumbnail_with_asset(embed: Embed, file: AssetImageFile) -> None:
@@ -37,9 +40,5 @@ class InvokedBase(ABC):
         cls._asset = asset
 
     @property
-    def interaction(self) -> Interaction:
+    def interaction(self) -> Interaction[Any]:
         return self._interaction
-
-
-    async def _respond(self, *args: Any, **kwargs: Any) -> None:
-        await self.interaction.response.send_message(*args, **kwargs)

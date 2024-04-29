@@ -13,7 +13,7 @@ from .cog import (
 from .invoked import InvokedBase
 
 if TYPE_CHECKING:
-    from discord import  Guild
+    from nextcord import Guild
     from fazbot import Core, Bot
 
 
@@ -32,6 +32,8 @@ class CogCore:
         self._wynn_stat = WynnStat(*args)
         self._wynn_track = WynnTrack(*args)
         self._wynn_utils = WynnUtils(*args)
+        self._bot.bot.add_all_application_commands()
+        self._app.logger.console_logger.info("Added all application commands.")
 
     def load_assets(self) -> None:
         self._app.asset.load()

@@ -3,7 +3,7 @@ import traceback
 from typing import TYPE_CHECKING
 
 from aiohttp import ClientSession
-from discord import Colour, Embed, Webhook
+from nextcord import Colour, Embed, Webhook
 
 if TYPE_CHECKING:
     from . import ConsoleLogger

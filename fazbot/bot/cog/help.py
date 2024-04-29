@@ -1,21 +1,17 @@
-from __future__ import annotations
-from typing import TYPE_CHECKING, Any
+from typing import Any
 
-from discord import app_commands
+import nextcord
 
 from ..invoked import Help as HelpCommand
 from . import CogBase
 
-if TYPE_CHECKING:
-    from discord import Interaction
-
 
 class Help(CogBase):
 
-    @app_commands.command(name="help", description="Help command")
-    async def _help(self, interaction: Interaction[Any]) -> None:
-        cmds = [
-                cmd for cmd in self._bot.bot.tree.get_commands(guild=interaction.guild)
-                if isinstance(cmd, app_commands.Command)
-        ]
+    @nextcord.slash_command(name="help", description="Help command")
+    async def _help(self, interaction: nextcord.Interaction[Any]) -> None:
+        if not interaction.guild:
+            await interaction.send("You can only use this command in a guild channel.")
+            return
+        cmds = [cmd for cmd in interaction.guild.get_application_commands()]
         await HelpCommand(interaction, cmds).run()

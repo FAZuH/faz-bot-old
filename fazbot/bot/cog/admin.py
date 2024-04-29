@@ -1,20 +1,27 @@
-from __future__ import annotations
-
 from typing import Any
 
-import discord
-from discord import Interaction, app_commands
-from discord.ext import commands
+import nextcord
+from nextcord import Interaction
+from nextcord.ext import commands
 
 from fazbot.enum import UserdataFile
 
+from . import CogBase
 from .. import Utils
-from . import GroupCogBase
 
 
-class Admin(GroupCogBase):
+class Admin(CogBase):
 
-    @app_commands.command(description="Bans an user from using the bot.")
+    def _setup(self) -> None:
+        self.sync.add_check(self._bot.checks.is_admin)
+        self.sync_guild.add_check(self._bot.checks.is_admin)
+        self.admin.add_check(self._bot.checks.is_admin)
+
+    @nextcord.slash_command(name="admin", description="Admin commands.")
+    async def admin(self, interaction: Interaction[Any]) -> None:
+        pass
+
+    @admin.subcommand(name="ban", description="Bans an user from using the bot.")
     async def ban(self, interaction: Interaction[Any], user_id: str) -> None:
         user_id_ = await Utils.parse_big_int(interaction, user_id)
         if not user_id_:
@@ -31,7 +38,7 @@ class Admin(GroupCogBase):
         self._app.userdata.save(UserdataFile.BANNED_USERS)
         await interaction.response.send_message(f"Banned user `{user.name}` (`{user.id}`).")
 
-    @app_commands.command()
+    @admin.subcommand(name="unban", description="Unbans an user from using the bot.")
     async def unban(self, interaction: Interaction[Any], user_id: str) -> None:
         user_id_ = await Utils.parse_big_int(interaction, user_id)
         if not user_id_:
@@ -48,26 +55,26 @@ class Admin(GroupCogBase):
         self._app.userdata.save(UserdataFile.BANNED_USERS)
         await interaction.response.send_message(f"Unbanned user `{user.name}` (`{user.id}`).")
 
-    @app_commands.command(description="Echoes a message.")
+    @admin.subcommand(name="echo", description="Echoes a message.")
     async def echo(self, interaction: Interaction[Any], message: str) -> None:
         await interaction.response.send_message(message)
 
-    @app_commands.command(description="Reloads asset.")
+    @admin.subcommand(name="reload_asset", description="Reloads asset.")
     async def reload_asset(self, interaction: Interaction[Any]) -> None:
         self._app.asset.load()
         await interaction.response.send_message("Reloaded asset successfully.")
 
-    @app_commands.command(description="Reloads configs.")
+    @admin.subcommand(name="reload_config", description="Reloads configs.")
     async def reload_config(self, interaction: Interaction[Any]) -> None:
         self._app.config.load()
         await interaction.response.send_message("Reloaded config successfully.")
 
-    @app_commands.command(description="Reloads userdata.")
+    @admin.subcommand(name="reload_userdata", description="Reloads userdata.")
     async def reload_userdata(self, interaction: Interaction[Any]) -> None:
         self._app.userdata.load()
         await interaction.response.send_message("Reloaded userdata successfully.")
 
-    @app_commands.command(description="Sends a message to a channel.")
+    @admin.subcommand(name="send", description="Sends a message to a channel.")
     async def send(self, interaction: Interaction[Any], channel_id: str, message: str) -> None:
         channel_id_ = await Utils.parse_big_int(interaction, channel_id)
         if not channel_id_:
@@ -79,11 +86,11 @@ class Admin(GroupCogBase):
 
         try:
             await channel.send(message)  # type: ignore
-        except discord.DiscordException as e:
+        except nextcord.DiscordException as e:
             await interaction.response.send_message(f"Failed to send message: {e}")
         await interaction.response.send_message(f"Sent message on channel `{channel.name}` (`{channel.id}`).")  # type: ignore
 
-    @commands.hybrid_command(description="Synchronizes commands with Discord for a guild.")
+    @commands.command(name="sync_guild", description="Synchronizes app commands for a specific guild.")
     async def sync_guild(self, ctx: commands.Context[Any], guild_id: str) -> None:
         try:
             guild_id_ = int(guild_id)
@@ -96,24 +103,23 @@ class Admin(GroupCogBase):
         if not guild:
             await ctx.send(f"Guild with ID `{guild_id_}` not found.")
             return
-
-        await self._bot.bot.tree.sync(guild=guild)
+        await self._bot.bot.sync_application_commands(guild_id=guild.id)
         await ctx.send(f"Synchronized app commands for guild `{guild.name}` (`{guild.id}`).")
 
-    @commands.hybrid_command(description="Synchronizes commands with Discord.")
+    @commands.command(name="sync", description="Synchronizes app commands across all whitelisted guilds.")
     async def sync(self, ctx: commands.Context[Any]) -> None:
         guilds_len = 0
         for guild in self._bot.synced_guilds:
-            await self._bot.bot.tree.sync(guild=guild)
+            await self._bot.bot.sync_application_commands(guild_id=guild.id)
             guilds_len += 1
         await ctx.send(f"Synchronized app commands across {guilds_len} guilds.")
 
-    @app_commands.command(description="Shuts down the bot.")
+    @admin.subcommand(name="shutdown", description="Shuts down the bot.")
     async def shutdown(self, interaction: Interaction[Any]) -> None:
         await interaction.response.send_message("Shutting down...")
         self._bot.stop()
 
-    @app_commands.command(description="Whispers a message to a user.")
+    @admin.subcommand(name="whisper", description="Whispers a message to a user.")
     async def whisper(self, interaction: Interaction[Any], user_id: str, message: str) -> None:
         user_id_ = await Utils.parse_big_int(interaction, user_id)
         if not user_id_:
@@ -125,6 +131,6 @@ class Admin(GroupCogBase):
             return
         try:
             await user.send(message)
-        except discord.DiscordException as e:
+        except nextcord.DiscordException as e:
             await interaction.response.send_message(f"Failed to whisper message: `{e}`")
         await interaction.response.send_message(f"Whispered message to `{user.name}` (`{user.id}`).")
