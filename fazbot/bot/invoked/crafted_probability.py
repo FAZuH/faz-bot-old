@@ -10,7 +10,7 @@ from nextcord import ButtonStyle, Colour, Embed, File, Interaction, errors, ui
 
 from fazbot.enum import AssetImageFile
 from fazbot.object import WynnIngredientValue
-from fazbot.util import CraftedUtil
+from fazbot.util import CacheUtil, CraftedUtil
 
 from . import InvokedBase
 
@@ -22,6 +22,9 @@ class CraftedProbability(InvokedBase):
     def __init__(self, interaction: Interaction[Any], ing_strs: list[str]) -> None:
         super().__init__(interaction)
         self._ing_strs = ing_strs
+
+        self._cache = CacheUtil()
+        self._cache.register(self, [self._get_craftprobs_embed, self._get_atleast_embed, self._get_atmost_embed, self._get_plot_embed, self._get_plot_file])
 
         self._assetfile = self.get_asset_file(AssetImageFile.CRAFTINGTABLE)
         self._craftutil = CraftedUtil(self._parse_ings_str(ing_strs))
