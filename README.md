@@ -22,9 +22,6 @@ Wynncraft's Utility and Statistics Bot.
 - user ratelimit
 - commands
   - admin commands
-    - ban `<user>` `<reason>`
-    - unban `<user>`
-    - whitelist `<guild_id>`
     - traceback `<bool>`
     - log_commands `<channel_id>`
   - wynnanalyze
