@@ -12,11 +12,11 @@ P = ParamSpec('P')
 class ErrorHandler:
 
     @staticmethod
-    def retry_decorator(max_retries: int, exceptions: type[BaseException] | Iterable[type[BaseException]]) -> Callable[[Callable[P, T]], Callable[P, Awaitable[T]]]:
+    def retry_decorator(max_retries: int, exceptions: type[BaseException] | Iterable[type[BaseException]]) -> Callable[[Callable[P, T | Awaitable[T]]], Callable[P, Awaitable[T]]]:
         """ Retries the wrapped function/method `times` times if the exceptions listed in `exceptions` are thrown """
-        def decorator(f: Callable[P, T]) -> Callable[P, Awaitable[T]]:
+        def decorator(f: Callable[P, T | Awaitable[T]]) -> Callable[P, Awaitable[T]]:
             @wraps(f)
-            async def wrapper(*args: P.args, **kwargs: P.kwargs) -> T:  # type: ignore
+            async def wrapper(*args: P.args, **kwargs: P.kwargs) -> T:
                 for _ in range(max_retries):
                     try:
                         return await ErrorHandler._must_return(f)
@@ -31,5 +31,7 @@ class ErrorHandler:
         return decorator
 
     @staticmethod
-    async def _must_return(func: Callable[P, T] | Callable[P, Awaitable[T]]) -> T:
-        return await func() if iscoroutinefunction(func) else func()  # type: ignore
+    async def _must_return(func: Callable[..., T | Awaitable[T]]) -> T:
+        if iscoroutinefunction(func):
+            return await func()
+        return func()  # type: ignore
