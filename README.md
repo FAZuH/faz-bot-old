@@ -19,7 +19,6 @@ Wynncraft's Utility and Statistics Bot.
 - tests (pain)
 - embed responses
 - init script. first time setup
-- user ratelimit
 - commands
   - admin commands
     - traceback `<bool>`
