@@ -5,7 +5,7 @@ from typing import Any
 from fazbot import Constants
 from fazbot.enum import UserdataFile
 
-FromJson = dict[str, Any] | list[Any]
+JsonType = dict[str, Any] | list[Any]
 
 
 class Userdata:
@@ -13,7 +13,7 @@ class Userdata:
     def __init__(self) -> None:
         self._type = UserdataFile
         self._dir = Path(Constants.USERDATA_DIR)
-        self._files: dict[UserdataFile, FromJson] = {}
+        self._files: dict[UserdataFile, JsonType] = {}
 
     def load(self) -> None:
         for fp in self._type:
@@ -29,14 +29,14 @@ class Userdata:
             with open(self._get_fp(fp), "w") as file:
                 dump(data, file)
 
-    def get(self, userdata: UserdataFile) -> FromJson:
+    def get(self, userdata: UserdataFile) -> JsonType:
         return self._files[userdata]
 
-    def set(self, userdata: UserdataFile, data: FromJson) -> None:
+    def set(self, userdata: UserdataFile, data: JsonType) -> None:
         self._files[userdata] = data
 
     @property
-    def files(self) -> dict[UserdataFile, FromJson]:
+    def files(self) -> dict[UserdataFile, JsonType]:
         return self._files
 
 
