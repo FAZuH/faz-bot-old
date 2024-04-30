@@ -66,4 +66,5 @@ class DiscordBot(Bot):
         """ Method to be run on start. """
         self._cogs.load_assets()
         self._client.add_check(self.checks.is_not_banned)
+        self._client.add_application_command_check(self.checks.is_not_banned)
         self._events.load_events()
