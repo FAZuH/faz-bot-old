@@ -7,7 +7,7 @@ from warnings import filterwarnings
 
 from aiomysql import DictCursor, connect, Warning
 
-from fazbot.util import ErrorHandler
+from fazbot.util import RetryHandler
 
 if TYPE_CHECKING:
     from aiomysql import Connection
@@ -22,7 +22,7 @@ class DatabaseQuery:
         self._password: str = password
         self._database: str = database
         self._retries: int = retries
-        self._retry_decorator = ErrorHandler.retry_decorator(self.retries, Exception)
+        self._retry_decorator = RetryHandler.decorator(self.retries, Exception)
 
     async def fetch(
         self,
