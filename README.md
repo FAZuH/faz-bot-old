@@ -17,7 +17,6 @@ Wynncraft's Utility and Statistics Bot.
 - command description
 - improve help command
 - tests (pain)
-- embed responses
 - init script. first time setup
 - commands
   - admin commands
@@ -41,7 +40,3 @@ Wynncraft's Utility and Statistics Bot.
     - player
     - guild
     - guild_member
-  - wynnutils
-    - convert_emerald
-    - crafted_probability
-    - ingredient_probability
