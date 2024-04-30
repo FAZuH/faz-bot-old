@@ -51,11 +51,9 @@ class Config:
 
     class _Logging(_ConfigNode):
         @property
-        def error_log_file(self) -> str: return self._config["error_log_file"]
+        def discord_log_webhook(self) -> str: return self._config["discord_log_webhook"]
         @property
-        def error_log_webhook(self) -> str: return self._config["error_log_webhook"]
-        @property
-        def status_report_webhook(self) -> str: return self._config["status_report_webhook"]
+        def discord_status_webhook(self) -> str: return self._config["discord_report_webhook"]
 
     class _Secret(_ConfigNode):
         def __init__(self, config: dict[str, Any]) -> None:

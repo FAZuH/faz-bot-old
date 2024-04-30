@@ -3,9 +3,8 @@ application:
   admin_discord_id: 0
 
 logging:
-  error_log_file: ""
-  error_log_webhook: ""
-  status_report_webhook: ""
+  discord_log_webhook: ""
+  discord_status_webhook: ""
 
 secret:
   discord:

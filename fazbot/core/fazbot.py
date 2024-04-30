@@ -25,7 +25,7 @@ class FazBot(Core):
         self.asset.load()
         self.userdata.load()
         self._logger = FazBotLogger(
-                self._config.logging.error_log_webhook,
+                self._config.logging.discord_log_webhook,
                 self._config.application.debug,
                 self._config.application.admin_discord_id
         )
