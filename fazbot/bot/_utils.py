@@ -1,12 +1,15 @@
-from typing import TYPE_CHECKING, Any, Callable, TypeVar
+from __future__ import annotations
+
 from datetime import datetime
+from typing import TYPE_CHECKING, Any, Callable, TypeVar
+
 from dateparser import parse
 
 P = TypeVar('P')
 
 if TYPE_CHECKING:
-    from nextcord import Guild, Interaction, PartialMessageable, User, Thread
-    from nextcord.abc import PrivateChannel, GuildChannel
+    from nextcord import Guild, Interaction, PartialMessageable, Thread, User
+    from nextcord.abc import GuildChannel, PrivateChannel
     from nextcord.ext.commands import Bot, Context
 
 
