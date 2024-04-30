@@ -8,7 +8,7 @@ T = TypeVar('T')
 P = ParamSpec('P')
 
 
-class ErrorHandler:
+class RetryHandler:
 
     @staticmethod
     def decorator(
