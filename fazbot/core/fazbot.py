@@ -20,7 +20,8 @@ class FazBot(Core):
         self._config = Config()
         self._asset = ImageAsset()
         self._userdata = Userdata()
-        self._config.load()
+        self._locks: dict[str, Lock] = {}
+        self.config.load()
         self.asset.load()
         self.userdata.load()
         self._logger = FazBotLogger(
@@ -30,7 +31,6 @@ class FazBot(Core):
         )
         self._heartbeat = SimpleHeartbeat(self)
         self._bot = DiscordBot(self)
-        self._locks: dict[str, Lock] = {}
 
     def start(self) -> None:
         self.heartbeat.start()
