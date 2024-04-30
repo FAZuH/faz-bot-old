@@ -3,11 +3,9 @@ run:
 	python -m fazbot
 
 install:
+	python3 -m venv .venv
+	source .venv/bin/activate
 	pip install -r requirements.txt
-	cp config-example example
-
-install-dev:
-	pip install -r requirements-dev.txt
 	cp config-example example
 
 lint:
