@@ -39,6 +39,9 @@ class Userdata:
     def files(self) -> dict[UserdataFile, JsonType]:
         return self._files
 
+    @property
+    def enum(self) -> type[UserdataFile]:
+        return self._type
 
     def _get_fp(self, path: UserdataFile) -> Path:
         return self._dir / path.value

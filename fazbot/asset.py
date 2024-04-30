@@ -31,6 +31,9 @@ class ImageAsset:
     def files(self) -> dict[AssetImageFile, bytes]:
         return self._files
 
+    @property
+    def enum(self) -> type[AssetImageFile]:
+        return self._type
 
     def _get_fp(self, path: AssetImageFile) -> Path:
         return self._dir / path.value
