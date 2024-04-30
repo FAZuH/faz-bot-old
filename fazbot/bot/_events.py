@@ -1,14 +1,17 @@
 from __future__ import annotations
 
+import traceback
+from datetime import datetime
 from typing import TYPE_CHECKING, Any
 
-from nextcord import (Activity, ActivityType, ApplicationError, Interaction,
-                      errors)
+from nextcord import (Activity, ActivityType, ApplicationError, Colour, Embed,
+                      Interaction, errors)
 from nextcord.ext import commands
 from nextcord.ext.commands import BucketType, Cooldown, CooldownMapping
 
 if TYPE_CHECKING:
     from . import Bot
+
 
 class Events:
 
@@ -44,15 +47,27 @@ class Events:
 
     async def on_command_error(self, ctx: commands.Context[Any], error: commands.CommandError) -> None:
         self._log_event_to_console(ctx, self.on_command_error.__name__)
+        is_admin = self._bot.checks.is_admin(ctx)
         if isinstance(error, commands.CheckFailure):
             await ctx.send("You do not have permission to use this command.")
+            return
             # TODO: log to admin
         elif isinstance(error, commands.CommandNotFound):
             await ctx.send("Command not found.")
+            return
         elif isinstance(error, commands.CommandOnCooldown):
             await ctx.send(f"Please wait {error.retry_after:.2f} seconds before using this command again.")
+            return
+        elif isinstance(error, commands.MissingRequiredArgument):
+            await ctx.send(f"Missing required argument on {error.param.name}")
+            return
+        elif isinstance(error, commands.BadArgument):
+            await ctx.send(f"Bad argument: {error}")
+            return
         else:
-            await ctx.send(f"An error occurred while executing the command: {error}")
+            embed = self._get_error_embed(error, is_admin)
+            await ctx.send(embed=embed)
+            return
 
     async def on_command_completion(self, ctx: commands.Context[Any]) -> None:
         self._log_event_to_console(ctx, self.on_command_completion.__name__)
@@ -63,10 +78,14 @@ class Events:
 
     async def on_application_command_error(self, interaction: Interaction[Any], error: ApplicationError) -> None:
         self._log_event_to_console(interaction, self.on_application_command_error.__name__)
+        is_admin = self._bot.checks.is_admin(interaction)
         if isinstance(error, errors.ApplicationCheckFailure):
-            await interaction.send("You do not have permission to use this command.")
+            await interaction.send("You do not have permission to use this command.", ephemeral=True)
+            return
         else:
-            await interaction.send(f"An error occurred while executing the command: {error}")
+            embed = self._get_error_embed(error, is_admin)
+            await interaction.send(embed=embed, ephemeral=True)
+            return
 
     async def before_invoke(self, ctx: commands.Context[Any]) -> None:
         self._log_event_to_console(ctx, self.before_invoke.__name__)
@@ -115,3 +134,12 @@ class Events:
             message += f", channel={channelname}"
         message += f", args={args}"
         self._bot.core.logger.console_logger.debug(message)
+
+    def _get_error_embed(self, exception: BaseException, is_traceback: bool) -> Embed:
+        tb = traceback.format_exception(exception)
+        embed_description = f"An error occurred while executing the command: {exception}"
+        embed = Embed(title="Error", description=embed_description, color=Colour.red())
+        if is_traceback:
+            embed.add_field(name=f"`{exception}`", value=f"```{''.join(tb)}```")
+        embed.set_footer(text=f"<t:{int(datetime.now().timestamp())}:F>")
+        return embed
