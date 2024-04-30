@@ -47,27 +47,27 @@ class FazBot(Core):
 
     @property
     def bot(self) -> Bot:
-        with self._get_lock("asset"):
+        with self._get_lock("bot"):
             return self._bot
 
     @property
     def config(self) -> Config:
-        with self._get_lock("asset"):
+        with self._get_lock("config"):
             return self._config
 
     @property
     def heartbeat(self) -> Heartbeat:
-        with self._get_lock("asset"):
+        with self._get_lock("heartbeat"):
             return self._heartbeat
 
     @property
     def logger(self) -> Logger:
-        with self._get_lock("asset"):
+        with self._get_lock("logger"):
             return self._logger
 
     @property
     def userdata(self) -> Userdata:
-        with self._get_lock("asset"):
+        with self._get_lock("userdata"):
             return self._userdata
 
     def _get_lock(self, key: str) -> Lock:
