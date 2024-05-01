@@ -21,9 +21,8 @@ class Main:
 
 
 if __name__ == "__main__":
-    main = Main()
     try:
-        main.main()
+        Main.main()
     except Exception as e:
         asyncio.run(Main.app.logger.discord_logger.error(f"FATAL ERROR", e))
         exit(1)
