@@ -11,17 +11,12 @@ from . import CogBase
 class Admin(CogBase):
 
     # @override
-    def _setup(self) -> None:
-        # Admin check for application commands.
-        self.admin.add_check(self._bot.checks.is_admin)
-        for subcmd in self.admin.children.values():
-            # Admin check for admin subcommands.
-            subcmd.add_check(self._bot.checks.is_admin)
+    def cog_check(self, ctx: commands.Context[Any]) -> bool:
+        return self._bot.checks.is_admin(ctx)
 
     # @override
-    def bot_check(self, ctx: commands.Context[Any]) -> bool:
-        # Admin check for context commands.
-        return self._bot.checks.is_admin(ctx)
+    def cog_application_command_check(self, interaction: Interaction[Any]) -> bool:
+        return self._bot.checks.is_admin(interaction)
 
     @nextcord.slash_command(name="admin", description="Admin commands.")
     async def admin(self, interaction: Interaction[Any]) -> None:
