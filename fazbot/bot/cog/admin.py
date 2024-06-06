@@ -11,10 +11,6 @@ from . import CogBase
 class Admin(CogBase):
 
     # @override
-    def cog_check(self, ctx: commands.Context[Any]) -> bool:
-        return self._bot.checks.is_admin(ctx)
-
-    # @override
     def cog_application_command_check(self, interaction: Interaction[Any]) -> bool:
         return self._bot.checks.is_admin(interaction)
 
@@ -78,28 +74,28 @@ class Admin(CogBase):
             await interaction.send(f"Failed to send message: {e}")
         await interaction.send(f"Sent message on channel `{channel.name}` (`{channel.id}`).")  # type: ignore
 
-    @commands.command(name="sync_guild", description="Synchronizes app commands for a specific guild.")
-    async def sync_guild(self, ctx: commands.Context[Any], guild_id: str) -> None:
-        guild = await Utils.must_get_guild(self._bot.client, ctx, guild_id)
+    @admin.subcommand(name="sync_guild", description="Synchronizes app commands for a specific guild.")
+    async def sync_guild(self, interaction: Interaction[Any], guild_id: str) -> None:
+        guild = await Utils.must_get_guild(self._bot.client, interaction, guild_id)
         if not guild:
             return
         if guild.id not in self._bot.core.userdata.get(self._bot.core.userdata.enum.WHITELISTED_GUILDS):
-            await ctx.send(
+            await interaction.send(
                     f"Guild `{guild.name}` (`{guild.id}`) is not whitelisted. "
                     f"Whitelist it first with `{self._bot.client.command_prefix}{self.whitelist.qualified_name}`"
             )
             return
         await self._bot.client.sync_application_commands(guild_id=guild.id)
-        await ctx.send(f"Synchronized app commands for guild `{guild.name}` (`{guild.id}`).")
+        await interaction.send(f"Synchronized app commands for guild `{guild.name}` (`{guild.id}`).")
 
-    @commands.command(name="sync", description="Synchronizes app commands across all whitelisted guilds.")
-    async def sync(self, ctx: commands.Context[Any]) -> None:
+    @admin.subcommand(name="sync", description="Synchronizes app commands across all whitelisted guilds.")
+    async def sync(self, interaction: Interaction[Any]) -> None:
         guilds_len = 0
         for guild_id in self._bot.core.userdata.get(self._bot.core.userdata.enum.WHITELISTED_GUILDS):
             assert isinstance(guild_id, int)
             await self._bot.client.sync_application_commands(guild_id=guild_id)
             guilds_len += 1
-        await ctx.send(f"Synchronized app commands across {guilds_len} guilds.")
+        await interaction.send(f"Synchronized app commands across {guilds_len} guilds.")
 
     @admin.subcommand(name="shutdown", description="Shuts down the bot.")
     async def shutdown(self, interaction: Interaction[Any]) -> None:

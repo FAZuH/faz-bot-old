@@ -30,27 +30,27 @@ class Utils:
             await interaction.response.send_message(f"Failed parsing {value} into a date.")
 
     @staticmethod
-    async def must_get_channel(bot: Bot, ctx: Context[Any] | Interaction[Any], channel_id: str) -> GuildChannel | Thread | PrivateChannel | PartialMessageable | None:
-        return await Utils.must_getter(bot.get_channel, ctx, channel_id, "channel")
+    async def must_get_channel(bot: Bot, interaction: Interaction[Any], channel_id: str) -> GuildChannel | Thread | PrivateChannel | PartialMessageable | None:
+        return await Utils.must_getter(bot.get_channel, interaction, channel_id, "channel")
 
     @staticmethod
-    async def must_get_guild(bot: Bot, ctx: Context[Any] | Interaction[Any], guild_id: str) -> Guild | None:
-        return await Utils.must_getter(bot.get_guild, ctx, guild_id, "guild")
+    async def must_get_guild(bot: Bot, interaction: Interaction[Any], guild_id: str) -> Guild | None:
+        return await Utils.must_getter(bot.get_guild, interaction, guild_id, "guild")
 
     @staticmethod
-    async def must_get_user(bot: Bot, ctx: Context[Any] | Interaction[Any], user_id: str) -> User | None:
-        return await Utils.must_getter(bot.get_user, ctx, user_id, "user")
+    async def must_get_user(bot: Bot, interaction: Interaction[Any], user_id: str) -> User | None:
+        return await Utils.must_getter(bot.get_user, interaction, user_id, "user")
 
     @staticmethod
-    async def must_getter(getter_func: Callable[[int], P | None], ctx: Context[Any] | Interaction[Any], id_: str, type: str) -> P | None:
+    async def must_getter(getter_func: Callable[[int], P | None], interaction: Interaction[Any], id_: str, type: str) -> P | None:
         try:
             id__ = int(id_)
         except ValueError:
-            await ctx.send(f"Failed parsing {id_} into an integer.")
+            await interaction.send(f"Failed parsing {id_} into an integer.")
             return
         if not id__:
             return
         if not (user := getter_func(id__)):
-            await ctx.send(f"{type.title()} with ID `{id__}` not found.")
+            await interaction.send(f"{type.title()} with ID `{id__}` not found.")
             return
         return user

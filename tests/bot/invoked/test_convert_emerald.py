@@ -7,7 +7,7 @@ from fazbot.bot.invoked import ConvertEmerald
 class TestConvertEmerald(TestCase):
 
     async def test_convert_emerald(self) -> None:
-        ctx = MagicMock()
-        convertemerald = ConvertEmerald(ctx, "100le")
+        interaction = MagicMock()
+        convertemerald = ConvertEmerald(interaction, "100le")
         await convertemerald.run()
-        ctx.assert_called_once()
+        interaction.assert_called_once()

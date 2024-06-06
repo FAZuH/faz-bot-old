@@ -16,8 +16,6 @@ class TestAdmin(TestCase):
         self._admin.setup()
 
     async def test_cog_check(self) -> None:
-        ctx = MagicMock()
-        await self._admin.sync.invoke(ctx)
         pass
 
     async def test_cog_application_command_check(self) -> None:

@@ -4,8 +4,7 @@ import traceback
 from datetime import datetime
 from typing import TYPE_CHECKING, Any
 
-from nextcord import (Activity, ActivityType, ApplicationError, Colour, Embed,
-                      Interaction, errors)
+from nextcord import (Activity, ActivityType, ApplicationError, Colour, Embed, Interaction, errors)
 from nextcord.ext import commands
 from nextcord.ext.commands import BucketType, Cooldown, CooldownMapping
 
@@ -22,12 +21,8 @@ class Events:
 
     def load_events(self) -> None:
         self._bot.client.add_listener(self.on_ready)
-        self._bot.client.add_listener(self.on_command)
-        self._bot.client.add_listener(self.on_command_error)
-        self._bot.client.add_listener(self.on_command_completion)
         self._bot.client.add_listener(self.on_application_command_completion)
         self._bot.client.add_listener(self.on_application_command_error)
-        self._bot.client.before_invoke(self.before_invoke)
         self._bot.client.application_command_before_invoke(self.before_application_invoke)
 
     async def on_ready(self) -> None:
@@ -41,37 +36,6 @@ class Events:
             # Loads all cogs and commands to the client
             await self._bot.cogs.setup()
         self._ready = True
-
-    async def on_command(self, ctx: commands.Context[Any]) -> None:
-        self._log_event_to_console(ctx, self.on_command.__name__)
-
-    async def on_command_error(self, ctx: commands.Context[Any], error: commands.CommandError) -> None:
-        self._log_event_to_console(ctx, self.on_command_error.__name__)
-        is_admin = self._bot.checks.is_admin(ctx)
-        if isinstance(error, commands.CheckFailure):
-            await ctx.send("You do not have permission to use this command.")
-            return
-            # TODO: log to admin
-        elif isinstance(error, commands.CommandNotFound):
-            await ctx.send("Command not found.")
-            return
-        elif isinstance(error, commands.CommandOnCooldown):
-            await ctx.send(f"Please wait {error.retry_after:.2f} seconds before using this command again.")
-            return
-        elif isinstance(error, commands.MissingRequiredArgument):
-            await ctx.send(f"Missing required argument on {error.param.name}")
-            return
-        elif isinstance(error, commands.BadArgument):
-            await ctx.send(f"Bad argument: {error}")
-            return
-        else:
-            embed = self._get_error_embed(error, is_admin)
-            await ctx.send(embed=embed)
-            return
-
-    async def on_command_completion(self, ctx: commands.Context[Any]) -> None:
-        self._log_event_to_console(ctx, self.on_command_completion.__name__)
-        # TODO: log to admin
 
     async def on_application_command_completion(self, interaction: Interaction[Any]) -> None:
         self._log_event_to_console(interaction, self.on_application_command_completion.__name__)
@@ -87,59 +51,47 @@ class Events:
             await interaction.send(embed=embed, ephemeral=True)
             return
 
-    async def before_invoke(self, ctx: commands.Context[Any]) -> None:
-        self._log_event_to_console(ctx, self.before_invoke.__name__)
-        self._ratelimit(ctx)
-
     async def before_application_invoke(self, interaction: Interaction[Any]) -> None:
         self._log_event_to_console(interaction, self.before_application_invoke.__name__)
         self._ratelimit(interaction)
 
-    def _ratelimit(self, ctx: commands.Context[Any] | Interaction[Any]) -> None:
-        if not ctx.message:
+    def _ratelimit(self, interaction: Interaction[Any]) -> None:
+        if not interaction.message:
             return
-        bucket: commands.Cooldown = self._cooldown.get_bucket(ctx.message)
+        bucket: commands.Cooldown = self._cooldown.get_bucket(interaction.message)
         retry_after = bucket.update_rate_limit()
         if retry_after:
             raise commands.CommandOnCooldown(bucket, retry_after, self._cooldown.type)  # type: ignore
 
-    def _log_event_to_console(self, ctx: commands.Context[Any] | Interaction[Any], event: str = '') -> None:
-        if isinstance(ctx, commands.Context):
-            if not ctx.command:
-                return
-            cmdname = ctx.command.name
-            author = ctx.author.display_name
-            guildname = ctx.guild.name if ctx.guild else None
-            channelname = ctx.channel.name if ctx.channel and hasattr(ctx.channel, "name") else None  # type: ignore
-            args = ctx.args, ctx.kwargs
-        else:
-            if not ctx.application_command:
-                return
-            cmdname = ctx.application_command.name
-            author = ctx.user.display_name if ctx.user else None
-            guildname = ctx.guild.name if ctx.guild else None
-            channelname = ctx.channel.name if ctx.channel and hasattr(ctx.channel, "name") else None  # type: ignore
-            data = ctx.data
-            args = []
-            if data:
-                if "options" in data:
-                    opts = data["options"]
-                    for opt in opts:
-                        if "options" in opt:
-                            args.append(opt["options"])
+    def _log_event_to_console(self, interaction: Interaction[Any], event: str = '') -> None:
+        if not interaction.application_command:
+            return
+
+        cmdname = interaction.application_command.name
+        author = interaction.user.display_name if interaction.user else None
+        guildname = interaction.guild.name if interaction.guild else None
+        channelname = interaction.channel.name if interaction.channel and hasattr(interaction.channel, "name") else None  # type: ignore
+        data = interaction.data
+
+        args = []
+        if data and "options" in data:
+            for opt in data["options"]:
+                if "options" in opt:
+                    args.append(opt["options"])
         message = f"fired event {event}. name={cmdname}, author={author}"
         if guildname:
             message += f", guild={guildname}"
         if channelname:
             message += f", channel={channelname}"
         message += f", args={args}"
+
         self._bot.core.logger.console_logger.debug(message)
 
     def _get_error_embed(self, exception: BaseException, is_traceback: bool) -> Embed:
-        tb = traceback.format_exception(exception)
         embed_description = f"An error occurred while executing the command: {exception}"
         embed = Embed(title="Error", description=embed_description, color=Colour.red())
         if is_traceback:
+            tb = traceback.format_exception(exception)
             embed.add_field(name=f"`{exception}`", value=f"```{''.join(tb)}```")
         embed.set_footer(text=f"<t:{int(datetime.now().timestamp())}:F>")
         return embed
