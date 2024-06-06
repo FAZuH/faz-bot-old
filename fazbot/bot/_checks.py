@@ -31,3 +31,6 @@ class Checks:
         user_id = interaction.user.id
         is_not_banned = user_id not in self._bot.core.userdata.get(UserdataFile.BANNED_USERS)
         return is_not_banned
+
+    def load_checks(self) -> None:
+        self._bot.client.add_application_command_check(self.is_not_banned)

@@ -66,8 +66,8 @@ class DiscordBot(Bot):
     def _setup(self) -> None:
         """Initial setup for the bot."""
         self.cogs.load_assets()
+        self._checks.load_checks()
         self._events.load_events()
-        self.client.add_application_command_check(self.checks.is_not_banned)
 
     def _get_cls_qualname(self) -> str:
         return self.__class__.__qualname__
