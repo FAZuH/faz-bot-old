@@ -6,6 +6,7 @@ from typing import TYPE_CHECKING
 
 from nextcord import Intents
 from nextcord.ext import commands
+from regex import D
 
 from . import Bot, Checks, CogCore, Events
 
@@ -31,17 +32,17 @@ class DiscordBot(Bot):
         intents.presences = True
 
         self._client = commands.Bot('/', intents=intents, help_command=None)
-        self._discord_bot_thread = Thread(target=self._start, daemon=True, name=self.__class__.__qualname__)
+        self._discord_bot_thread = Thread(target=self._start, daemon=True, name=self._get_cls_qualname())
 
     def start(self) -> None:
-        self._core.logger.console_logger.info(f"Starting {self.__class__.__qualname__}...")
+        self._core.logger.console_logger.info(f"Starting {self._get_cls_qualname()}...")
         self._setup()
         self._discord_bot_thread.start()
-        self._core.logger.console_logger.info(f"Started {self.__class__.__qualname__}.")
+        self.core.logger.console_logger.info(f"Started {self._get_cls_qualname()}.")
 
     def stop(self) -> None:
-        self._core.logger.console_logger.info(f"Stopping {self.__class__.__qualname__}...")
-        self._event_loop.run_until_complete(self._client.close())
+        self.core.logger.console_logger.info(f"Stopping {self._get_cls_qualname()}...")
+        self._event_loop.run_until_complete(self.client.close())
 
     @property
     def cogs(self) -> CogCore:
@@ -60,11 +61,14 @@ class DiscordBot(Bot):
         return self._checks
 
     def _start(self) -> None:
-        self._event_loop.run_until_complete(self._client.start(self._core.config.secret.discord.bot_token))
+        self._event_loop.run_until_complete(self.client.start(self.core.config.secret.discord.bot_token))
 
     def _setup(self) -> None:
-        """ Method to be run on start. """
-        self._cogs.load_assets()
-        self._client.add_check(self.checks.is_not_banned)
-        self._client.add_application_command_check(self.checks.is_not_banned)
+        """Initial setup for the bot."""
+        self.cogs.load_assets()
         self._events.load_events()
+        self.client.add_check(self.checks.is_not_banned)
+        self.client.add_application_command_check(self.checks.is_not_banned)
+
+    def _get_cls_qualname(self) -> str:
+        return self.__class__.__qualname__
