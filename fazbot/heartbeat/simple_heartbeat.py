@@ -17,12 +17,12 @@ class SimpleHeartbeat(Thread, Heartbeat):
         self._tasks: list[HeartbeatTask] = []
 
     def start(self) -> None:
-        self._app.logger.console_logger.info("Starting Heartbeat...")
+        self._app.logger.console.info("Starting Heartbeat...")
         for task in self._tasks:
             task.start()
 
     def stop(self) -> None:
-        self._app.logger.console_logger.info("Stopping Heartbeat...")
+        self._app.logger.console.info("Stopping Heartbeat...")
         for task in self._tasks:
             task.cancel()
 

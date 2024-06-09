@@ -25,7 +25,6 @@ class IngredientProbability(InvokedBase):
         embed_resp = self._get_embed(self._ing_util, self._interaction)
         await self._interaction.response.send_message(embed=embed_resp, file=self.get_asset_file(AssetImageFile.DECAYINGHEART))
 
-
     def _get_embed(self, ing_util: IngredientUtil, interaction: Interaction[Any]) -> Embed:
         one_in_n = 1 / ing_util.boosted_probability
 
@@ -43,11 +42,12 @@ class IngredientProbability(InvokedBase):
         )
         if interaction.user:
             embed_resp.set_author(name=interaction.user.display_name, icon_url=interaction.user.display_avatar.url)
+
         return embed_resp
 
     def _parse_base_chance(self, base_chance: str) -> Decimal:
         if base_chance.endswith('%'):
-            return Decimal(base_chance[:-1])
+            return Decimal(base_chance[:-1]) / 100
         elif '/' in base_chance:
             match = re.match(r'^(\d+(?:\.\d+)?)/(\d+(?:\.\d+)?)$', base_chance)
             if match:

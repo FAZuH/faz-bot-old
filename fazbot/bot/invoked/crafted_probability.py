@@ -24,7 +24,7 @@ class CraftedProbability(InvokedBase):
         self._ing_strs = ing_strs
 
         self._cache = CacheUtil()
-        self._cache.register(self, [self._get_craftprobs_embed, self._get_atleast_embed, self._get_atmost_embed, self._get_plot_embed, self._get_plot_file])
+        self._cache.register(self, [self._get_craftprobs_embed, self._get_atleast_embed, self._get_atmost_embed])
 
         self._assetfile = self.get_asset_file(AssetImageFile.CRAFTINGTABLE)
         self._craftutil = CraftedUtil(self._parse_ings_str(ing_strs))
@@ -33,16 +33,7 @@ class CraftedProbability(InvokedBase):
 
     async def run(self) -> None:
         embed = self._get_craftprobs_embed(self.interaction, self._craftutil)
-        try:
-            await self.interaction.send(embed=embed, view=self._view, file=self._assetfile)
-        except errors.HTTPException as e:
-            # fallback to sending plot if embed size exceeds maximum size
-            if e.code == 50035:
-                embed = self._get_plot_embed(self._craftutil.craft_probs)
-                dist_plot = self._get_plot_file(self._craftutil.craft_probs)
-                await self.interaction.send(embed=embed, file=dist_plot)
-            else:
-                raise e
+        await self.interaction.send(embed=embed, view=self._view, file=self._assetfile)
 
     def _parse_ings_str(self, ing_strs: list[str]) -> list[WynnIngredientValue]:
         res: list[WynnIngredientValue] = []
@@ -131,44 +122,6 @@ class CraftedProbability(InvokedBase):
         embed.add_field(name="Probabilities" if is_first_embed else "", value=field_value, inline=False)
         return embed
 
-    def _get_plot_embed(self, craftprobs: dict[int, Decimal]) -> Embed:
-        embed = Embed(title="Error", color=Colour.red())
-
-        min_roll = min(craftprobs)
-        min_prob = craftprobs[min_roll]
-        one_in_n_min = round(Decimal(1 / craftprobs[min_roll]), 2)
-
-        max_roll = max(craftprobs)
-        max_prob = craftprobs[max_roll]
-        one_in_n_max = round(Decimal(1 / craftprobs[max_roll]), 2)
-
-        embed.description = (
-                f"**Embed size exceeds maximum size of 6000 characters. Attaching plot instead.**\n"
-                f"- Min Roll: **{min_roll}**, Probability: **{min_prob * 100:.2f}%** (1 in {one_in_n_min:,})\n"
-                f"- Max Roll: **{max_roll}**, Probability: **{max_prob * 100:.2f}%** (1 in {one_in_n_max:,})"
-        )
-        return embed
-
-    def _get_plot_file(self, craftprobs: dict[int, Decimal]) -> File:
-        if len(craftprobs) > 200:
-            plt.plot(list(craftprobs.keys()), list(craftprobs.values()), marker='o')  # type: ignore
-        else:
-            keys_list = list(craftprobs)
-            diffs = [keys_list[index + 1] - roll for index, roll in enumerate(keys_list[:-1])]
-            bar_width = min(diffs) * 0.9
-            plt.bar(list(craftprobs.keys()), list(craftprobs.values()), width=bar_width)  # type: ignore
-
-        plt.title('Roll Probability Distribution')
-        plt.ylabel('Probability')
-        plt.xlabel('Roll')
-        plt.gca().set_axisbelow(True)
-        plt.grid(visible=True, alpha=.3)
-
-        buffer = BytesIO()
-        plt.savefig(buffer, format='png')
-        buffer.seek(0)
-        return File(buffer, filename="graph.png")
-
     class _View(ui.View):
         def __init__(self, cmd: CraftedProbability):
             super().__init__(timeout=60)
@@ -176,7 +129,7 @@ class CraftedProbability(InvokedBase):
             self._interaction = cmd.interaction
             self._craftutil = cmd._craftutil
 
-        # @override
+        # override
         async def on_timeout(self) -> None:
             # Disable all items on timeout
             for item in self.children:
@@ -199,11 +152,11 @@ class CraftedProbability(InvokedBase):
                 self,
                 button: ui.Button[Any],
                 interaction: Interaction[Any],
-                embedfactory: Callable[[Interaction[Any], CraftedUtil], Embed] | None = None,
+                embed_strategy: Callable[[Interaction[Any], CraftedUtil], Embed] | None = None,
             ) -> None:
             await interaction.response.defer()
             self._click_button(button)
-            embed = embedfactory(interaction, self._craftutil) if embedfactory else None
+            embed = embed_strategy(interaction, self._craftutil) if embed_strategy else None
             await interaction.edit_original_message(embed=embed, view=self)
 
         def _click_button(self, button: ui.Button[CraftedProbability._View]) -> None:

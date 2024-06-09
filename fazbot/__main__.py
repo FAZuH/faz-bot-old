@@ -19,10 +19,9 @@ class Main:
         while True:  # keep-alive
             sleep(69_420)
 
-
 if __name__ == "__main__":
     try:
         Main.main()
     except Exception as e:
-        asyncio.run(Main.app.logger.discord_logger.error(f"FATAL ERROR", e))
+        asyncio.run(Main.app.logger.discord.error(f"FATAL ERROR", e))
         exit(1)

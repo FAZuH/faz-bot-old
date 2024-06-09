@@ -1,17 +1,14 @@
 from asyncio import iscoroutinefunction
 from functools import wraps
-from typing import Any, Awaitable, Callable, ParamSpec, TypeVar
+from typing import Any, Awaitable, Callable
 
 from fazbot.logger import ConsoleLogger
-
-T = TypeVar('T')
-P = ParamSpec('P')
 
 
 class RetryHandler:
 
     @staticmethod
-    def decorator(
+    def decorator[T, **P](
             max_retries: int,
             exceptions: type[BaseException] | tuple[type[BaseException]]
     ) -> Callable[[Callable[P, Awaitable[T]]], Callable[P, Awaitable[T]]]:
@@ -33,7 +30,7 @@ class RetryHandler:
         return decorator
 
     @staticmethod
-    def async_decorator(
+    def async_decorator[T, **P](
             max_retries: int,
             exceptions: type[BaseException] | tuple[type[BaseException]]
     ) -> Callable[[Callable[P, T]], Callable[P, T]]:

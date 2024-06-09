@@ -27,14 +27,14 @@ class Events:
 
     async def on_ready(self) -> None:
         if self._bot.client.user is not None:
-            await self._bot.core.logger.discord_logger.success(f"{self._bot.client.user.display_name} has successfully started.")
+            await self._bot.core.logger.discord.success(f"{self._bot.client.user.display_name} has successfully started.")
 
         await self._bot.client.change_presence(activity=Activity(type=ActivityType.playing, name="/help"))
 
         # on_ready can be called multiple times. don't setup cogs more than once
         if not self._ready:
             # Loads all cogs and commands to the client
-            await self._bot.cogs.setup()
+            self._bot.setup()
         self._ready = True
 
     async def on_application_command_completion(self, interaction: Interaction[Any]) -> None:
@@ -45,11 +45,9 @@ class Events:
         is_admin = self._bot.checks.is_admin(interaction)
         if isinstance(error, errors.ApplicationCheckFailure):
             await interaction.send("You do not have permission to use this command.", ephemeral=True)
-            return
         else:
-            embed = self._get_error_embed(error, is_admin)
+            embed = self._get_unexpected_error_embed(error, is_admin)
             await interaction.send(embed=embed, ephemeral=True)
-            return
 
     async def before_application_invoke(self, interaction: Interaction[Any]) -> None:
         self._log_event_to_console(interaction, self.before_application_invoke.__name__)
@@ -85,9 +83,9 @@ class Events:
             message += f", channel={channelname}"
         message += f", args={args}"
 
-        self._bot.core.logger.console_logger.debug(message)
+        self._bot.core.logger.console.debug(message)
 
-    def _get_error_embed(self, exception: BaseException, is_traceback: bool) -> Embed:
+    def _get_unexpected_error_embed(self, exception: BaseException, is_traceback: bool) -> Embed:
         embed_description = f"An error occurred while executing the command: {exception}"
         embed = Embed(title="Error", description=embed_description, color=Colour.red())
         if is_traceback:
@@ -95,3 +93,13 @@ class Events:
             embed.add_field(name=f"`{exception}`", value=f"```{''.join(tb)}```")
         embed.set_footer(text=f"<t:{int(datetime.now().timestamp())}:F>")
         return embed
+
+    # TODO: Implement this
+    # def _get_handled_error_embed(self, exception: BaseException, is_traceback: bool) -> Embed:
+        # embed_description = f"An error occurred while executing the command: {exception}"
+        # embed = Embed(title="Error", description=embed_description, color=Colour.red())
+        # if is_traceback:
+        #     tb = traceback.format_exception(exception)
+        #     embed.add_field(name=f"`{exception}`", value=f"```{''.join(tb)}```")
+        # embed.set_footer(text=f"<t:{int(datetime.now().timestamp())}:F>")
+        # return embed

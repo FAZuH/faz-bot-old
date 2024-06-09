@@ -28,7 +28,7 @@ class HeartbeatTask:
             t1 = perf_counter()
             self._task.run()
             if self._logger:
-                self._logger.console_logger.success(f"Task {self.task.name} took {perf_counter() - t1:.2f} seconds")
+                self._logger.console.success(f"Task {self.task.name} took {perf_counter() - t1:.2f} seconds")
             self._reschedule()
         return run
 

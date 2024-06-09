@@ -19,8 +19,8 @@ class Checks:
             return False
 
         user_id = interaction.user.id
-        is_admin = user_id == self._bot.core.config.application.admin_discord_id
-        self._bot.core.logger.console_logger.debug(f"check {self.is_admin.__name__}: {user_id} is {is_admin}.")
+        is_admin = user_id == self._bot.core.get_config_threadsafe().application.admin_discord_id
+        self._bot.core.logger.console.debug(f"check {self.is_admin.__name__}: {user_id} is {is_admin}.")
 
         return is_admin
 

@@ -20,13 +20,13 @@ class FazBotLogger(Logger):
         self._performance_logger = PerformanceLogger()
 
     @property
-    def console_logger(cls) -> ConsoleLogger:
+    def console(cls) -> ConsoleLogger:
         return cls._console_logger
 
     @property
-    def discord_logger(cls) -> DiscordLogger:
+    def discord(cls) -> DiscordLogger:
         return cls._discord_logger
 
     @property
-    def performance_logger(cls) -> PerformanceLogger:
+    def performance(cls) -> PerformanceLogger:
         return cls._performance_logger

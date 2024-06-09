@@ -53,7 +53,7 @@ class WynnUtils(CogBase):
         Parameters
         -----------
         base_chance: str
-            Ingredient base drop chance. (Supported format: 1.2%, 1.2/100, 0.012)
+            Ingredient base drop chance. (Supported format: 1.2%, 1.2/100)
         loot_bonus: int
             Loot bonus value.
         loot_quality: int

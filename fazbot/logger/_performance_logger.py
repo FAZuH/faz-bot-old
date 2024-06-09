@@ -2,10 +2,7 @@ from datetime import datetime, timedelta
 from functools import wraps
 from threading import Lock
 from time import perf_counter
-from typing import Any, Awaitable, Callable, Coroutine, ParamSpec, TypeVar
-
-P = ParamSpec('P')
-T = TypeVar('T')
+from typing import Any, Awaitable, Callable, Coroutine
 
 
 class PerformanceLogger:
@@ -18,7 +15,7 @@ class PerformanceLogger:
         self._MAX_CACHE = 1_000
         """Max amount of cache for each name. If exceeded, the oldest data will be removed."""
 
-    def bind_async(self, callable: Callable[P, Awaitable[T]], name: None | str = None) -> Callable[P, Coroutine[Any, Any, T]]:
+    def bind_async[T, **P](self, callable: Callable[P, Awaitable[T]], name: None | str = None) -> Callable[P, Coroutine[Any, Any, T]]:
         """Decorator to record the duration of an async method. The duration will be recorded in `timedelta`."""
         if name is None:
             name = callable.__qualname__
@@ -42,7 +39,7 @@ class PerformanceLogger:
 
         return wrapped
 
-    def bind_sync(self, callable: Callable[P, T], name: None | str = None) -> Callable[P, T]:
+    def bind_sync[T, **P](self, callable: Callable[P, T], name: None | str = None) -> Callable[P, T]:
         """Decorator to record the duration of an async method. The duration will be recorded in `timedelta`."""
         if name is None:
             name = callable.__qualname__

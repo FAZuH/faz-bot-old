@@ -27,9 +27,9 @@ class Help(InvokedBase):
     def _get_embed_page(self, commands: list[BaseApplicationCommand], page: int) -> Embed:
         """ Generates embed page for page nth-page """
         embed = Embed(
-                title=f"Commands List : Page [{page}/{self._embed_total_pages}]",
-                color=Colour.dark_blue(),
-                timestamp=datetime.now(),
+            title=f"Commands List : Page [{page}/{self._embed_total_pages}]",
+            color=Colour.dark_blue(),
+            timestamp=datetime.now(),
         )
         embed.set_footer(text="[text] means optional. <text> means required")
 
@@ -38,9 +38,9 @@ class Help(InvokedBase):
         for cmd in commands[min_idx:max_idx]:
             parameter_msg = self._get_parameters(cmd.options)
             embed.add_field(
-                    name=f"/{cmd.qualified_name}{parameter_msg}" ,
-                    value=cmd.description or "No brief description given",
-                    inline=False
+                name=f"/{cmd.qualified_name}{parameter_msg}" ,
+                value=cmd.description or "No brief description given",
+                inline=False
             )
         return embed
 

@@ -1,8 +1,5 @@
 from functools import wraps
-from typing import Any, Awaitable, Callable, ParamSpec, TypeVar
-
-T = TypeVar('T')
-P = ParamSpec('P')
+from typing import Any, Awaitable, Callable
 
 
 class CacheUtil:
@@ -10,7 +7,7 @@ class CacheUtil:
     def __init__(self) -> None:
         self._cache: dict[str, Any] = {}
 
-    def decorator(self, func: Callable[P, T]) -> Callable[P, T]:
+    def decorator[T, **P](self, func: Callable[P, T]) -> Callable[P, T]:
         @wraps(func)
         def wrapper(*args: P.args, **kwargs: P.kwargs) -> T:
             key = func.__name__
@@ -19,7 +16,7 @@ class CacheUtil:
             return self._cache[key]
         return wrapper
 
-    def async_decorator(self, func: Callable[P, Awaitable[T]]) -> Callable[P, Awaitable[T]]:
+    def async_decorator[T, **P](self, func: Callable[P, Awaitable[T]]) -> Callable[P, Awaitable[T]]:
         @wraps(func)
         async def wrapper(*args: P.args, **kwargs: P.kwargs) -> T:
             key = func.__name__

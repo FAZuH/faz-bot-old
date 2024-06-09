@@ -1,56 +1,33 @@
 from __future__ import annotations
 
-from datetime import datetime
-from typing import TYPE_CHECKING, Any, Callable, TypeVar
-
-from dateparser import parse
-
-P = TypeVar('P')
+from typing import TYPE_CHECKING, Callable
 
 if TYPE_CHECKING:
-    from nextcord import Guild, Interaction, PartialMessageable, Thread, User
+    from nextcord import Guild, PartialMessageable, Thread, User
     from nextcord.abc import GuildChannel, PrivateChannel
-    from nextcord.ext.commands import Bot, Context
+    from nextcord.ext.commands import Bot
 
 
 class Utils:
 
     @staticmethod
-    async def parse_big_int(interaction: Interaction[Any], value: str) -> int | None:
+    async def must_get_channel(bot: Bot, channel_id: str) -> GuildChannel | Thread | PrivateChannel | PartialMessageable:
+        return await Utils.must_get_id(bot.get_channel, channel_id)
+
+    @staticmethod
+    async def must_get_guild(bot: Bot, guild_id: str) -> Guild:
+        return await Utils.must_get_id(bot.get_guild, guild_id)
+
+    @staticmethod
+    async def must_get_user(bot: Bot, user_id: str) -> User:
+        return await Utils.must_get_id(bot.get_user, user_id)
+
+    @staticmethod
+    async def must_get_id[T](get_strategy: Callable[[int], T | None], id_str: str) -> T:
         try:
-            return int(value)
+            id_int = int(id_str)
         except ValueError:
-            await interaction.response.send_message(f"Failed parsing {value} into an integer.")
-
-    @staticmethod
-    async def parse_date(interaction: Interaction[Any], value: str) -> datetime | None:
-        try:
-            return parse(value)
-        except ValueError:
-            await interaction.response.send_message(f"Failed parsing {value} into a date.")
-
-    @staticmethod
-    async def must_get_channel(bot: Bot, interaction: Interaction[Any], channel_id: str) -> GuildChannel | Thread | PrivateChannel | PartialMessageable | None:
-        return await Utils.must_getter(bot.get_channel, interaction, channel_id, "channel")
-
-    @staticmethod
-    async def must_get_guild(bot: Bot, interaction: Interaction[Any], guild_id: str) -> Guild | None:
-        return await Utils.must_getter(bot.get_guild, interaction, guild_id, "guild")
-
-    @staticmethod
-    async def must_get_user(bot: Bot, interaction: Interaction[Any], user_id: str) -> User | None:
-        return await Utils.must_getter(bot.get_user, interaction, user_id, "user")
-
-    @staticmethod
-    async def must_getter(getter_func: Callable[[int], P | None], interaction: Interaction[Any], id_: str, type: str) -> P | None:
-        try:
-            id__ = int(id_)
-        except ValueError:
-            await interaction.send(f"Failed parsing {id_} into an integer.")
-            return
-        if not id__:
-            return
-        if not (user := getter_func(id__)):
-            await interaction.send(f"{type.title()} with ID `{id__}` not found.")
-            return
-        return user
+            raise ValueError(f"Failed parsing {id_str} into an integer.")
+        if not (ret := get_strategy(id_int)):
+            raise ValueError(f"Failed getting object from ID {id_str}")
+        return ret

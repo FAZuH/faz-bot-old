@@ -1,7 +1,6 @@
 # FazBot
 Wynncraft's Utility and Statistics Bot.
 
-
 ## Installation
 ### Docker
 *docker installation guide*
@@ -17,7 +16,6 @@ Wynncraft's Utility and Statistics Bot.
 - command description
 - improve help command
 - tests (pain)
-- init script. first time setup
 - commands
   - admin commands
     - traceback `<bool>`

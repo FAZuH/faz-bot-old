@@ -1,7 +1,8 @@
 from __future__ import annotations
 
+from contextlib import contextmanager
 from threading import Lock
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Generator
 
 from fazbot import Config, ImageAsset, Userdata
 from fazbot.bot import DiscordBot
@@ -21,9 +22,6 @@ class FazBot(Core):
         self._asset = ImageAsset()
         self._userdata = Userdata()
         self._locks: dict[str, Lock] = {}
-        self.config.load()
-        self.asset.load()
-        self.userdata.load()
         self._logger = FazBotLogger(
                 self._config.logging.discord_log_webhook,
                 self._config.application.debug,
@@ -41,34 +39,39 @@ class FazBot(Core):
         self.bot.stop()
 
     @property
-    def asset(self) -> ImageAsset:
-        with self._get_lock("asset"):
-            return self._asset
-
-    @property
     def bot(self) -> Bot:
         with self._get_lock("bot"):
             return self._bot
-
-    @property
-    def config(self) -> Config:
-        with self._get_lock("config"):
-            return self._config
 
     @property
     def heartbeat(self) -> Heartbeat:
         with self._get_lock("heartbeat"):
             return self._heartbeat
 
-    @property
-    def logger(self) -> Logger:
-        with self._get_lock("logger"):
-            return self._logger
+    @contextmanager
+    def get_asset_threadsafe(self) -> Generator[ImageAsset]:
+        with self._get_lock("asset"):
+            yield self._asset
 
-    @property
-    def userdata(self) -> Userdata:
+    @contextmanager
+    def get_config_threadsafe(self) -> Generator[Config]:
+        with self._get_lock("config"):
+            yield self._config
+
+    @contextmanager
+    def logger(self) -> Generator[Logger]:
+        with self._get_lock("logger"):
+            yield self._logger
+
+    @contextmanager
+    def userdata(self) -> Generator[Userdata]:
         with self._get_lock("userdata"):
-            return self._userdata
+            yield self._userdata
+
+    def _setup(self) -> None:
+        self._asset.load()
+        self._config.load()
+        self._userdata.load()
 
     def _get_lock(self, key: str) -> Lock:
         if key not in self._locks:
