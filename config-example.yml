@@ -8,8 +8,6 @@ logging:
 
 secret:
   discord:
-    bot_client_secret: ""
-    bot_client_id: 0
     bot_token: ""
   fazbot:
     db_username: ""

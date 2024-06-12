@@ -70,10 +70,6 @@ class Config:
 
         class _Discord(_ConfigNode):
             @property
-            def bot_client_secret(self) -> str: return self._config["bot_client_secret"]
-            @property
-            def bot_client_id(self) -> int: return int(self._config["bot_client_id"])
-            @property
             def bot_token(self) -> str: return self._config["bot_token"]
 
         class _Database(_ConfigNode):
