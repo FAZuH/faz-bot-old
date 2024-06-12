@@ -1,18 +1,22 @@
 from __future__ import annotations
 
-import re
 from decimal import Decimal
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from nextcord import Embed, Interaction
 
 from fazbot.enum import AssetImageFile
 from fazbot.util import IngredientUtil
 
-from . import InvokedBase
+from . import Invoke
+
+if TYPE_CHECKING:
+    from nextcord import File
 
 
-class IngredientProbability(InvokedBase):
+class IngredientProbability(Invoke):
+
+    ASSET_DECAYINGHEART: File
 
     def __init__(self, interaction: Interaction[Any], base_chance: str, loot_bonus: int, loot_quality: int) -> None:
         super().__init__(interaction)
@@ -23,7 +27,7 @@ class IngredientProbability(InvokedBase):
 
     async def run(self) -> None:
         embed_resp = self._get_embed(self._ing_util, self._interaction)
-        await self._interaction.response.send_message(embed=embed_resp, file=self.get_asset_file(AssetImageFile.DECAYINGHEART))
+        await self._interaction.response.send_message(embed=embed_resp, file=self.ASSET_DECAYINGHEART)
 
     def _get_embed(self, ing_util: IngredientUtil, interaction: Interaction[Any]) -> Embed:
         one_in_n = 1 / ing_util.boosted_probability

@@ -3,7 +3,7 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 
 from .cog import Admin, Help, Info, WynnAnalyze, WynnStat, WynnTrack, WynnUtils
-from .invoked import InvokedBase
+from .invoke import Invoke
 
 if TYPE_CHECKING:
     from fazbot import Bot
@@ -26,5 +26,6 @@ class CogCore:
         self._bot.core.logger.console.info("Added all application commands.")
 
     def load_assets(self) -> None:
-        self._bot.core.get_asset_threadsafe()().load()
-        InvokedBase.set_asset(self._bot.core.get_asset_threadsafe()())
+        self._bot.core.get_asset_threadsafe().load()
+        Invoke.set_asset(self._bot.core.get_asset_threadsafe())
+

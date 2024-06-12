@@ -8,7 +8,9 @@ from fazbot.bot.invoked import CraftedProbability
 class TestCraftedProbability(TestCase):
 
     def test_run(self) -> None:
-        interaction = MagicMock()
+        interaction = MagicMock(bytes)
+        image_asset = MagicMock()
+        CraftedProbability._asset = image_asset
         ing_strs = [
             "1,2,50",
             "1,2,50",

@@ -7,10 +7,10 @@ from nextcord import (ApplicationCommandOption, BaseApplicationCommand,
                       ButtonStyle, Colour, Embed, Interaction, Message)
 from nextcord.ui import Button, View, button
 
-from . import InvokedBase
+from . import Invoke
 
 
-class Help(InvokedBase):
+class Help(Invoke):
 
     def __init__(self, interaction: Interaction[Any], commands: list[BaseApplicationCommand]) -> None:
         super().__init__(interaction)

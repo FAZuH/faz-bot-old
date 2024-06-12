@@ -25,3 +25,4 @@ class TestCraftedUtil(TestCase):
         self.assertAlmostEqual(Decimal(0.375), craftedutil.craft_probs[8], delta=0.001)
         self.assertAlmostEqual(Decimal(0.255), craftedutil.craft_probs[10], delta=0.001)
         self.assertAlmostEqual(Decimal(0.065), craftedutil.craft_probs[12], delta=0.001)
+
