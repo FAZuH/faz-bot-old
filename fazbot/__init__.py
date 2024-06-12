@@ -1,10 +1,10 @@
-from .constants import Constants
+from .errors import *
 
 from .asset import Asset
-from .config import Config
-from .errors import *
-from .logger import Logger
-
-from .core import Core
 from .bot import Bot
+from .config import Config
+from .constants import Constants
+from .core import Core
+from .db.fazbot import IFazBotDatabase
 from .heartbeat import Heartbeat
+from .logger import Logger

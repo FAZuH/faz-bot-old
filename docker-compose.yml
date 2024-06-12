@@ -1,4 +1,4 @@
-version: '3.8'
+version: "3.8"
 
 services:
   fazbotbot:
@@ -10,7 +10,6 @@ services:
     restart: on-failure
     volumes:
       - ./config.yml:/app/config.yml
-      - ./userdata:/app/userdata
   #   depends_on:
   #     - mysql_db
 
@@ -22,6 +21,5 @@ services:
   #     - MYSQL_ROOT_PASSWORD=root
   #     - MYSQL_DATABASE=fazbot
   #     - MYSQL_PASSWORD=root
-
 # volumes:
 #   db_data:

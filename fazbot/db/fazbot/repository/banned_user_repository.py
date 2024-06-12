@@ -11,10 +11,10 @@ class BannedUserRepository(Repository[BannedUser, int]):
         await self._db.execute(
             f"""
             CREATE TABLE IF NOT EXISTS {self.TABLE_NAME} (
-                user_id BIGINT PRIMARY KEY,
-                reason TEXT NOT NULL,
-                from DATETIME NOT NULL,
-                until DATETIME DEFAULT NULL
+                `user_id` BIGINT PRIMARY KEY,
+                `reason` TEXT NOT NULL,
+                `from` DATETIME NOT NULL,
+                `until` DATETIME DEFAULT NULL
             )
             """
         )
@@ -23,7 +23,7 @@ class BannedUserRepository(Repository[BannedUser, int]):
     async def add(self, entity: BannedUser) -> None:
         await self._db.execute(
             f"""
-            INSERT INTO {self.TABLE_NAME} (user_id, reason, from, until)
+            INSERT INTO {self.TABLE_NAME} (`user_id`, `reason`, `from`, `until`)
             VALUES (?, ?, ?, ?)
             """,
             (entity.user_id, entity.reason, entity.from_, entity.until)
@@ -34,7 +34,7 @@ class BannedUserRepository(Repository[BannedUser, int]):
         await self._db.execute(
             f"""
             DELETE FROM {self.TABLE_NAME}
-            WHERE user_id = ?
+            WHERE `user_id` = ?
             """,
             (id_,)
         )
@@ -45,7 +45,7 @@ class BannedUserRepository(Repository[BannedUser, int]):
             f"""
             SELECT *
             FROM {self.TABLE_NAME}
-            WHERE user_id = ?
+            WHERE `user_id` = ?
             """,
             (id_,)
         )
@@ -59,7 +59,7 @@ class BannedUserRepository(Repository[BannedUser, int]):
             f"""
             SELECT *
             FROM {self.TABLE_NAME}
-            WHERE user_id IN ({", ".join("?" for _ in ids)})
+            WHERE `user_id` IN ({", ".join("?" for _ in ids)})
             """,
             (tuple(ids),)
         )
@@ -69,3 +69,4 @@ class BannedUserRepository(Repository[BannedUser, int]):
     # override
     async def exists(self, id_: int) -> bool:
         return await self.find(id_) is not None
+

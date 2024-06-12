@@ -3,35 +3,45 @@ from contextlib import contextmanager
 from threading import Lock
 from typing import Generator, TYPE_CHECKING
 
-from fazbot import Config, Asset
+from fazbot import Asset, Config
 from fazbot.bot import DiscordBot
 from fazbot.constants import Constants
+from fazbot.db.fazbot import FazBotDatabase
 from fazbot.heartbeat import SimpleHeartbeat
 from fazbot.logger import FazBotLogger
 
 from .core import Core
 
 if TYPE_CHECKING:
-    from fazbot import Bot, Heartbeat, Logger
+    from fazbot import Bot, Heartbeat, Logger, IFazBotDatabase
 
 
 class FazBot(Core):
 
     def __init__(self) -> None:
-        self._config = Config()
-        self._asset = Asset(Constants.ASSET_DIR)
-
         self._locks: dict[str, Lock] = {}
+
+        self._asset = Asset(Constants.ASSET_DIR)
+        self._config = Config(Constants.CONFIG_FP)
+
+        self._asset.read_all()
+        self._config.read()
+
         with self.enter_config() as config:
-            self._logger = FazBotLogger(
-                    config.logging.discord_log_webhook,
-                    config.application.debug,
-                    config.application.admin_discord_id
+            self._fazbotdb = FazBotDatabase(
+                config.secret.fazbot.db_username,
+                config.secret.fazbot.db_password,
+                config.secret.fazbot.db_schema_name,
+                config.secret.fazbot.db_max_retries,
             )
+            self._logger = FazBotLogger(
+                config.logging.discord_log_webhook,
+                config.application.debug,
+                config.application.admin_discord_id
+            )
+
         self._heartbeat = SimpleHeartbeat(self)
         self._bot = DiscordBot(self)
-
-        self._setup()
 
     def start(self) -> None:
         self._heartbeat.start()
@@ -57,6 +67,11 @@ class FazBot(Core):
             yield self._config
 
     @contextmanager
+    def enter_fazbotdb(self) -> Generator[IFazBotDatabase]:
+        with self._get_lock("fazbotdb"):
+            yield self._fazbotdb
+
+    @contextmanager
     def enter_heartbeat(self) -> Generator[Heartbeat]:
         with self._get_lock("heartbeat"):
             yield self._heartbeat
@@ -65,10 +80,6 @@ class FazBot(Core):
     def enter_logger(self) -> Generator[Logger]:
         with self._get_lock("logger"):
             yield self._logger
-
-    def _setup(self) -> None:
-        self._asset.read_all()
-        self._config.read()
 
     def _get_lock(self, key: str) -> Lock:
         if key not in self._locks:

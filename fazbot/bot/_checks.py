@@ -3,8 +3,6 @@ from typing import Any, TYPE_CHECKING
 
 from nextcord import Interaction
 
-from fazbot.enum import UserdataFile
-
 if TYPE_CHECKING:
     from fazbot import Bot
 
@@ -19,8 +17,11 @@ class Checks:
             return False
 
         user_id = interaction.user.id
-        is_admin = user_id == self._bot.core.get_config_threadsafe().application.admin_discord_id
-        self._bot.core.logger.console.debug(f"check {self.is_admin.__name__}: {user_id} is {is_admin}.")
+        with self._bot.core.enter_config() as config:
+            is_admin = user_id == config.application.admin_discord_id
+
+        with self._bot.core.enter_logger() as logger:
+            logger.console.debug(f"check {self.is_admin.__name__}: {user_id} is {is_admin}.")
 
         return is_admin
 
@@ -29,7 +30,8 @@ class Checks:
             return False
 
         user_id = interaction.user.id
-        is_not_banned = user_id not in self._bot.core.userdata.get(UserdataFile.BANNED_USERS)
+        # is_not_banned = user_id not in self._bot.core.userdata.get(UserdataFile.BANNED_USERS)
+        is_not_banned = False
         return is_not_banned
 
     def load_checks(self) -> None:

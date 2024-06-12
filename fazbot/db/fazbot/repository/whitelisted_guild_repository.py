@@ -4,17 +4,25 @@ from ..model import WhitelistedGuild
 
 class WhitelistedGuildRepository(Repository[WhitelistedGuild, int]):
 
-    TABLE_NAME = "banned_user"
+    TABLE_NAME = "whitelisted_guild"
+
+    async def get_all_whitelisted_guilds(self) -> list[int]:
+        result = await self._db.fetch(f"""SELECT `guild_id` FROM {self.TABLE_NAME}""")
+        guild_ids: list[int] = [
+            guild["guild_id"]
+            for guild in result
+        ]
+        return guild_ids
 
     # override
     async def create_table(self) -> None:
         await self._db.execute(
             f"""
             CREATE TABLE IF NOT EXISTS {self.TABLE_NAME} (
-                guild_id BIGINT PRIMARY KEY,
-                guild_name TEXT NOT NULL,
-                from DATETIME NOT NULL,
-                until DATETIME DEFAULT NULL
+                `guild_id` BIGINT PRIMARY KEY,
+                `guild_name` TEXT NOT NULL,
+                `from` DATETIME NOT NULL,
+                `until` DATETIME DEFAULT NULL
             )
             """
         )
@@ -23,7 +31,7 @@ class WhitelistedGuildRepository(Repository[WhitelistedGuild, int]):
     async def add(self, entity: WhitelistedGuild) -> None:
         await self._db.execute(
             f"""
-            INSERT INTO {self.TABLE_NAME} (guild_id, guild_name, from, until)
+            INSERT INTO {self.TABLE_NAME} (`guild_id`, `guild_name`, `from`, `until`)
             VALUES (?, ?, ?, ?)
             """,
             (entity.guild_id, entity.guild_name, entity.from_, entity.until)
@@ -34,7 +42,7 @@ class WhitelistedGuildRepository(Repository[WhitelistedGuild, int]):
         await self._db.execute(
             f"""
             DELETE FROM {self.TABLE_NAME}
-            WHERE guild_id = ?
+            WHERE `guild_id` = ?
             """,
             (id_,)
         )
@@ -45,7 +53,7 @@ class WhitelistedGuildRepository(Repository[WhitelistedGuild, int]):
             f"""
             SELECT *
             FROM {self.TABLE_NAME}
-            WHERE guild_id = ?
+            WHERE `guild_id` = ?
             """,
             (id_,)
         )
@@ -59,7 +67,7 @@ class WhitelistedGuildRepository(Repository[WhitelistedGuild, int]):
             f"""
             SELECT *
             FROM {self.TABLE_NAME}
-            WHERE guild_id IN ?
+            WHERE `guild_id` IN ?
             """,
             (tuple(ids),)
         )

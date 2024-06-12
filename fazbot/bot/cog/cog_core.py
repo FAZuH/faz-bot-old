@@ -23,6 +23,6 @@ class CogCore:
 
         self._bot.client.add_all_application_commands()
 
-        with self._bot.core.get_logger_synced() as logger:
+        with self._bot.core.enter_logger() as logger:
             logger.console.info("Added all application commands.")
 

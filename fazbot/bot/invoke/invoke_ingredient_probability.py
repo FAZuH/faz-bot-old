@@ -21,7 +21,7 @@ class InvokeIngredientProbability(Invoke):
 
     def __init__(self, interaction: Interaction[Any], base_chance: str, loot_bonus: int, loot_quality: int) -> None:
         super().__init__(interaction)
-        self._base_chance = self.__parse_base_chance(base_chance)
+        self._base_chance = self._parse_base_chance(base_chance)
         self._loot_bonus = loot_bonus
         self._loot_quality = loot_quality
         self._ing_util = IngredientUtil(self._base_chance, self._loot_quality, self._loot_bonus)
@@ -32,10 +32,10 @@ class InvokeIngredientProbability(Invoke):
         cls.ASSET_DECAYINGHEART = cls._get_from_assets(assets, "decayingheart")
 
     async def run(self) -> None:
-        embed_resp = self.__get_embed(self._ing_util, self._interaction)
+        embed_resp = self._get_embed(self._ing_util, self._interaction)
         await self._interaction.response.send_message(embed=embed_resp, file=self.ASSET_DECAYINGHEART.file)
 
-    def __get_embed(self, ing_util: IngredientUtil, interaction: Interaction[Any]) -> Embed:
+    def _get_embed(self, ing_util: IngredientUtil, interaction: Interaction[Any]) -> Embed:
         one_in_n = 1 / ing_util.boosted_probability
 
         embed_resp = Embed(title="Ingredient Chance Calculator", color=472931)
@@ -55,7 +55,7 @@ class InvokeIngredientProbability(Invoke):
 
         return embed_resp
 
-    def __parse_base_chance(self, base_chance: str) -> Decimal:
+    def _parse_base_chance(self, base_chance: str) -> Decimal:
         if base_chance.endswith('%'):
             return Decimal(base_chance[:-1]) / 100
         elif '/' in base_chance:

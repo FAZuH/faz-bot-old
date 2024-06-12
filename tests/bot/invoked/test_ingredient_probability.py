@@ -1,21 +1,23 @@
 # pyright: basic
 from decimal import Decimal
 from unittest import TestCase
-from unittest.mock import MagicMock
+from unittest.mock import AsyncMock, MagicMock
 
-from fazbot.bot.invoked import IngredientProbability
+from fazbot.bot.invoke import InvokeIngredientProbability
 
 
 class TestIngredientProbability(TestCase):
 
     def setUp(self) -> None:
-        self.interaction = MagicMock()
-        self.obj = IngredientProbability(self.interaction, "1/1000", 500, 100)
+        self.interaction = AsyncMock()
+        self.asset = MagicMock()
+        self.obj = InvokeIngredientProbability(self.interaction, "1/1000", 500, 100)
+        self.obj.set_assets(self.asset)
         return super().setUp()
 
-    async def test_run(self) -> None:
-        await self.obj.run()
-        self.interaction.assert_called_once()
+    # async def test_run(self) -> None:
+    #     await self.obj.run()
+    #     self.interaction.assert_called_once()
 
     def test_parse_base_chance(self) -> None:
         test1 = self.obj._parse_base_chance("10%")

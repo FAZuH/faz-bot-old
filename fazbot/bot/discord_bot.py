@@ -19,7 +19,7 @@ class DiscordBot(Bot):
     def __init__(self, core: Core) -> None:
         self._core = core
 
-        with core.get_asset_synced() as asset:
+        with core.enter_asset() as asset:
             self._asset_manager = AssetManager(asset.files)
 
         self._checks = Checks(self)
@@ -38,16 +38,16 @@ class DiscordBot(Bot):
         self._discord_bot_thread = Thread(target=self._start, daemon=True, name=self._get_cls_qualname())
 
     def start(self) -> None:
-        with self._core.get_logger_synced() as logger:
+        with self._core.enter_logger() as logger:
             logger.console.info(f"Starting {self._get_cls_qualname()}...")
 
         self._discord_bot_thread.start()
 
-        with self._core.get_logger_synced() as logger:
+        with self._core.enter_logger() as logger:
             logger.console.info(f"Started {self._get_cls_qualname()}.")
 
     def stop(self) -> None:
-        with self._core.get_logger_synced() as logger:
+        with self._core.enter_logger() as logger:
             logger.console.info(f"Stopping {self._get_cls_qualname()}...")
 
         self._event_loop.run_until_complete(self.client.close())
@@ -83,7 +83,7 @@ class DiscordBot(Bot):
         return self._events
 
     def _start(self) -> None:
-        with self._core.get_config_synced() as config:
+        with self._core.enter_config() as config:
             bot_token = config.secret.discord.bot_token
 
         self._event_loop.run_until_complete(self.client.start(bot_token))

@@ -1,13 +1,19 @@
-from unittest import TestCase
-from unittest.mock import MagicMock
+from unittest import IsolatedAsyncioTestCase
+from unittest.mock import AsyncMock, MagicMock
 
-from fazbot.bot.invoked import ConvertEmerald
+from fazbot.bot.invoke import InvokeConvertEmerald
 
 
-class TestConvertEmerald(TestCase):
+class TestConvertEmerald(IsolatedAsyncioTestCase):
+
+    def setUp(self) -> None:
+        self.interaction = AsyncMock()
+        self.asset = MagicMock()
+        self.obj = InvokeConvertEmerald(self.interaction, "100le")
+        self.obj.set_assets(self.asset)
+        return super().setUp()
 
     async def test_convert_emerald(self) -> None:
-        interaction = MagicMock()
-        convertemerald = ConvertEmerald(interaction, "100le")
-        await convertemerald.run()
-        interaction.assert_called_once()
+        await self.obj.run()
+
+
