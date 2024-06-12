@@ -21,7 +21,9 @@ class CogBase(commands.Cog):
                 assert isinstance(guild, int)
                 cmd.add_guild_rollout(guild=guild)
         self._bot.client.add_cog(self)
-        self._bot.core.logger.console.info(f"Added cog {self.__class__.__qualname__} to client.")
+
+        with self._bot.core.get_logger_synced() as logger:
+            logger.console.info(f"Added cog {self.__class__.__qualname__} to client.")
 
     def _setup(self) -> None:
         """ Method to be run on cog initialization. Override this method in subclasses. """

@@ -19,7 +19,6 @@ class CraftedUtil:
         self._crafted_roll_max = np.int32(0)
         self._craft_probs = {}
 
-    def run(self):
         self._calculate_ingredient_probabilities()
         self._calculate_crafted_probabilities()
 
@@ -73,3 +72,4 @@ class CraftedUtil:
             if crafted_roll_chance == 0:
                 continue
             self.craft_probs[int(roll)] = Decimal(crafted_roll_chance)
+

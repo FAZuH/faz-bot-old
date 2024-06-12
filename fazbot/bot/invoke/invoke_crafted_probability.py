@@ -1,22 +1,23 @@
-# pyright: reportUnknownMemberType=false, reportUnknownArgumentType=false, reportUnknownVariableType=false, reportMissingTypeStubs=false
 from __future__ import annotations
-
 from decimal import Decimal
-from io import BytesIO
-from typing import Any, Callable
+from typing import Any, Callable, TYPE_CHECKING
 
-import matplotlib.pyplot as plt
-from nextcord import ButtonStyle, Colour, Embed, File, Interaction, errors, ui
+from nextcord import ButtonStyle, Embed, Interaction, ui
 
-from fazbot.enum import AssetImageFile
 from fazbot.object import WynnIngredientValue
 from fazbot.util import CacheUtil, CraftedUtil
 
-from . import InvokedBase
+from . import Invoke
+
+if TYPE_CHECKING:
+    from nextcord import File
+
+    from . import Asset
 
 
-class CraftedProbability(InvokedBase):
+class InvokeCraftedProbability(Invoke):
 
+    ASSET_CRAFTINGTABLE: Asset
     INGSTR_DEFAULT = "0,0,0"
 
     def __init__(self, interaction: Interaction[Any], ing_strs: list[str]) -> None:
@@ -26,19 +27,22 @@ class CraftedProbability(InvokedBase):
         self._cache = CacheUtil()
         self._cache.register(self, [self._get_craftprobs_embed, self._get_atleast_embed, self._get_atmost_embed])
 
-        self._assetfile = self.get_asset_file(AssetImageFile.CRAFTINGTABLE)
         self._craftutil = CraftedUtil(self._parse_ings_str(ing_strs))
-        self._craftutil.run()
         self._view = self._View(self)
 
+    # override
+    @classmethod
+    def set_assets(cls, assets: dict[str, File]) -> None:
+        cls.ASSET_CRAFTINGTABLE = cls._get_from_assets(assets, "craftingtable")
+
     async def run(self) -> None:
-        embed = self._get_craftprobs_embed(self.interaction, self._craftutil)
-        await self.interaction.send(embed=embed, view=self._view, file=self._assetfile)
+        embed = self._get_craftprobs_embed(self._interaction, self._craftutil)
+        await self._interaction.send(embed=embed, view=self._view, file=self.ASSET_CRAFTINGTABLE.file)
 
     def _parse_ings_str(self, ing_strs: list[str]) -> list[WynnIngredientValue]:
         res: list[WynnIngredientValue] = []
         for ing_str in ing_strs:
-            if ing_str == CraftedProbability.INGSTR_DEFAULT:
+            if ing_str == InvokeCraftedProbability.INGSTR_DEFAULT:
                 continue
             ing_str = ing_str.strip()
             ing_vals = ing_str.split(",")
@@ -56,7 +60,7 @@ class CraftedProbability(InvokedBase):
 
     def _get_base_embed(self, interaction: Interaction[Any], craftutil: CraftedUtil) -> Embed:
         embed = Embed(title="Crafteds Probabilites Calculator", color=8894804)
-        self.set_embed_thumbnail_with_asset(embed, AssetImageFile.CRAFTINGTABLE)
+        self._set_embed_thumbnail_with_asset(embed, self.ASSET_CRAFTINGTABLE.filename)
         if interaction.user:
             embed.set_author(name=interaction.user.display_name, icon_url=interaction.user.display_avatar.url)
 
@@ -123,10 +127,10 @@ class CraftedProbability(InvokedBase):
         return embed
 
     class _View(ui.View):
-        def __init__(self, cmd: CraftedProbability):
+        def __init__(self, cmd: InvokeCraftedProbability):
             super().__init__(timeout=60)
             self._cmd = cmd
-            self._interaction = cmd.interaction
+            self._interaction = cmd._interaction
             self._craftutil = cmd._craftutil
 
         # override
@@ -134,7 +138,7 @@ class CraftedProbability(InvokedBase):
             # Disable all items on timeout
             for item in self.children:
                 self.remove_item(item)
-            await self._cmd.interaction.edit_original_message(view=self)
+            await self._cmd._interaction.edit_original_message(view=self)
 
         @ui.button(label="Distribution", style=ButtonStyle.green, emoji="🎲", disabled=True)
         async def button_distribution(self, button: ui.Button[Any], interaction: Interaction[Any]) -> None:
@@ -159,8 +163,9 @@ class CraftedProbability(InvokedBase):
             embed = embed_strategy(interaction, self._craftutil) if embed_strategy else None
             await interaction.edit_original_message(embed=embed, view=self)
 
-        def _click_button(self, button: ui.Button[CraftedProbability._View]) -> None:
+        def _click_button(self, button: ui.Button[InvokeCraftedProbability._View]) -> None:
             for item in self.children:
                 if isinstance(item, ui.Button):
                     item.disabled = False
             button.disabled = True
+

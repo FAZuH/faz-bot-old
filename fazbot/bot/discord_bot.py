@@ -1,5 +1,4 @@
 from __future__ import annotations
-
 import asyncio
 from threading import Thread
 from typing import TYPE_CHECKING
@@ -7,7 +6,9 @@ from typing import TYPE_CHECKING
 from nextcord import Intents
 from nextcord.ext import commands
 
-from . import Bot, Checks, CogCore, Events
+from . import Bot, Checks, Events
+from .cog import CogCore
+from .invoke import AssetManager
 
 if TYPE_CHECKING:
     from fazbot import Core
@@ -17,6 +18,9 @@ class DiscordBot(Bot):
 
     def __init__(self, core: Core) -> None:
         self._core = core
+
+        with core.get_asset_synced() as asset:
+            self._asset_manager = AssetManager(asset.files)
 
         self._checks = Checks(self)
         self._cogs = CogCore(self)
@@ -34,21 +38,30 @@ class DiscordBot(Bot):
         self._discord_bot_thread = Thread(target=self._start, daemon=True, name=self._get_cls_qualname())
 
     def start(self) -> None:
-        self._core.logger.console.info(f"Starting {self._get_cls_qualname()}...")
+        with self._core.get_logger_synced() as logger:
+            logger.console.info(f"Starting {self._get_cls_qualname()}...")
+
         self._discord_bot_thread.start()
-        self.core.logger.console.info(f"Started {self._get_cls_qualname()}.")
+
+        with self._core.get_logger_synced() as logger:
+            logger.console.info(f"Started {self._get_cls_qualname()}.")
 
     def stop(self) -> None:
-        self.core.logger.console.info(f"Stopping {self._get_cls_qualname()}...")
+        with self._core.get_logger_synced() as logger:
+            logger.console.info(f"Stopping {self._get_cls_qualname()}...")
+
         self._event_loop.run_until_complete(self.client.close())
 
     def setup(self) -> None:
         """Initial setup for the bot."""
         self.cogs.setup()
-        self.cogs.load_assets()
         self._checks.load_checks()
         self._events.load_events()
     
+    @property
+    def asset_manager(self) -> AssetManager:
+        return self._asset_manager
+
     @property
     def cogs(self) -> CogCore:
         return self._cogs
@@ -65,8 +78,16 @@ class DiscordBot(Bot):
     def checks(self) -> Checks:
         return self._checks
 
+    @property
+    def event(self) -> Events:
+        return self._events
+
     def _start(self) -> None:
-        self._event_loop.run_until_complete(self.client.start(self.core.get_config_threadsafe().secret.discord.bot_token))
+        with self._core.get_config_synced() as config:
+            bot_token = config.secret.discord.bot_token
+
+        self._event_loop.run_until_complete(self.client.start(bot_token))
 
     def _get_cls_qualname(self) -> str:
         return self.__class__.__qualname__
+

@@ -1,39 +1,57 @@
 from pathlib import Path
 
-from fazbot import Constants
-from fazbot.enum import AssetImageFile
 
+class Asset:
+    """Class for reading, storing, and writing files stored in 'asset' directory."""
 
-class ImageAsset:
+    def __init__(self, path: str | Path) -> None:
+        self._dir = Path(path) if isinstance(path, str) else path
+        self._files: dict[Path, bytes] = {}
 
-    def __init__(self) -> None:
-        self._type = AssetImageFile
-        self._dir = Path(Constants.ASSET_IMAGE_DIR)
-        self._files: dict[AssetImageFile, bytes] = {}
+    def read_all(self) -> None:
+        """Reads all files in `path`, and stores it into `_files`"""
+        file_paths = list(self._dir.glob("**/*"))
+        for fp in file_paths:
+            with open(fp, "rb") as opened_file:
+                self._files[fp] = opened_file.read()
 
-    def load(self) -> None:
-        for fp in self._type:
-            with open(self._get_fp(fp), "r") as file:
-                self._files[fp] = file.buffer.read()
-
-    def save(self) -> None:
+    def write_all(self) -> None:
+        """Writes all data in `_files` to their respective file path"""
         for fp, data in self._files.items():
-            with open(self._get_fp(fp), "w") as file:
-                file.buffer.write(data)
+            with open(fp, "wb") as opened_file:
+                opened_file.write(data)
 
-    def get(self, asset: AssetImageFile) -> bytes:
-        return self._files[asset]
+    def write(self, key: str) -> None:
+        """Writes a data in `_files` by `key` to their respective file path
+        Args:
+            key (str): The file name to write.
+        """
+        fp = self.get_fp_by_key(key)
+        with open(fp, "wb") as opened_file:
+            opened_file.write(self.files[fp])
 
-    def set(self, asset: AssetImageFile, data: bytes) -> None:
-        self._files[asset] = data
+    def get(self, key: str) -> bytes:
+        fp = self.get_fp_by_key(key)
+        return self.files[fp]
+
+    def set(self, key: str, data: bytes) -> None:
+        fp = self.get_fp_by_key(key)
+        self.files[fp] = data
+
+    def get_fp_by_key(self, key: str) -> Path:
+        for fp in self._files:
+            # Strict search
+            if key == fp.stem:
+                return fp
+        else:
+            # Less strict search
+            for fp in self._files:
+                if key in fp.name:
+                    return fp
+            else:
+                raise KeyError("Asset with key {key} not found")
 
     @property
-    def files(self) -> dict[AssetImageFile, bytes]:
+    def files(self) -> dict[Path, bytes]:
         return self._files
 
-    @property
-    def enum(self) -> type[AssetImageFile]:
-        return self._type
-
-    def _get_fp(self, path: AssetImageFile) -> Path:
-        return self._dir / path.value

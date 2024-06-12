@@ -2,7 +2,7 @@ from typing import Any
 
 import nextcord
 
-from ..invoked import Help as HelpCommand
+from ..invoke import InvokeHelp as InvokeHelp
 from . import CogBase
 
 
@@ -14,4 +14,5 @@ class Help(CogBase):
             await interaction.send("You can only use this command in a guild channel.")
             return
         cmds = [cmd for cmd in interaction.guild.get_application_commands()]
-        await HelpCommand(interaction, cmds).run()
+        await InvokeHelp(interaction, cmds).run()
+

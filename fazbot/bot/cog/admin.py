@@ -53,7 +53,7 @@ class Admin(CogBase):
 
     @admin.subcommand(name="reload_asset", description="Reloads asset.")
     async def reload_asset(self, interaction: Interaction[Any]) -> None:
-        self._bot.core.get_asset_threadsafe()().load()
+        self._bot.core.get_asset_threadsafe().load()
         await interaction.send("Reloaded asset successfully.")
 
     @admin.subcommand(name="reload_config", description="Reloads configs.")
@@ -142,3 +142,4 @@ class Admin(CogBase):
                 await interaction.send(f"Guild `{guild.name}` (`{guild.id}`) is not whitelisted.")
 
         self._bot.core.userdata.save(self._bot.core.userdata.enum.WHITELISTED_GUILDS)
+

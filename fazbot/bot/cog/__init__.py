@@ -9,3 +9,5 @@ from .wynn_analyze import WynnAnalyze
 from .wynn_stat import WynnStat
 from .wynn_track import WynnTrack
 from .wynn_utils import WynnUtils
+
+from .cog_core import CogCore

@@ -1,4 +1,3 @@
-# pyright: reportMissingTypeStubs=false
 from __future__ import annotations
 
 from typing import TYPE_CHECKING, Protocol
@@ -8,7 +7,9 @@ if TYPE_CHECKING:
 
     from fazbot import Core
 
-    from . import Checks, CogCore
+    from . import Checks, Events
+    from .cog import CogCore
+    from .invoke import AssetManager
 
 
 class Bot(Protocol):
@@ -16,10 +17,15 @@ class Bot(Protocol):
     def stop(self) -> None: ...
     def setup(self) -> None: ...
     @property
-    def checks(self) -> Checks: ...
-    @property
-    def client(self) -> Client: ...
+    def asset_manager(self) -> AssetManager: ...
     @property
     def cogs(self) -> CogCore: ...
     @property
     def core(self) -> Core: ...
+    @property
+    def client(self) -> Client: ...
+    @property
+    def checks(self) -> Checks: ...
+    @property
+    def event(self) -> Events: ...
+

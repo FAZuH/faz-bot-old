@@ -22,7 +22,7 @@ class Config:
         self._fp = Path(Constants.CONFIG_FP)
         self._config: dict[str, Any] = {}
 
-    def load(self) -> None:
+    def read(self) -> None:
         with open(self._fp, "r") as stream:
             self._config = load(stream, Loader=Loader)
         self._application = Config._Application(self._config["application"])
