@@ -32,7 +32,7 @@ class WhitelistedGuildRepository(Repository[WhitelistedGuild, int]):
         await self._db.execute(
             f"""
             INSERT INTO {self.TABLE_NAME} (`guild_id`, `guild_name`, `from`, `until`)
-            VALUES (?, ?, ?, ?)
+            VALUES (%s, %s, %s, %s)
             """,
             (entity.guild_id, entity.guild_name, entity.from_, entity.until)
         )
@@ -42,7 +42,7 @@ class WhitelistedGuildRepository(Repository[WhitelistedGuild, int]):
         await self._db.execute(
             f"""
             DELETE FROM {self.TABLE_NAME}
-            WHERE `guild_id` = ?
+            WHERE `guild_id` = %s
             """,
             (id_,)
         )
@@ -53,7 +53,7 @@ class WhitelistedGuildRepository(Repository[WhitelistedGuild, int]):
             f"""
             SELECT *
             FROM {self.TABLE_NAME}
-            WHERE `guild_id` = ?
+            WHERE `guild_id` = %s
             """,
             (id_,)
         )
@@ -67,7 +67,7 @@ class WhitelistedGuildRepository(Repository[WhitelistedGuild, int]):
             f"""
             SELECT *
             FROM {self.TABLE_NAME}
-            WHERE `guild_id` IN ?
+            WHERE `guild_id` IN ({", ".join("%s" for _ in ids)})
             """,
             (tuple(ids),)
         )

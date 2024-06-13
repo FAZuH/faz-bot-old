@@ -11,12 +11,7 @@ class TestBannedUser(unittest.TestCase):
         self.obj_reason = "test"
         self.obj_from = MagicMock()
         self.obj_until = MagicMock()
-        self.obj = BannedUser(
-            self.obj_userid,
-            self.obj_reason,
-            self.obj_from,
-            self.obj_until
-        )
+        self.obj = BannedUser(self.obj_userid, self.obj_reason, self.obj_from, self.obj_until)
         return super().setUp()
 
     def test_to_dict(self) -> None:

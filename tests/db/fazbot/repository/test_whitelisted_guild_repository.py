@@ -6,23 +6,23 @@ import unittest
 from aiomysql import IntegrityError
 
 from fazbot.db import DatabaseQuery
-from fazbot.db.fazbot.model import BannedUser, banned_user
-from fazbot.db.fazbot.repository import BannedUserRepository
+from fazbot.db.fazbot.model import WhitelistedGuild
+from fazbot.db.fazbot.repository import WhitelistedGuildRepository
 
 
-class TestBannedUserRepository(unittest.IsolatedAsyncioTestCase):
+class TestWhitelistedGuildRepository(unittest.IsolatedAsyncioTestCase):
 
     def setUp(self) -> None:
-        self.e_userid1 = 12345
-        self.e_userid2 = 12346
-        self.e_reason = 'test'
+        self.e_guildid1 = 12345
+        self.e_guildid2 = 12346
+        self.e_guildname = 'test'
         self.e_from = datetime.now()
         self.e_until = datetime.now() + timedelta(days=1)
         self.e_untilnone = None
 
-        self.entity1 = BannedUser(self.e_userid1, self.e_reason, self.e_from, self.e_until)
-        self.entity2 = BannedUser(self.e_userid2, self.e_reason, self.e_from, self.e_untilnone)
-        self.entity3 = BannedUser(self.e_userid2, self.e_reason, self.e_from, self.e_until)
+        self.entity1 = WhitelistedGuild(self.e_guildid1, self.e_guildname, self.e_from, self.e_until)
+        self.entity2 = WhitelistedGuild(self.e_guildid2, self.e_guildname, self.e_from, self.e_untilnone)
+        self.entity3 = WhitelistedGuild(self.e_guildid2, self.e_guildname, self.e_from, self.e_until)
 
     @classmethod
     def setUpClass(cls) -> None:
@@ -33,7 +33,7 @@ class TestBannedUserRepository(unittest.IsolatedAsyncioTestCase):
             "test_fazbot",
             retries=3
         )
-        cls.repo = BannedUserRepository(cls.db)
+        cls.repo = WhitelistedGuildRepository(cls.db)
         cls.eventloop = asyncio.new_event_loop()
         cls.eventloop.run_until_complete(cls.repo.create_table())
         cls.eventloop.run_until_complete(cls.__truncate())
@@ -60,17 +60,17 @@ class TestBannedUserRepository(unittest.IsolatedAsyncioTestCase):
         results = await self.__select_all()
         self.assertEqual(len(results), 2)
 
-        entity1id = BannedUser.from_dict(results[0]).user_id
-        entity2id = BannedUser.from_dict(results[1]).user_id
+        entity1id = WhitelistedGuild.from_dict(results[0]).guild_id
+        entity2id = WhitelistedGuild.from_dict(results[1]).guild_id
 
-        self.assertSetEqual({entity1id, entity2id}, {self.e_userid1, self.e_userid2})
+        self.assertSetEqual({entity1id, entity2id}, {self.e_guildid1, self.e_guildid2})
 
     async def test_remove(self) -> None:
         # PREPARE
         await self.repo.add(self.entity1)
 
         # ACT
-        await self.repo.remove(self.e_userid1)
+        await self.repo.remove(self.e_guildid1)
 
         # ASSERT
         results = await self.__select_all()
@@ -81,30 +81,30 @@ class TestBannedUserRepository(unittest.IsolatedAsyncioTestCase):
         await self.repo.add(self.entity1)
 
         # ACT
-        entity1 = await self.repo.find(self.e_userid1)
+        entity1 = await self.repo.find(self.e_guildid1)
         
         # ASSERT
-        self.assertEqual(entity1.user_id, self.entity1.user_id)  # type: ignore
+        self.assertEqual(entity1.guild_id, self.entity1.guild_id)  # type: ignore
 
     async def test_find_all(self) -> None:
         # PREPARE
         await self.repo.add(self.entity1)
         await self.repo.add(self.entity2)
-        userids = [self.e_userid1, self.e_userid2]
+        guildids = [self.e_guildid1, self.e_guildid2]
 
         # ACT
-        entities = await self.repo.find_all(userids)
+        entities = await self.repo.find_all(guildids)
 
         # ASSERT
         for entity in entities:
-            self.assertIn(entity.user_id, userids)
+            self.assertIn(entity.guild_id, guildids)
 
     async def test_exists(self) -> None:
         # PREPARE
         await self.repo.add(self.entity1)
 
         # ACT
-        isexists = await self.repo.exists(self.e_userid1)
+        isexists = await self.repo.exists(self.e_guildid1)
         self.assertTrue(isexists)
 
     async def test_primary_constraint(self) -> None:
@@ -124,3 +124,4 @@ class TestBannedUserRepository(unittest.IsolatedAsyncioTestCase):
     async def __select_all(self) -> list[dict[str, Any]]:
         results = await self.db.fetch(f" SELECT * FROM {self.repo.TABLE_NAME}")
         return results
+

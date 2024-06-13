@@ -24,7 +24,7 @@ class BannedUserRepository(Repository[BannedUser, int]):
         await self._db.execute(
             f"""
             INSERT INTO {self.TABLE_NAME} (`user_id`, `reason`, `from`, `until`)
-            VALUES (?, ?, ?, ?)
+            VALUES (%s, %s, %s, %s)
             """,
             (entity.user_id, entity.reason, entity.from_, entity.until)
         )
@@ -34,7 +34,7 @@ class BannedUserRepository(Repository[BannedUser, int]):
         await self._db.execute(
             f"""
             DELETE FROM {self.TABLE_NAME}
-            WHERE `user_id` = ?
+            WHERE `user_id` = %s
             """,
             (id_,)
         )
@@ -45,7 +45,7 @@ class BannedUserRepository(Repository[BannedUser, int]):
             f"""
             SELECT *
             FROM {self.TABLE_NAME}
-            WHERE `user_id` = ?
+            WHERE `user_id` = %s
             """,
             (id_,)
         )
@@ -59,7 +59,7 @@ class BannedUserRepository(Repository[BannedUser, int]):
             f"""
             SELECT *
             FROM {self.TABLE_NAME}
-            WHERE `user_id` IN ({", ".join("?" for _ in ids)})
+            WHERE `user_id` IN ({", ".join("%s" for _ in ids)})
             """,
             (tuple(ids),)
         )
