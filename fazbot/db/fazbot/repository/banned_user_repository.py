@@ -20,7 +20,7 @@ class BannedUserRepository(Repository[BannedUser, int]):
         )
 
     # override
-    async def add(self, entity: BannedUser) -> None:
+    async def insert(self, entity: BannedUser) -> None:
         await self._db.execute(
             f"""
             INSERT INTO {self.TABLE_NAME} (`user_id`, `reason`, `from`, `until`)
@@ -30,7 +30,7 @@ class BannedUserRepository(Repository[BannedUser, int]):
         )
 
     # override
-    async def remove(self, id_: int) -> None:
+    async def delete(self, id_: int) -> None:
         await self._db.execute(
             f"""
             DELETE FROM {self.TABLE_NAME}
@@ -40,7 +40,7 @@ class BannedUserRepository(Repository[BannedUser, int]):
         )
 
     # override
-    async def find(self, id_: int) -> BannedUser | None:
+    async def find_one(self, id_: int) -> BannedUser | None:
         results = await self._db.fetch(
             f"""
             SELECT *
@@ -67,6 +67,6 @@ class BannedUserRepository(Repository[BannedUser, int]):
         return entities
 
     # override
-    async def exists(self, id_: int) -> bool:
-        return await self.find(id_) is not None
+    async def is_exists(self, id_: int) -> bool:
+        return await self.find_one(id_) is not None
 

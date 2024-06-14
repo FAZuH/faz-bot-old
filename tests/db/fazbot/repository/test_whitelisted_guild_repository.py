@@ -53,8 +53,8 @@ class TestWhitelistedGuildRepository(unittest.IsolatedAsyncioTestCase):
 
     async def test_add(self) -> None:
         # ACT
-        await self.repo.add(self.entity1)
-        await self.repo.add(self.entity2)
+        await self.repo.insert(self.entity1)
+        await self.repo.insert(self.entity2)
         
         # ASSERT
         results = await self.__select_all()
@@ -67,10 +67,10 @@ class TestWhitelistedGuildRepository(unittest.IsolatedAsyncioTestCase):
 
     async def test_remove(self) -> None:
         # PREPARE
-        await self.repo.add(self.entity1)
+        await self.repo.insert(self.entity1)
 
         # ACT
-        await self.repo.remove(self.e_guildid1)
+        await self.repo.delete(self.e_guildid1)
 
         # ASSERT
         results = await self.__select_all()
@@ -78,18 +78,18 @@ class TestWhitelistedGuildRepository(unittest.IsolatedAsyncioTestCase):
 
     async def test_find(self) -> None:
         # PREPARE
-        await self.repo.add(self.entity1)
+        await self.repo.insert(self.entity1)
 
         # ACT
-        entity1 = await self.repo.find(self.e_guildid1)
+        entity1 = await self.repo.find_one(self.e_guildid1)
         
         # ASSERT
         self.assertEqual(entity1.guild_id, self.entity1.guild_id)  # type: ignore
 
     async def test_find_all(self) -> None:
         # PREPARE
-        await self.repo.add(self.entity1)
-        await self.repo.add(self.entity2)
+        await self.repo.insert(self.entity1)
+        await self.repo.insert(self.entity2)
         guildids = [self.e_guildid1, self.e_guildid2]
 
         # ACT
@@ -101,17 +101,17 @@ class TestWhitelistedGuildRepository(unittest.IsolatedAsyncioTestCase):
 
     async def test_exists(self) -> None:
         # PREPARE
-        await self.repo.add(self.entity1)
+        await self.repo.insert(self.entity1)
 
         # ACT
-        isexists = await self.repo.exists(self.e_guildid1)
+        isexists = await self.repo.is_exists(self.e_guildid1)
         self.assertTrue(isexists)
 
     async def test_primary_constraint(self) -> None:
         # ACT
         with self.assertRaises(IntegrityError):
-            await self.repo.add(self.entity2)
-            await self.repo.add(self.entity3)
+            await self.repo.insert(self.entity2)
+            await self.repo.insert(self.entity3)
 
     async def asyncTearDown(self) -> None:
         await self.__truncate()

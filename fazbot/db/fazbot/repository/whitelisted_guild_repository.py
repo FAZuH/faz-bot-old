@@ -28,7 +28,7 @@ class WhitelistedGuildRepository(Repository[WhitelistedGuild, int]):
         )
 
     # override
-    async def add(self, entity: WhitelistedGuild) -> None:
+    async def insert(self, entity: WhitelistedGuild) -> None:
         await self._db.execute(
             f"""
             INSERT INTO {self.TABLE_NAME} (`guild_id`, `guild_name`, `from`, `until`)
@@ -38,7 +38,7 @@ class WhitelistedGuildRepository(Repository[WhitelistedGuild, int]):
         )
 
     # override
-    async def remove(self, id_: int) -> None:
+    async def delete(self, id_: int) -> None:
         await self._db.execute(
             f"""
             DELETE FROM {self.TABLE_NAME}
@@ -48,7 +48,7 @@ class WhitelistedGuildRepository(Repository[WhitelistedGuild, int]):
         )
 
     # override
-    async def find(self, id_: int) -> WhitelistedGuild | None:
+    async def find_one(self, id_: int) -> WhitelistedGuild | None:
         results = await self._db.fetch(
             f"""
             SELECT *
@@ -75,5 +75,5 @@ class WhitelistedGuildRepository(Repository[WhitelistedGuild, int]):
         return entities
 
     # override
-    async def exists(self, id_: int) -> bool:
-        return await self.find(id_) is not None
+    async def is_exists(self, id_: int) -> bool:
+        return await self.find_one(id_) is not None
