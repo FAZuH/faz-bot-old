@@ -1,10 +1,15 @@
-from typing import Any
+from datetime import datetime
+from typing import TYPE_CHECKING, Any
 
 import nextcord
-from nextcord import Interaction
+
+from fazbot.db.fazbot.model import BannedUser, WhitelistedGuild
 
 from .. import Utils
 from . import CogBase
+
+if TYPE_CHECKING:
+    from nextcord import Interaction
 
 
 class Admin(CogBase):
@@ -17,129 +22,212 @@ class Admin(CogBase):
     async def admin(self, interaction: Interaction[Any]) -> None:
         ...
 
-    @admin.subcommand(name="ban", description="Bans an user from using the bot.")
-    async def ban(self, interaction: Interaction[Any], user_id: str) -> None:
+    @admin.subcommand(name="ban")
+    async def ban(
+            self,
+            interaction: Interaction[Any],
+            user_id: str,
+            reason: str = '',
+            until: str | None = None
+        ) -> None:
+        """Bans an user from using the bot.
+
+        Parameters
+        ----------
+        user_id : str
+            The user ID to ban.
+        reason : str, optional
+            Reason of ban, by default ''
+        until : str | None, optional
+            Time when the user will be unbanned, by default None
+        """
         user = await Utils.must_get_user(self._bot.client, user_id)
-        banned_users = self._bot.core.userdata.get(self._bot.core.userdata.enum.BANNED_USERS)
 
-        if user.id in banned_users:
-            await interaction.send(f"User `{user.name}` (`{user.id}`) is already banned.")
-            return
+        with self._bot.core.enter_fazbotdb() as db:
+            is_banned = await db.banned_user_repository.is_exists(user.id)
+            if is_banned:
+                return await self._respond_error(interaction, f"User `{user.name}` (`{user.id}`) is already banned.")
 
-        # TODO: not thread safe
-        banned_users.append(user.id)  # type: ignore
-        self._bot.core.userdata.save(self._bot.core.userdata.enum.BANNED_USERS)
+            banned_user = BannedUser(user.id, reason, datetime.now(), Utils.must_parse_date_string(until) if until else None)
+            await db.banned_user_repository.insert(banned_user)
 
-        await interaction.send(f"Banned user `{user.name}` (`{user.id}`).")
+        await self._respond_successful(interaction, f"Banned user `{user.name}` (`{user.id}`).")
 
-    @admin.subcommand(name="unban", description="Unbans an user from using the bot.")
+    @admin.subcommand(name="unban")
     async def unban(self, interaction: Interaction[Any], user_id: str) -> None:
+        """Unbans an user from using the bot.
+
+        Parameters
+        ----------
+        user_id : str
+            The user ID to unban.
+        """
         user = await Utils.must_get_user(self._bot.client, user_id)
 
-        banned_users = self._bot.core.userdata.get(self._bot.core.userdata.enum.BANNED_USERS)
+        with self._bot.core.enter_fazbotdb() as db:
+            is_banned = await db.banned_user_repository.is_exists(user.id)
+            if not is_banned:
+                return await self._respond_error(interaction, f"User `{user.name}` (`{user.id}`) is not banned.")
 
-        if user.id not in banned_users:
-            await interaction.send(f"User `{user.name}` (`{user.id}`) is not banned.")
-            return
+            await db.banned_user_repository.delete(user.id)
+            
+        await self._respond_successful(interaction, f"Unbanned user `{user.name}` (`{user.id}`).")
 
-        banned_users.remove(user.id)  # type: ignore
-        self._bot.core.userdata.save(self._bot.core.userdata.enum.BANNED_USERS)
-
-        await interaction.send(f"Unbanned user `{user.name}` (`{user.id}`).")
-
-    @admin.subcommand(name="echo", description="Echoes a message.")
+    @admin.subcommand(name="echo")
     async def echo(self, interaction: Interaction[Any], message: str) -> None:
+        """Echoes a message.
+
+        Parameters
+        ----------
+        message : str
+            The message to echo.
+        """
         await interaction.send(message)
 
-    @admin.subcommand(name="reload_asset", description="Reloads asset.")
+    @admin.subcommand(name="reload_asset")
     async def reload_asset(self, interaction: Interaction[Any]) -> None:
-        self._bot.core.get_asset_threadsafe().load()
-        await interaction.send("Reloaded asset successfully.")
+        """Reloads asset."""
+        with self._bot.core.enter_asset() as asset:
+            asset.read_all()
 
-    @admin.subcommand(name="reload_config", description="Reloads configs.")
+        self._bot.asset_manager.load_assets()
+        await self._respond_successful(interaction, "Reloaded asset successfully.")
+
+    @admin.subcommand(name="reload_config")
     async def reload_config(self, interaction: Interaction[Any]) -> None:
-        self._bot.core.get_config_threadsafe().load()
-        await interaction.send("Reloaded config successfully.")
+        """Reloads configs."""
+        with self._bot.core.enter_config() as config:
+            config.read()
 
-    @admin.subcommand(name="reload_userdata", description="Reloads userdata.")
-    async def reload_userdata(self, interaction: Interaction[Any]) -> None:
-        self._bot.core.userdata.load()
-        await interaction.send("Reloaded userdata successfully.")
+        await self._respond_successful(interaction, "Reloaded config successfully.")
 
-    @admin.subcommand(name="send", description="Sends a message to a channel.")
+    @admin.subcommand(name="send")
     async def send(self, interaction: Interaction[Any], channel_id: str, message: str) -> None:
+        """Unbans an user from using the bot.
+
+        Parameters
+        ----------
+        channel_id : str
+            The channel ID to send the message.
+        message : str
+            Message to send.
+        """
         channel = await Utils.must_get_channel(self._bot.client, channel_id)
 
-        if not hasattr(channel, "send"):
-            await interaction.send(f"Channel of type `{type(channel)}` does not support sending messages.")
-            return
+        if not self.__is_channel_sendable(channel):
+            return await self._respond_error(interaction, f"Channel of type `{type(channel)}` does not support sending messages.") 
 
         try:
             await channel.send(message)  # type: ignore
         except nextcord.DiscordException as e:
-            await interaction.send(f"Failed to send message: {e}")
+            return await self._respond_error(interaction, f"Failed sending message: {e}")
 
-        await interaction.send(f"Sent message on channel `{channel.name}` (`{channel.id}`).")  # type: ignore
+        await self._respond_successful(interaction, f"Sent message on channel `{channel.name}` (`{channel.id}`).")  # type: ignore
 
-    @admin.subcommand(name="sync_guild", description="Synchronizes app commands for a specific guild.")
+    @admin.subcommand(name="sync_guild")
     async def sync_guild(self, interaction: Interaction[Any], guild_id: str) -> None:
+        """Syncs app commands for a specific guild.
+
+        Parameters
+        ----------
+        guild_id : str
+            The guild ID to sync app commands to.
+        """        
         guild = await Utils.must_get_guild(self._bot.client, guild_id)
 
-        if guild.id not in self._bot.core.userdata.get(self._bot.core.userdata.enum.WHITELISTED_GUILDS):
-            await interaction.send(
-                    f"Guild `{guild.name}` (`{guild.id}`) is not whitelisted. "
-                    f"Whitelist it first with `{self._bot.client.command_prefix}{self.whitelist.qualified_name}`"
+        if not self.__is_whitelisted(guild.id):
+            return await self._respond_error(
+                interaction,
+                f"Guild `{guild.name}` (`{guild.id}`) is not whitelisted. "
+                f"Whitelist it first with `{self._bot.client.command_prefix}{self.whitelist.qualified_name}`"
             )
-            return
 
         await self._bot.client.sync_application_commands(guild_id=guild.id)
+        await self._respond_successful(interaction, f"Synchronized app commands for guild `{guild.name}` (`{guild.id}`).")
 
-        await interaction.send(f"Synchronized app commands for guild `{guild.name}` (`{guild.id}`).")
-
-    @admin.subcommand(name="sync", description="Synchronizes app commands across all whitelisted guilds.")
+    @admin.subcommand(name="sync")
     async def sync(self, interaction: Interaction[Any]) -> None:
-        guilds_len = 0
-
-        for guild_id in self._bot.core.userdata.get(self._bot.core.userdata.enum.WHITELISTED_GUILDS):
-            assert isinstance(guild_id, int)
+        """Synchronizes app commands across all whitelisted guilds."""
+        for guild_id in self._whitelisted_guild_ids:
             await self._bot.client.sync_application_commands(guild_id=guild_id)
-            guilds_len += 1
 
-        await interaction.send(f"Synchronized app commands across {guilds_len} guilds.")
+        await self._respond_successful(
+            interaction,
+            f"Synchronized app commands across {len(self._whitelisted_guild_ids)} guilds."
+        )
 
     @admin.subcommand(name="shutdown", description="Shuts down the bot.")
     async def shutdown(self, interaction: Interaction[Any]) -> None:
-        await interaction.send("Shutting down...")
+        """Shutdowns the bot enitirely."""
+        await self._respond_successful(interaction, "Shutting down...")
         self._bot.stop()
 
-    @admin.subcommand(name="whisper", description="Whispers a message to a user.")
+    @admin.subcommand(name="whisper")
     async def whisper(self, interaction: Interaction[Any], user_id: str, message: str) -> None:
+        """Whispers a message to a user.
+
+        Parameters
+        ----------
+        user_id : str
+            The user ID to whisper.
+        message : str
+            The message to whisper to the user.
+        """
         user = await Utils.must_get_user(self._bot.client, user_id)
 
         try:
             await user.send(message)
         except nextcord.DiscordException as e:
-            await interaction.send(f"Failed whispering message to user {user.display_name}: `{e}`")
+            return await self._respond_error(interaction, f"Failed whispering message to user {user.display_name}: `{e}`")
 
-        await interaction.send(f"Whispered message to `{user.name}` (`{user.id}`).")
+        await self._respond_successful(interaction, f"Whispered message to `{user.name}` (`{user.id}`).")
 
-    @admin.subcommand(name="whitelist", description="Whitelists a guild.")
-    async def whitelist(self, interaction: Interaction[Any], guild_id: str, option: bool = True) -> None:
+    # TODO: manage syncing database and local memory
+    @admin.subcommand(name="whitelist")
+    async def whitelist(self, interaction: Interaction[Any], guild_id: str, option: bool = True, until: str | None = None) -> None:
+        """Whitelists or unwhitelists a guild from using the bot.
+
+        Parameters
+        ----------
+        guild_id : str
+            The guild ID to whitelist.
+        until : str | None, optional
+            Date until the whitelist expires, by default None
+        """
         guild = await Utils.must_get_guild(self._bot.client, guild_id)
 
-        whitelisted_guilds: list[int] = self._bot.core.userdata.get(self._bot.core.userdata.enum.WHITELISTED_GUILDS)  # type: ignore
-        if option:
-            if guild.id in whitelisted_guilds:
-                whitelisted_guilds.append(guild.id)
-                await interaction.send(f"Whitelisted guild `{guild.name}` (`{guild.id}`).")
-            else:
-                await interaction.send(f"Guild `{guild.name}` (`{guild.id}`) is already whitelisted.")
-        else:
-            if guild.id in whitelisted_guilds:
-                whitelisted_guilds.remove(guild.id)
-                await interaction.send(f"Unwhitelisted guild `{guild.name}` (`{guild.id}`).")
-            else:
-                await interaction.send(f"Guild `{guild.name}` (`{guild.id}`) is not whitelisted.")
+        if self.__is_whitelisted(guild.id):
+            return await self._respond_error(interaction, f"Guild `{guild.name}` (`{guild.id}`) is already whitelisted.")
 
-        self._bot.core.userdata.save(self._bot.core.userdata.enum.WHITELISTED_GUILDS)
+        with self._bot.core.enter_fazbotdb() as db:
+            whitelisted_guild = WhitelistedGuild(guild.id, guild.name, datetime.now(), Utils.must_parse_date_string(until) if until else None)
+            await db.whitelisted_guild_repository.insert(whitelisted_guild)
+            
+        self.get_whitelisted_guild_ids().add(guild.id)
+        await self._respond_successful(interaction, f"Whitelisted guild `{guild.name}` (`{guild.id}`).")
 
+    @admin.subcommand(name="unwhitelist")
+    async def unwhitelist(self, interaction: Interaction[Any], guild_id: str) -> None:
+        """Unwhitelists a guild from using the bot.
+
+        Parameters
+        ----------
+        guild_id : str
+            The guild ID to unwhitelist.
+        """
+        guild = await Utils.must_get_guild(self._bot.client, guild_id)
+
+        if not self.__is_whitelisted(guild.id):
+            return await self._respond_error(interaction, f"Guild `{guild.name}` (`{guild.id}`) is not whitelisted.")
+
+        with self._bot.core.enter_fazbotdb() as db:
+            await db.whitelisted_guild_repository.delete(guild.id) 
+
+        self.get_whitelisted_guild_ids().remove(guild.id)
+        await self._respond_successful(interaction, f"Unwhitelisted guild `{guild.name}` (`{guild.id}`).")
+
+    def __is_whitelisted(self, guild_id: int) -> bool:
+        return guild_id in self.get_whitelisted_guild_ids()
+
+    def __is_channel_sendable(self, channel: Any) -> bool:
+        return hasattr(channel, "send")

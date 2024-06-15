@@ -19,9 +19,7 @@ class DiscordBot(Bot):
     def __init__(self, core: Core) -> None:
         self._core = core
 
-        with core.enter_asset() as asset:
-            self._asset_manager = AssetManager(asset.files)
-
+        self._asset_manager = AssetManager(self)
         self._checks = Checks(self)
         self._cogs = CogCore(self)
         self._events = Events(self)
@@ -38,26 +36,27 @@ class DiscordBot(Bot):
         self._discord_bot_thread = Thread(target=self._start, daemon=True, name=self._get_cls_qualname())
 
     def start(self) -> None:
-        with self._core.enter_logger() as logger:
+        with self.core.enter_logger() as logger:
             logger.console.info(f"Starting {self._get_cls_qualname()}...")
 
         self._discord_bot_thread.start()
 
-        with self._core.enter_logger() as logger:
+        with self.core.enter_logger() as logger:
             logger.console.info(f"Started {self._get_cls_qualname()}.")
 
     def stop(self) -> None:
-        with self._core.enter_logger() as logger:
+        with self.core.enter_logger() as logger:
             logger.console.info(f"Stopping {self._get_cls_qualname()}...")
 
         self._event_loop.run_until_complete(self.client.close())
 
     def setup(self) -> None:
         """Initial setup for the bot."""
+        self.asset_manager.load_assets()
         self.cogs.setup()
-        self._checks.load_checks()
-        self._events.load_events()
-    
+        self.checks.load_checks()
+        self.events.load_events()
+
     @property
     def asset_manager(self) -> AssetManager:
         return self._asset_manager
@@ -79,7 +78,7 @@ class DiscordBot(Bot):
         return self._checks
 
     @property
-    def event(self) -> Events:
+    def events(self) -> Events:
         return self._events
 
     def _start(self) -> None:

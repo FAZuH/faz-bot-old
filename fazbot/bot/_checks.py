@@ -35,4 +35,5 @@ class Checks:
         return is_not_banned
 
     def load_checks(self) -> None:
+        """Loads global checks to the client."""
         self._bot.client.add_application_command_check(self.is_not_banned)

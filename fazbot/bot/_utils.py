@@ -1,6 +1,9 @@
 from __future__ import annotations
 
+from datetime import datetime
 from typing import TYPE_CHECKING, Callable
+
+import dateparser
 
 if TYPE_CHECKING:
     from nextcord import Guild, PartialMessageable, Thread, User
@@ -31,3 +34,10 @@ class Utils:
         if not (ret := get_strategy(id_int)):
             raise ValueError(f"Failed getting object from ID {id_str}")
         return ret
+
+    @staticmethod
+    def must_parse_date_string(datestr: str) -> datetime:
+        date = dateparser.parse(datestr)
+        if not date:
+            raise ValueError(f"Failed parsing date string {datestr}")
+        return date

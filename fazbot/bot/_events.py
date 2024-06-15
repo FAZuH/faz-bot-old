@@ -20,6 +20,7 @@ class Events:
         self._ready = False
 
     def load_events(self) -> None:
+        """Loads events to the client."""
         self._bot.client.add_listener(self.on_ready)
         self._bot.client.add_listener(self.on_application_command_completion)
         self._bot.client.add_listener(self.on_application_command_error)
@@ -27,7 +28,8 @@ class Events:
 
     async def on_ready(self) -> None:
         if self._bot.client.user is not None:
-            await self._bot.core.logger.discord.success(f"{self._bot.client.user.display_name} has successfully started.")
+            with self._bot.core.enter_logger() as logger:
+                await logger.discord.success(f"{self._bot.client.user.display_name} has successfully started.")
 
         await self._bot.client.change_presence(activity=Activity(type=ActivityType.playing, name="/help"))
 
@@ -83,7 +85,8 @@ class Events:
             message += f", channel={channelname}"
         message += f", args={args}"
 
-        self._bot.core.logger.console.debug(message)
+        with self._bot.core.enter_logger() as logger:
+            logger.console.debug(message)
 
     def _get_unexpected_error_embed(self, exception: BaseException, is_traceback: bool) -> Embed:
         embed_description = f"An error occurred while executing the command: {exception}"

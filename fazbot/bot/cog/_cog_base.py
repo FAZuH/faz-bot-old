@@ -1,8 +1,9 @@
 from __future__ import annotations
 
 import asyncio
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 
+from discord import Colour, Embed, Interaction
 from nextcord import ClientException
 from nextcord.ext import commands
 
@@ -40,10 +41,6 @@ class CogBase(commands.Cog):
             # this usually only happens on tests
             pass
 
-    def _setup(self) -> None:
-        """Method to be run on cog initialization. Override this method in subclasses."""
-        pass
-
     @classmethod
     def get_whitelisted_guild_ids(cls) -> set[int]:
         return cls._whitelisted_guild_ids
@@ -51,4 +48,24 @@ class CogBase(commands.Cog):
     @classmethod
     def set_whitelisted_guild_ids(cls, guild_ids: set[int]) -> None:
         cls._whitelisted_guild_ids = guild_ids
+
+    async def _respond_successful(self, interaction: Interaction[Any], message: str) -> None:
+        embed = Embed(
+            title="Success",
+            description=message,
+            color=Colour.dark_green()
+        )
+        await interaction.response.send_message(embed=embed)
+
+    async def _respond_error(self, interaction: Interaction[Any], message: str) -> None:
+        embed = Embed(
+            title="Error",
+            description=message,
+            color=Colour.dark_red()
+        )
+        await interaction.response.send_message(embed=embed)
+
+    def _setup(self) -> None:
+        """Method to be run on cog initialization. Override this method in subclasses."""
+        pass
 

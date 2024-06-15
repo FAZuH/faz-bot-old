@@ -13,6 +13,8 @@ class CogCore:
         self._bot = bot
 
     def setup(self) -> None:
+        """Intansiates all cogs and adds all application commands to the client.
+        Should only be run once"""
         self._admin = Admin(self._bot)
         self._help = Help(self._bot)
         self._info = Info(self._bot)
@@ -25,4 +27,3 @@ class CogCore:
 
         with self._bot.core.enter_logger() as logger:
             logger.console.info("Added all application commands.")
-
