@@ -7,9 +7,8 @@ if TYPE_CHECKING:
 
     from fazbot import Core
 
-    from . import Checks, Events
+    from . import AssetManager, Checks, Events
     from .cog import CogCore
-    from .invoke import AssetManager
 
 
 class Bot(Protocol):

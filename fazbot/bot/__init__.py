@@ -1,4 +1,5 @@
 # type: ignore
+from ._asset_manager import AssetManager
 from ._checks import Checks
 from ._utils import Utils
 from ._events import Events

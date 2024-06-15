@@ -6,9 +6,8 @@ from typing import TYPE_CHECKING
 from nextcord import Intents
 from nextcord.ext import commands
 
-from . import Bot, Checks, Events
+from . import AssetManager, Bot, Checks, Events
 from .cog import CogCore
-from .invoke import AssetManager
 
 if TYPE_CHECKING:
     from fazbot import Core
