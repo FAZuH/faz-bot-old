@@ -1,6 +1,6 @@
 # pyright: reportPrivateUsage=none
 import asyncio
-from unittest import TestCase
+from unittest import IsolatedAsyncioTestCase
 from unittest.mock import MagicMock
 
 from fazbot.bot import DiscordBot
@@ -8,11 +8,13 @@ from fazbot.bot.cog import Admin
 from fazbot.core import FazBot
 
 
-class TestAdmin(TestCase):
+class TestAdmin(IsolatedAsyncioTestCase):
+
+    def setUp(self) -> None:
+        self.interaction = MagicMock()
 
     @classmethod
     def setUpClass(cls) -> None:
-        cls.interaction = MagicMock()
         cls._core = FazBot()
 
         with cls._core.enter_fazbotdb() as db:
@@ -23,16 +25,6 @@ class TestAdmin(TestCase):
         cls._bot = DiscordBot(cls._core)
         cls._admin = Admin(cls._bot)
         cls._admin.setup()
-        return super().setUpClass()
-
-    def test_cog_check(self) -> None:
-        pass
-
-    def test_cog_application_command_check(self) -> None:
-        pass
-
-    def whisper(self) -> None:
-        pass
 
     def ban(self) -> None:
         pass

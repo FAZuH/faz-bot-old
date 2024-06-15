@@ -1,36 +1,16 @@
-from __future__ import annotations
-from typing import TYPE_CHECKING, Any
-from dataclasses import dataclass
+from datetime import datetime
+from typing import Optional
 
-from . import Model
+from sqlalchemy import String
+from sqlalchemy.orm import Mapped, mapped_column
 
-if TYPE_CHECKING:
-    from datetime import datetime
+from . import BaseModel
 
 
-@dataclass
-class BannedUser(Model):
-    user_id: int
-    reason: str
-    from_: datetime
-    until: datetime | None
+class BannedUser(BaseModel):
+    __tablename__ = "banned_user"
 
-    # override
-    def to_dict(self) -> dict[str, Any]:
-        return {
-            "user_id": self.user_id,
-            "reason": self.reason,
-            "from": self.from_,
-            "until": self.until,
-        }
-
-    # override
-    @classmethod
-    def from_dict(cls, data: dict[str, Any]) -> BannedUser:
-        return cls(
-            data["user_id"],
-            data["reason"],
-            data["from"],
-            data["until"],
-        )
-
+    user_id: Mapped[int] = mapped_column(primary_key=True)
+    reason: Mapped[str] = mapped_column(String(255))
+    from_: Mapped[datetime] = mapped_column(name="from")
+    until: Mapped[Optional[datetime]] = mapped_column(default=None)

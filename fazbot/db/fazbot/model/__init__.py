@@ -1,5 +1,5 @@
-# type: ignore
-from .model import Model
+from ._base_model import BaseModel
 
-from .banned_user import BannedUser  # depends: Model
-from .whitelisted_guild import WhitelistedGuild  # depends: Model
+from .banned_user import BannedUser  # depends: BaseModel
+from .whitelisted_guild import WhitelistedGuild  # depends: BaseModel
+

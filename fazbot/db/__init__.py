@@ -1,3 +1,2 @@
 # type: ignore
-from .database_query import DatabaseQuery
-from .fazbot import IFazBotDatabase
+from ._base_database import BaseDatabase

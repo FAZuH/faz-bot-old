@@ -2,14 +2,12 @@ from datetime import datetime
 from typing import TYPE_CHECKING, Any
 
 import nextcord
+from nextcord import Interaction
 
 from fazbot.db.fazbot.model import BannedUser, WhitelistedGuild
 
 from .. import Utils
 from . import CogBase
-
-if TYPE_CHECKING:
-    from nextcord import Interaction
 
 
 class Admin(CogBase):
