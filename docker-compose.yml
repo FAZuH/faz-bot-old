@@ -1,25 +1,10 @@
 version: "3.8"
 
 services:
-  fazbotbot:
-    build:
-      context: .
-      dockerfile: Dockerfile
-    image: fazbot
+  fazbot:
+    build: .
+    image: fazbot:latest
     container_name: fazbot
-    restart: on-failure
+    restart: unless-stopped
     volumes:
       - ./config.yml:/app/config.yml
-  #   depends_on:
-  #     - mysql_db
-
-  # mysql_db:
-  #   image: mysql:latest
-  #   volumes:
-  #     - db_data:/var/lib/mysql
-  #   environment:
-  #     - MYSQL_ROOT_PASSWORD=root
-  #     - MYSQL_DATABASE=fazbot
-  #     - MYSQL_PASSWORD=root
-# volumes:
-#   db_data:

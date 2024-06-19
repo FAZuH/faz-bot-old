@@ -1,9 +1,9 @@
 FROM python:3.12.3-slim
 
-WORKDIR /FazBot
-COPY requirements.txt .
-RUN pip3 install --no-cache-dir -r requirements.txt
+WORKDIR /usr/fazbot/app
 
-COPY . .
+COPY . /usr/fazbot/app
+
+RUN pip3 install --no-cache-dir -r requirements.txt
 
 CMD ["python", "-m", "fazbot"]
