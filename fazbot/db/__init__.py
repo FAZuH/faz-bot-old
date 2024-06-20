@@ -1,2 +1,2 @@
 # type: ignore
-from ._base_database import BaseDatabase
+from ._base_database import BaseAsyncDatabase

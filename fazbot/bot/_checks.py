@@ -18,7 +18,7 @@ class Checks:
 
         user_id = interaction.user.id
         with self._bot.core.enter_config() as config:
-            is_admin = user_id == config.application.admin_discord_id
+            is_admin = user_id == config.admin_discord_id
 
         with self._bot.core.enter_logger() as logger:
             logger.console.debug(f"check {self.is_admin.__name__}: {user_id} is {is_admin}.")

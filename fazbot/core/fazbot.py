@@ -29,16 +29,13 @@ class FazBot(Core):
 
         with self.enter_config() as config:
             self._fazbotdb = FazBotDatabase(
-                config.secret.fazbot.db_username,
-                config.secret.fazbot.db_password,
-                config.secret.fazbot.db_schema_name,
-                config.secret.fazbot.db_max_retries,
+                "mysql+aiomysql",
+                config.fazbot_db_username,
+                config.fazbot_db_password,
+                "localhost",
+                config.fazbot_db_max_retries
             )
-            self._logger = FazBotLogger(
-                config.logging.discord_log_webhook,
-                config.application.debug,
-                config.application.admin_discord_id
-            )
+            self._logger = FazBotLogger(config.discord_log_webhook, config.is_debug, config.admin_discord_id)
 
         self._heartbeat = SimpleHeartbeat(self)
         self._bot = DiscordBot(self)

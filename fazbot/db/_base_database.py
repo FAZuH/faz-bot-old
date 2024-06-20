@@ -8,7 +8,7 @@ if TYPE_CHECKING:
     from sqlalchemy.ext.asyncio import AsyncConnection, AsyncEngine, AsyncSession
 
 
-class BaseDatabase:
+class BaseAsyncDatabase:
 
     def __init__(
             self,

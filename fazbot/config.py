@@ -1,17 +1,11 @@
 from __future__ import annotations
-from abc import ABC
 from pathlib import Path
-from typing import TYPE_CHECKING, Any
+from typing import Any, TYPE_CHECKING
 
-from yaml import dump, load, Dumper, Loader
+from yaml import Dumper, Loader, dump, load
 
 if TYPE_CHECKING:
     from pathlib import Path
-
-
-class _ConfigNode(ABC):
-    def __init__(self, config: dict[str, Any]) -> None:
-        self._config = config
 
 
 class Config:
@@ -23,74 +17,32 @@ class Config:
     def read(self) -> None:
         with open(self._fp, "r") as stream:
             self._config = load(stream, Loader=Loader)
-        self._application = Config._Application(self._config["application"])
-        self._logging = Config._Logging(self._config["logging"])
-        self._secret = Config._Secret(self._config["secret"])
+
+        app = self._config["application"]
+        self.is_debug = bool(app["debug"])
+        self.admin_discord_id = int(app["admin_discord_id"])
+
+        logging = self._config["logging"]
+        self.discord_log_webhook = logging["discord_log_webhook"]
+        self.discord_status_webhook = logging["discord_report_webhook"]
+
+        secret = self._config["secret"]
+
+        secret_discord = secret["discord"]
+        self.discord_bot_token = secret_discord["bot_token"]
+
+        secret_fazbot = secret["fazbot"]
+        self.fazbot_db_username = secret_fazbot["username"]
+        self.fazbot_db_password = secret_fazbot["password"]
+        self.fazbot_db_max_retries = secret_fazbot["max_retries"]
+        self.fazbot_db_name = secret_fazbot["database_name"]
+
+        secret_wynndb = secret["wynndb"]
+        self.wynndb_db_username = secret_wynndb["username"]
+        self.wynndb_db_password = secret_wynndb["password"]
+        self.wynndb_db_max_retries = secret_wynndb["max_retries"]
+        self.wynndb_db_name = secret_wynndb["database_name"]
 
     def save(self) -> None:
         with open(self._fp, "w") as stream:
             dump(self._config, stream, Dumper)
-
-    @property
-    def application(self) -> Config._Application:
-        return self._application
-
-    @property
-    def logging(self) -> Config._Logging:
-        return self._logging
-
-    @property
-    def secret(self) -> Config._Secret:
-        return self._secret
-
-    class _Application(_ConfigNode):
-        @property
-        def debug(self) -> bool:
-            return bool(self._config["debug"])
-        @property
-        def admin_discord_id(self) -> int:
-            return int(self._config["admin_discord_id"])
-
-    class _Logging(_ConfigNode):
-        @property
-        def discord_log_webhook(self) -> str:
-            return self._config["discord_log_webhook"]
-        @property
-        def discord_status_webhook(self) -> str:
-            return self._config["discord_report_webhook"]
-
-    class _Secret(_ConfigNode):
-        def __init__(self, config: dict[str, Any]) -> None:
-            super().__init__(config)
-            self._discord = Config._Secret._Discord(config["discord"])
-            self._fazbot = Config._Secret._Database(config["fazbot"])
-            self._wynndb = Config._Secret._Database(config["wynndb"])
-        @property
-        def discord(self) -> Config._Secret._Discord:
-            return self._discord
-        @property
-        def fazbot(self) -> Config._Secret._Database:
-            return self._fazbot
-        @property
-        def wynndb(self) -> Config._Secret._Database:
-            return self._wynndb
-
-        class _Discord(_ConfigNode):
-            @property
-            def bot_token(self) -> str:
-                return self._config["bot_token"]
-
-        class _Database(_ConfigNode):
-            @property
-            def db_username(self) -> str:
-                return self._config["db_username"]
-            @property
-            def db_password(self) -> str:
-                return self._config["db_password"]
-            @property
-            def db_max_retries(self) -> int:
-                return int(self._config["db_max_retries"])
-            @property
-            def db_schema_name(self) -> str:
-                return self._config["db_schema_name"]
-

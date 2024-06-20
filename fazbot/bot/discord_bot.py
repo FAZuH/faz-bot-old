@@ -82,7 +82,7 @@ class DiscordBot(Bot):
 
     def _start(self) -> None:
         with self._core.enter_config() as config:
-            bot_token = config.secret.discord.bot_token
+            bot_token = config.discord_bot_token
 
         self._event_loop.run_until_complete(self.client.start(bot_token))
 
