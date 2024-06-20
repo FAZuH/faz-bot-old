@@ -34,6 +34,22 @@ class BaseAsyncDatabase[T: DeclarativeBase](ABC):
         async with async_session.begin() as session:
             yield session
 
+    @asynccontextmanager
+    async def must_enter_connection(self, connection: AsyncConnection | None = None) -> AsyncGenerator[AsyncConnection, None]:
+        if connection:
+            yield connection
+        else:
+            async with self.enter_connection() as connection:
+                yield connection
+
+    @asynccontextmanager
+    async def must_enter_session(self, session: AsyncSession | None = None) -> AsyncGenerator[AsyncSession, None]:
+        if session:
+            yield session
+        else:
+            async with self.enter_session() as session:
+                yield session
+
     async def create_all(self) -> None:
         async with self.enter_connection() as connection:
             await connection.run_sync(self.base_model.metadata.create_all)
