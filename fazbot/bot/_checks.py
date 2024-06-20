@@ -25,13 +25,13 @@ class Checks:
 
         return is_admin
 
-    def is_not_banned(self, interaction: Interaction[Any]) -> bool:
+    async def is_not_banned(self, interaction: Interaction[Any]) -> bool:
         if not interaction.user:
             return False
 
-        user_id = interaction.user.id
-        # is_not_banned = user_id not in self._bot.core.userdata.get(UserdataFile.BANNED_USERS)
-        is_not_banned = False
+        with self._bot.core.enter_fazbotdb() as db:
+            is_not_banned = await db.banned_user_repository.is_exists(interaction.user.id)
+
         return is_not_banned
 
     def load_checks(self) -> None:
