@@ -1,4 +1,5 @@
 from __future__ import annotations
+from abc import ABC, abstractmethod
 from contextlib import asynccontextmanager
 from typing import AsyncGenerator, TYPE_CHECKING
 
@@ -6,9 +7,10 @@ from sqlalchemy.ext.asyncio import async_sessionmaker, create_async_engine
 
 if TYPE_CHECKING:
     from sqlalchemy.ext.asyncio import AsyncConnection, AsyncEngine, AsyncSession
+    from sqlalchemy.orm import DeclarativeBase
 
 
-class BaseAsyncDatabase:
+class BaseDatabase[T: DeclarativeBase](ABC):
 
     def __init__(
             self,
@@ -32,7 +34,15 @@ class BaseAsyncDatabase:
         async with async_session.begin() as session:
             yield session
 
+    async def create_all(self) -> None:
+        async with self.enter_connection() as connection:
+            await connection.run_sync(self.base_model.metadata.create_all)
+
     @property
     def engine(self) -> AsyncEngine:
         return self._engine
+
+    @property
+    @abstractmethod
+    def base_model(self) -> T: ...
 
