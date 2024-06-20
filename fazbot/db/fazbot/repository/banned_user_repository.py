@@ -12,8 +12,7 @@ if TYPE_CHECKING:
 class BannedUserRepository(Repository[BannedUser]):
 
     def __init__(self, database: BaseAsyncDatabase) -> None:
-        self._model = BannedUser
-        super().__init__(database, self._model)
+        super().__init__(database, BannedUser)
 
     async def is_exists(self, guild_id: int) -> bool:
         async with self.database.enter_session() as session:

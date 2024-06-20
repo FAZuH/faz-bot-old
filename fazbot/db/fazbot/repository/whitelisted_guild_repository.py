@@ -10,5 +10,4 @@ if TYPE_CHECKING:
 class WhitelistedGuildRepository(Repository[WhitelistedGuild]):
 
     def __init__(self, database: BaseAsyncDatabase) -> None:
-        self._model = WhitelistedGuild
-        super().__init__(database, self._model)
+        super().__init__(database, WhitelistedGuild)
