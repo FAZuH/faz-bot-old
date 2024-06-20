@@ -4,7 +4,7 @@ from typing import Generator, Protocol, TYPE_CHECKING
 
 if TYPE_CHECKING:
     from fazbot import Asset, Bot, Config, Heartbeat, Logger
-    from fazbot.db import IFazBotDatabase
+    from fazbot.db.fazbot import IFazBotDatabase
 
 
 class Core(Protocol):
