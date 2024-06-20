@@ -10,7 +10,7 @@ if TYPE_CHECKING:
     from sqlalchemy.orm import DeclarativeBase
 
 
-class BaseDatabase[T: DeclarativeBase](ABC):
+class BaseAsyncDatabase[T: DeclarativeBase](ABC):
 
     def __init__(
             self,
