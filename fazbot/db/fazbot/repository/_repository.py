@@ -35,9 +35,10 @@ class Repository[T: BaseModel](ABC):
     def database(self) -> BaseAsyncDatabase:
         return self._database
 
-    async def insert(self, entities: Iterable[T], session: None | AsyncSession = None) -> None:
+    async def insert(self, entities: Iterable[T] | T, session: None | AsyncSession = None) -> None:
         async with self.database.must_enter_session(session) as session:
-            session.add_all(entities)
+            iterable = self.__ensure_iterable(entities)
+            session.add_all(iterable)
 
     async def create_table(self, session: None | AsyncSession = None) -> None:
         async with self.database.must_enter_session(session) as session:
@@ -47,3 +48,12 @@ class Repository[T: BaseModel](ABC):
     @property
     def table_name(self) -> str:
         return self.get_model_cls().__tablename__
+
+    @staticmethod
+    def __ensure_iterable[U](obj: Iterable[U] | U) -> Iterable[U]:
+        if isinstance(obj, Iterable):
+            return obj
+        else:
+            return (obj,)
+
+

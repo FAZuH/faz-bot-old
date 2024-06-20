@@ -1,13 +1,11 @@
 from datetime import datetime
-from typing import TYPE_CHECKING, Any
+from typing import Any
 
 import nextcord
 from nextcord import Interaction
 
-from fazbot.db.fazbot.model import BannedUser, WhitelistedGuild
-
-from .. import Utils
 from . import CogBase
+from .. import Utils
 
 
 class Admin(CogBase):
@@ -17,8 +15,7 @@ class Admin(CogBase):
         return self._bot.checks.is_admin(interaction)
 
     @nextcord.slash_command(name="admin", description="Admin commands.")
-    async def admin(self, interaction: Interaction[Any]) -> None:
-        ...
+    async def admin(self, interaction: Interaction[Any]) -> None: ...
 
     @admin.subcommand(name="ban")
     async def ban(
@@ -42,11 +39,17 @@ class Admin(CogBase):
         user = await Utils.must_get_user(self._bot.client, user_id)
 
         with self._bot.core.enter_fazbotdb() as db:
-            is_banned = await db.banned_user_repository.is_exists(user.id)
+            is_banned = await db.banned_user_repository.is_banned(user.id)
             if is_banned:
                 return await self._respond_error(interaction, f"User `{user.name}` (`{user.id}`) is already banned.")
 
-            banned_user = BannedUser(user.id, reason, datetime.now(), Utils.must_parse_date_string(until) if until else None)
+            model_cls = db.banned_user_repository.get_model_cls()
+            banned_user = model_cls(
+                user_id=user.id,
+                reason=reason,
+                from_=datetime.now(),
+                until=Utils.must_parse_date_string(until) if until else None
+            )
             await db.banned_user_repository.insert(banned_user)
 
         await self._respond_successful(interaction, f"Banned user `{user.name}` (`{user.id}`).")
@@ -63,7 +66,7 @@ class Admin(CogBase):
         user = await Utils.must_get_user(self._bot.client, user_id)
 
         with self._bot.core.enter_fazbotdb() as db:
-            is_banned = await db.banned_user_repository.is_exists(user.id)
+            is_banned = await db.banned_user_repository.is_banned(user.id)
             if not is_banned:
                 return await self._respond_error(interaction, f"User `{user.name}` (`{user.id}`) is not banned.")
 
@@ -198,7 +201,13 @@ class Admin(CogBase):
             return await self._respond_error(interaction, f"Guild `{guild.name}` (`{guild.id}`) is already whitelisted.")
 
         with self._bot.core.enter_fazbotdb() as db:
-            whitelisted_guild = WhitelistedGuild(guild.id, guild.name, datetime.now(), Utils.must_parse_date_string(until) if until else None)
+            model_cls = db.whitelisted_guild_repository.get_model_cls()
+            whitelisted_guild = model_cls(
+                guild_id=guild.id,
+                guild_name=guild.name,
+                from_=datetime.now(),
+                until=Utils.must_parse_date_string(until) if until else None
+            )
             await db.whitelisted_guild_repository.insert(whitelisted_guild)
             
         self.get_whitelisted_guild_ids().add(guild.id)
