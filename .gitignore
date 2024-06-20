@@ -163,3 +163,5 @@ cython_debug/
 userdata/
 .logs
 config.yml
+sandbox.py
+sandbox.ipynb
