@@ -10,12 +10,12 @@ secret:
   discord:
     bot_token: ""
   fazbot:
-    db_username: ""
-    db_password: ""
-    db_max_retries: 3
-    db_schema_name: ""
+    username: ""
+    password: ""
+    database_name: ""
+    max_retries: 0
   wynndb:
-    db_username: ""
-    db_password: ""
-    db_max_retries: 3
-    db_schema_name: ""
+    username: ""
+    password: ""
+    database_name: ""
+    max_retries: 0
