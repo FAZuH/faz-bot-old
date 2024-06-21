@@ -1,9 +1,9 @@
 from __future__ import annotations
 from abc import ABC
 from decimal import Decimal
-from typing import TYPE_CHECKING, Any, Iterable
+from typing import Iterable, TYPE_CHECKING
 
-from sqlalchemy import Column, delete, inspect, text, select, exists
+from sqlalchemy import Tuple, delete, exists, inspect, select, text, tuple_
 
 if TYPE_CHECKING:
     from sqlalchemy.ext.asyncio import AsyncSession
@@ -52,17 +52,37 @@ class Repository[T: BaseModel, ID](ABC):
             return ret
 
     async def create_table(self, session: None | AsyncSession = None) -> None:
+        """
+        Create the table associated with the repository if it does not already exist.
+
+        Parameters
+        ----------
+        session : AsyncSession, optional
+            Optional AsyncSession object to use for the database connection.
+            If not provided, a new session will be created.
+        """
         fn = lambda conn: self.get_model_cls().get_table().create(conn, checkfirst=True)
         async with self.database.must_enter_session(session) as session:
             conn = await session.connection()
             await conn.run_sync(fn)
 
-    async def insert(self, entities: Iterable[T] | T, session: None | AsyncSession = None) -> None:
-        iterable = self.__ensure_iterable(entities)
-        async with self.database.must_enter_session(session) as session:
-            session.add_all(iterable)
+    async def insert(self, entity: Iterable[T] | T, session: None | AsyncSession = None) -> None:
+        """
+        Insert one or more entities into the database.
 
-    async def delete(self, id_: ID, session: AsyncSession | None = None) -> None:
+        Parameters
+        ----------
+        entity : Iterable[T] | T
+            An entity or an iterable of entities to be inserted into the database.
+        session : AsyncSession, optional
+            Optional AsyncSession object to use for the database connection.
+            If not provided, a new session will be created.
+        """
+        entities = self.__ensure_iterable(entity)
+        async with self.database.must_enter_session(session) as session:
+            session.add_all(entities)
+
+    async def delete(self, id_: Iterable[ID] | ID, session: AsyncSession | None = None) -> None:
         """Deletes an entry from the repository based on `id_`
 
         Parameters
@@ -74,15 +94,29 @@ class Repository[T: BaseModel, ID](ABC):
             Optional AsyncSession object to use for the database connection.
             If not provided, a new session will be created.
         """
+        ids = self.__ensure_iterable(id_)
         model = self.get_model_cls()
         async with self.database.must_enter_session(session) as session:
-            stmt = (
-                delete(model).
-                where(self.__get_primary_key() == id_)
-            )
+            stmt = delete(model).where(self.__get_primary_key().in_(ids))
             await session.execute(stmt)
 
-    async def is_exists(self, id_: ID) -> bool:
+    async def is_exists(self, id_: ID, session: None | AsyncSession = None) -> bool:
+        """
+        Check if an entry with the given primary key exists in the database.
+
+        Parameters
+        ----------
+        id_ : ID
+            Primary key value of the entry to check.
+        session : AsyncSession, optional
+            Optional AsyncSession object to use for the database connection.
+            If not provided, a new session will be created.
+
+        Returns
+        -------
+        bool
+            True if the entry exists, False otherwise.
+        """
         async with self.database.enter_session() as session:
             stmt = select(exists().where(self.__get_primary_key() == id_))
             result = await session.execute(stmt)
@@ -100,11 +134,10 @@ class Repository[T: BaseModel, ID](ABC):
     def table_name(self) -> str:
         return self.get_model_cls().__tablename__
 
-    def __get_primary_key(self) -> Column[Any]:
+    def __get_primary_key(self) -> Tuple:
         model_cls = self.get_model_cls()
-        primary_key_name = inspect(model_cls).primary_key[0]
-        # primary_key_variable = getattr(model_cls, primary_key_name)
-        return primary_key_name
+        primary_keys = tuple_(*inspect(model_cls).primary_key)
+        return primary_keys
 
     @staticmethod
     def __ensure_iterable[U](obj: Iterable[U] | U) -> Iterable[U]:
