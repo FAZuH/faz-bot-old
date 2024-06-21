@@ -82,6 +82,13 @@ class Repository[T: BaseModel, ID](ABC):
             )
             await session.execute(stmt)
 
+    async def is_exists(self, id_: ID) -> bool:
+        async with self.database.enter_session() as session:
+            stmt = select(exists().where(self.__get_primary_key() == id_))
+            result = await session.execute(stmt)
+            is_exist = result.scalar()
+            return is_exist or False
+
     def get_model_cls(self) -> type[T]:
         return self._model_cls
 
