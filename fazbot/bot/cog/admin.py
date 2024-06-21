@@ -39,7 +39,7 @@ class Admin(CogBase):
         user = await Utils.must_get_user(self._bot.client, user_id)
 
         with self._bot.core.enter_fazbotdb() as db:
-            is_banned = await db.banned_user_repository.is_banned(user.id)
+            is_banned = await db.banned_user_repository.is_exists(user.id)
             if is_banned:
                 return await self._respond_error(interaction, f"User `{user.name}` (`{user.id}`) is already banned.")
 
@@ -66,7 +66,7 @@ class Admin(CogBase):
         user = await Utils.must_get_user(self._bot.client, user_id)
 
         with self._bot.core.enter_fazbotdb() as db:
-            is_banned = await db.banned_user_repository.is_banned(user.id)
+            is_banned = await db.banned_user_repository.is_exists(user.id)
             if not is_banned:
                 return await self._respond_error(interaction, f"User `{user.name}` (`{user.id}`) is not banned.")
 

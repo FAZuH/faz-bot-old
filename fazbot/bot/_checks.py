@@ -30,7 +30,7 @@ class Checks:
             return False
 
         with self._bot.core.enter_fazbotdb() as db:
-            is_not_banned = await db.banned_user_repository.is_banned(interaction.user.id)
+            is_not_banned = await db.banned_user_repository.is_exists(interaction.user.id)
 
         return is_not_banned
 
