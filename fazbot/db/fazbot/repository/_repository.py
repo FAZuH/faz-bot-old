@@ -11,7 +11,7 @@ if TYPE_CHECKING:
     from ... import BaseAsyncDatabase
 
 
-class Repository[T: BaseModel](ABC):
+class Repository[T: BaseModel, ID](ABC):
 
     def __init__(self, database: BaseAsyncDatabase, model_cls: type[T]) -> None:
         self._database = database
@@ -62,7 +62,7 @@ class Repository[T: BaseModel](ABC):
         async with self.database.must_enter_session(session) as session:
             session.add_all(iterable)
 
-    async def delete(self, id_: Any, session: AsyncSession | None = None) -> None:
+    async def delete(self, id_: ID, session: AsyncSession | None = None) -> None:
         """Deletes an entry from the repository based on `id_`
 
         Parameters

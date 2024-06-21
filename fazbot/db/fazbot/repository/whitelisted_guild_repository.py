@@ -8,7 +8,7 @@ if TYPE_CHECKING:
     from ... import BaseAsyncDatabase
 
 
-class WhitelistedGuildRepository(Repository[WhitelistedGuild]):
+class WhitelistedGuildRepository(Repository[WhitelistedGuild, int]):
 
     def __init__(self, database: BaseAsyncDatabase) -> None:
         super().__init__(database, WhitelistedGuild)

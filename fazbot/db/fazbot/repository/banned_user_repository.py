@@ -10,7 +10,7 @@ if TYPE_CHECKING:
     from ... import BaseAsyncDatabase
 
 
-class BannedUserRepository(Repository[BannedUser]):
+class BannedUserRepository(Repository[BannedUser, int]):
 
     def __init__(self, database: BaseAsyncDatabase) -> None:
         super().__init__(database, BannedUser)
