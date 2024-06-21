@@ -14,3 +14,13 @@ class WhitelistedGuild(BaseModel):
     guild_name: Mapped[str] = mapped_column(String(32))
     from_: Mapped[datetime] = mapped_column(name="from")
     until: Mapped[Optional[datetime]] = mapped_column(default=None)
+
+    def __repr__(self) -> str:
+        return (
+            "<WhitelistedGuild("
+            f"guild_id={self.guild_id},"
+            f"guild_name='{self.guild_name}',"
+            f"from_={self.from_},"
+            f"until={self.until}"
+            ")>"
+        )
