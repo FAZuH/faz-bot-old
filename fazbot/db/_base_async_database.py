@@ -20,6 +20,12 @@ class BaseAsyncDatabase[T: DeclarativeBase](ABC):
             host: str,
             database: str,
         ) -> None:
+        self._driver = driver
+        self._user = user
+        self._password = password
+        self._host = host
+        self._database = database
+
         db_url = f"{driver}://{user}:{password}@{host}/{database}?charset=utf8mb4"
         self._engine = create_async_engine(db_url)
 
@@ -57,6 +63,26 @@ class BaseAsyncDatabase[T: DeclarativeBase](ABC):
     @property
     def engine(self) -> AsyncEngine:
         return self._engine
+
+    @property
+    def driver(self) -> str:
+        return self._driver
+
+    @property
+    def user(self) -> str:
+        return self._user
+
+    @property
+    def password(self) -> str:
+        return self._password
+
+    @property
+    def host(self) -> str:
+        return self._host
+
+    @property
+    def database(self) -> str:
+        return self._database
 
     @property
     @abstractmethod
