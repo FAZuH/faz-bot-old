@@ -1,11 +1,15 @@
+from __future__ import annotations
 from datetime import datetime
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 import nextcord
 from nextcord import Interaction
 
 from . import CogBase
 from .. import Utils
+
+if TYPE_CHECKING:
+    from fazbot import IFazBotDatabase
 
 
 class Admin(CogBase):
@@ -39,8 +43,7 @@ class Admin(CogBase):
         user = await Utils.must_get_user(self._bot.client, user_id)
 
         with self._bot.core.enter_fazbotdb() as db:
-            is_banned = await db.banned_user_repository.is_exists(user.id)
-            if is_banned:
+            if await self.__is_banned(db, user.id):
                 return await self._respond_error(interaction, f"User `{user.name}` (`{user.id}`) is already banned.")
 
             model_cls = db.banned_user_repository.get_model_cls()
@@ -66,8 +69,7 @@ class Admin(CogBase):
         user = await Utils.must_get_user(self._bot.client, user_id)
 
         with self._bot.core.enter_fazbotdb() as db:
-            is_banned = await db.banned_user_repository.is_exists(user.id)
-            if not is_banned:
+            if not await self.__is_banned(db, user.id):
                 return await self._respond_error(interaction, f"User `{user.name}` (`{user.id}`) is not banned.")
 
             await db.banned_user_repository.delete(user.id)
@@ -185,7 +187,7 @@ class Admin(CogBase):
 
     # TODO: manage syncing database and local memory
     @admin.subcommand(name="whitelist")
-    async def whitelist(self, interaction: Interaction[Any], guild_id: str, option: bool = True, until: str | None = None) -> None:
+    async def whitelist(self, interaction: Interaction[Any], guild_id: str, until: str | None = None) -> None:
         """Whitelists or unwhitelists a guild from using the bot.
 
         Parameters
@@ -233,8 +235,11 @@ class Admin(CogBase):
         self.get_whitelisted_guild_ids().remove(guild.id)
         await self._respond_successful(interaction, f"Unwhitelisted guild `{guild.name}` (`{guild.id}`).")
 
-    def __is_whitelisted(self, guild_id: int) -> bool:
-        return guild_id in self.get_whitelisted_guild_ids()
+    async def __is_banned(self, db: IFazBotDatabase, user_id: int) -> bool:
+        return await db.banned_user_repository.is_exists(user_id)
 
     def __is_channel_sendable(self, channel: Any) -> bool:
         return hasattr(channel, "send")
+
+    def __is_whitelisted(self, guild_id: int) -> bool:
+        return guild_id in self.get_whitelisted_guild_ids()
