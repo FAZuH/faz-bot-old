@@ -7,6 +7,14 @@ from ._common_repository_test import CommonRepositoryTest
 
 class TestWhitelistedGuildRepository(CommonRepositoryTest.Test[WhitelistedGuild, int]):
 
+    async def test_get_all_whitelisted_guilds_ids_return_value(self) -> None:
+        test_guild_ids = set([guild.guild_id for guild in self.test_data])
+
+        await self.repo.insert(self.test_data)
+
+        guild_ids = set(await self.repo.get_all_whitelisted_guild_ids())
+        self.assertSetEqual(guild_ids, test_guild_ids)
+        
     # override
     def get_data(self):
         self.guild_name = "test"
