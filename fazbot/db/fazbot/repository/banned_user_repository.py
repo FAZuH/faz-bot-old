@@ -10,5 +10,5 @@ if TYPE_CHECKING:
 
 class BannedUserRepository(Repository[BannedUser, int]):
 
-    def __init__(self, database: BaseAsyncDatabase) -> None:
+    def __init__(self, database: BaseAsyncDatabase[BannedUser]) -> None:
         super().__init__(database, BannedUser)

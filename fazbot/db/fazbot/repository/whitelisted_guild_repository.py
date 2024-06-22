@@ -13,10 +13,10 @@ if TYPE_CHECKING:
 
 class WhitelistedGuildRepository(Repository[WhitelistedGuild, int]):
 
-    def __init__(self, database: BaseAsyncDatabase) -> None:
+    def __init__(self, database: BaseAsyncDatabase[WhitelistedGuild]) -> None:
         super().__init__(database, WhitelistedGuild)
 
-    async def get_all_whitelisted_guilds(self, session: None | AsyncSession = None) -> list[int]:
+    async def get_all_whitelisted_guild_ids(self, session: None | AsyncSession = None) -> list[int]:
         model = self.get_model_cls()
         async with self.database.must_enter_session(session) as session:
             stmt = select(model)
