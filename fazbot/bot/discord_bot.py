@@ -52,7 +52,10 @@ class DiscordBot(Bot):
     def setup(self) -> None:
         """Initial setup for the bot."""
         self.asset_manager.load_assets()
-        self.cogs.setup()
+        whitelisted_guild_ids = self._event_loop.run_until_complete(
+            self.get_whitelisted_guild_ids()
+        )
+        self.cogs.setup(whitelisted_guild_ids)
         self.checks.load_checks()
         self.events.load_events()
 
@@ -89,3 +92,7 @@ class DiscordBot(Bot):
     def _get_cls_qualname(self) -> str:
         return self.__class__.__qualname__
 
+    async def get_whitelisted_guild_ids(self) -> list[int]:
+        with self.core.enter_fazbotdb() as db:
+            guild_ids = await db.whitelisted_guild_repository.get_all_whitelisted_guild_ids()
+            return list(guild_ids)

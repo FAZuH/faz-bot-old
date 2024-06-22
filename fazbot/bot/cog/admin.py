@@ -1,17 +1,12 @@
 from __future__ import annotations
-from contextlib import asynccontextmanager
 from datetime import datetime
-from typing import Any, AsyncGenerator, TYPE_CHECKING
+from typing import Any
 
 import nextcord
 from nextcord import Interaction
-from sqlalchemy.ext.asyncio import AsyncSession
 
 from . import CogBase
 from .. import Utils
-
-if TYPE_CHECKING:
-    from fazbot import IFazBotDatabase
 
 
 class Admin(CogBase):
@@ -22,7 +17,7 @@ class Admin(CogBase):
 
     @nextcord.slash_command(name="admin", description="Admin commands.")
     async def admin(self, interaction: Interaction[Any]) -> None: ...
-
+  
     @admin.subcommand(name="ban")
     async def ban(
             self,
@@ -44,7 +39,7 @@ class Admin(CogBase):
         """
         user = await Utils.must_get_user(self._bot.client, user_id)
 
-        async with self.__enter_db_session() as (db, session):
+        async with self._enter_db_session() as (db, session):
             banlist = db.banned_user_repository
             model_cls = banlist.get_model_cls()
 
@@ -73,7 +68,7 @@ class Admin(CogBase):
         """
         user = await Utils.must_get_user(self._bot.client, user_id)
 
-        async with self.__enter_db_session() as (db, session):
+        async with self._enter_db_session() as (db, session):
             banlist = db.banned_user_repository
 
             if not await banlist.is_exists(user.id, session):
@@ -145,10 +140,10 @@ class Admin(CogBase):
         """        
         guild = await Utils.must_get_guild(self._bot.client, guild_id)
 
-        async with self.__enter_db_session() as (db, session):
+        with self._bot.core.enter_fazbotdb() as db:
             whitelist = db.whitelisted_guild_repository
 
-            if not whitelist.is_exists(guild.id, session):
+            if not whitelist.is_exists(guild.id):
                 return await self._respond_error(interaction,
                     f"Guild `{guild.name}` (`{guild.id}`) is not whitelisted. "
                     f"Whitelist it first with `{self._bot.client.command_prefix}{self.whitelist.qualified_name}`"
@@ -168,7 +163,7 @@ class Admin(CogBase):
 
         await self._respond_successful(
             interaction,
-            f"Synchronized app commands across {len(self._whitelisted_guild_ids)} guilds."
+            f"Synchronized app commands across {len(self.get_whitelisted_guild_ids())} guilds."
         )
 
     @admin.subcommand(name="shutdown", description="Shuts down the bot.")
@@ -211,7 +206,7 @@ class Admin(CogBase):
         """
         guild = await Utils.must_get_guild(self._bot.client, guild_id)
 
-        async with self.__enter_db_session() as (db, session):
+        async with self._enter_db_session() as (db, session):
             whitelist = db.whitelisted_guild_repository
             model_cls = whitelist.get_model_cls()
 
@@ -240,7 +235,7 @@ class Admin(CogBase):
         """
         guild = await Utils.must_get_guild(self._bot.client, guild_id)
 
-        async with self.__enter_db_session() as (db, session):
+        async with self._enter_db_session() as (db, session):
             whitelist = db.whitelisted_guild_repository
 
             if not await whitelist.is_exists(guild.id, session):
@@ -252,9 +247,3 @@ class Admin(CogBase):
 
     def __is_channel_sendable(self, channel: Any) -> bool:
         return hasattr(channel, "send")
-
-    @asynccontextmanager
-    async def __enter_db_session(self) -> AsyncGenerator[tuple[IFazBotDatabase, AsyncSession], None]:
-        with self._bot.core.enter_fazbotdb() as db:
-            async with db.enter_session() as session:
-                yield db, session
