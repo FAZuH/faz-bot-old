@@ -1,9 +1,9 @@
 from __future__ import annotations
 from abc import ABC
 from decimal import Decimal
-from typing import Iterable, TYPE_CHECKING
+from typing import Any, Iterable, TYPE_CHECKING
 
-from sqlalchemy import Tuple, delete, exists, inspect, select, text, tuple_
+from sqlalchemy import Column, Tuple, delete, exists, select, text, tuple_
 
 if TYPE_CHECKING:
     from sqlalchemy.ext.asyncio import AsyncSession
@@ -13,7 +13,7 @@ if TYPE_CHECKING:
 
 class Repository[T: BaseModel, ID](ABC):
 
-    def __init__(self, database: BaseAsyncDatabase, model_cls: type[T]) -> None:
+    def __init__(self, database: BaseAsyncDatabase[T], model_cls: type[T]) -> None:
         self._database = database
         self._model_cls = model_cls
 
@@ -94,10 +94,11 @@ class Repository[T: BaseModel, ID](ABC):
             Optional AsyncSession object to use for the database connection.
             If not provided, a new session will be created.
         """
-        ids = self.__ensure_iterable(id_)
         model = self.get_model_cls()
+        to_compare = self.__convert_comparable(id_)
+
         async with self.database.must_enter_session(session) as session:
-            stmt = delete(model).where(self.__get_primary_key().in_(ids))
+            stmt = delete(model).where(self.__get_primary_key().in_(to_compare))
             await session.execute(stmt)
 
     async def is_exists(self, id_: ID, session: None | AsyncSession = None) -> bool:
@@ -118,7 +119,7 @@ class Repository[T: BaseModel, ID](ABC):
             True if the entry exists, False otherwise.
         """
         async with self.database.enter_session() as session:
-            stmt = select(exists().where(self.__get_primary_key() == id_))
+            stmt = select(exists().where(self.__get_primary_key() == (id_,)))
             result = await session.execute(stmt)
             is_exist = result.scalar()
             return is_exist or False
@@ -127,21 +128,30 @@ class Repository[T: BaseModel, ID](ABC):
         return self._model_cls
 
     @property
-    def database(self) -> BaseAsyncDatabase:
+    def database(self) -> BaseAsyncDatabase[T]:
         return self._database
 
     @property
     def table_name(self) -> str:
         return self.get_model_cls().__tablename__
 
-    def __get_primary_key(self) -> Tuple:
+    def __get_primary_key(self) -> Tuple[Column[Any], ...]:
         model_cls = self.get_model_cls()
-        primary_keys = tuple_(*inspect(model_cls).primary_key)
-        return primary_keys
+        primary_keys: tuple[Column[Any], ...] | Column[Any] = model_cls.__mapper__.primary_key
+        if not isinstance(primary_keys, tuple):  # type: ignore
+            tupl = tuple_(primary_keys)
+        else:
+            tupl = tuple_(*primary_keys)
+        return tupl
 
     @staticmethod
     def __ensure_iterable[U](obj: Iterable[U] | U) -> Iterable[U]:
         if isinstance(obj, Iterable):
             return obj
         else:
-            return (obj,)
+            return [obj]
+
+    def __convert_comparable(self, id_: Iterable[ID] | ID) -> list[tuple[ID, ...]]:
+        ids = self.__ensure_iterable(id_)
+        ret = [(id__,) for id__ in ids]
+        return ret
