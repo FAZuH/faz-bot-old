@@ -4,6 +4,7 @@ from decimal import Decimal
 from typing import Any, Iterable, TYPE_CHECKING
 
 from sqlalchemy import Column, Tuple, delete, exists, select, text, tuple_
+from sqlalchemy.schema import CreateTable
 
 if TYPE_CHECKING:
     from sqlalchemy.ext.asyncio import AsyncSession
@@ -61,10 +62,10 @@ class Repository[T: BaseModel, ID](ABC):
             Optional AsyncSession object to use for the database connection.
             If not provided, a new session will be created.
         """
-        fn = lambda conn: self.get_model_cls().get_table().create(conn, checkfirst=True)
         async with self.database.must_enter_session(session) as session:
-            conn = await session.connection()
-            await conn.run_sync(fn)
+            table = self.get_model_cls().get_table()
+            stmt = CreateTable(table, if_not_exists=True)
+            await session.execute(stmt)
 
     async def insert(self, entity: Iterable[T] | T, session: None | AsyncSession = None) -> None:
         """

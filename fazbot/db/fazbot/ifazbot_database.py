@@ -3,7 +3,7 @@ from contextlib import asynccontextmanager
 from typing import AsyncGenerator, Protocol, TYPE_CHECKING
 
 if TYPE_CHECKING:
-    from sqlalchemy import AsyncEngine, AsyncConnection, AsyncSession
+    from sqlalchemy.ext.asyncio import AsyncEngine, AsyncConnection, AsyncSession
     from .model import BaseModel
     from .repository import BannedUserRepository, WhitelistedGuildRepository
 
