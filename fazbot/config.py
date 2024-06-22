@@ -21,10 +21,11 @@ class Config:
         app = self._config["application"]
         self.is_debug = bool(app["debug"])
         self.admin_discord_id = int(app["admin_discord_id"])
+        self.dev_server_id = int(app["dev_server_id"])
 
         logging = self._config["logging"]
         self.discord_log_webhook = logging["discord_log_webhook"]
-        self.discord_status_webhook = logging["discord_report_webhook"]
+        self.discord_status_webhook = logging["discord_status_webhook"]
 
         secret = self._config["secret"]
 

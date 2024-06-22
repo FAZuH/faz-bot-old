@@ -12,7 +12,7 @@ class FazBotDatabase(BaseAsyncDatabase[BaseModel], IFazBotDatabase):
 
         self._banned_user_repository = BannedUserRepository(self)
         self._whitelisted_guild_repository = WhitelistedGuildRepository(self)
-
+        
     @property
     def banned_user_repository(self) -> BannedUserRepository:
         return self._banned_user_repository

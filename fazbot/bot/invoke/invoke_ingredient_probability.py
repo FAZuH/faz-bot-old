@@ -29,13 +29,13 @@ class InvokeIngredientProbability(Invoke):
     # override
     @classmethod
     def set_assets(cls, assets: dict[str, File]) -> None:
-        cls.ASSET_DECAYINGHEART = cls._get_from_assets(assets, "decayingheart")
+        cls.ASSET_DECAYINGHEART = cls._get_from_assets(assets, "decayingheart.png")
 
     async def run(self) -> None:
-        embed_resp = self._get_embed(self._ing_util, self._interaction)
-        await self._interaction.response.send_message(embed=embed_resp, file=self.ASSET_DECAYINGHEART.file)
+        embed_resp = self.__get_embed(self._ing_util, self._interaction)
+        await self._interaction.send(embed=embed_resp, file=self.ASSET_DECAYINGHEART.get_file_to_send())
 
-    def _get_embed(self, ing_util: IngredientUtil, interaction: Interaction[Any]) -> Embed:
+    def __get_embed(self, ing_util: IngredientUtil, interaction: Interaction[Any]) -> Embed:
         one_in_n = 1 / ing_util.boosted_probability
 
         embed_resp = Embed(title="Ingredient Chance Calculator", color=472931)

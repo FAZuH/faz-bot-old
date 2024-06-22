@@ -1,5 +1,5 @@
 from __future__ import annotations
-from typing import TYPE_CHECKING, Sequence
+from typing import TYPE_CHECKING, Any, Sequence
 
 from sqlalchemy import select
 
@@ -13,7 +13,7 @@ if TYPE_CHECKING:
 
 class WhitelistedGuildRepository(Repository[WhitelistedGuild, int]):
 
-    def __init__(self, database: BaseAsyncDatabase[WhitelistedGuild]) -> None:
+    def __init__(self, database: BaseAsyncDatabase[Any]) -> None:
         super().__init__(database, WhitelistedGuild)
 
     async def get_all_whitelisted_guild_ids(self, session: None | AsyncSession = None) -> Sequence[int]:

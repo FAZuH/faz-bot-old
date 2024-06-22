@@ -13,7 +13,7 @@ class WynnUtils(CogBase):
         return super()._setup()
 
     @nextcord.slash_command(name="crafted_probability")
-    async def _crafted_probability(
+    async def crafted_probability(
             self,
             interaction: Interaction[Any],
             ingredient1: str = InvokeCraftedProbability.INGSTR_DEFAULT,

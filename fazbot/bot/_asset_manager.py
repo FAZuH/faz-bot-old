@@ -20,11 +20,11 @@ class AssetManager:
         self._bot = bot
     
     def load_assets(self) -> None:
-        with self._bot.core.enter_asset() as asset:
-            self._assets = self.__convert_asset_file_type(asset.files)
-            self.set_invoke_assets()
+        asset = self._bot.core.asset
+        self._assets = self.__convert_asset_file_type(asset.files)
+        self.__set_invoke_assets()
 
-    def set_invoke_assets(self) -> None:
+    def __set_invoke_assets(self) -> None:
         InvokeConvertEmerald.set_assets(self._assets)
         InvokeCraftedProbability.set_assets(self._assets)
         InvokeIngredientProbability.set_assets(self._assets)
@@ -33,6 +33,6 @@ class AssetManager:
         assets_: dict[str, File] = {}
         for fp, asset in assets.items():
             fileio = BytesIO(asset)
-            file = File(fileio)
-            assets_[fp.stem] = file
+            file = File(fileio, filename=fp.name)
+            assets_[fp.name] = file
         return assets_

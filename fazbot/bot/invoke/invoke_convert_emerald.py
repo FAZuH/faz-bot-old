@@ -27,13 +27,13 @@ class InvokeConvertEmerald(Invoke):
     # override
     @classmethod
     def set_assets(cls, assets: dict[str, File]) -> None:
-        cls.ASSET_LIQUIDEMERALD = cls._get_from_assets(assets, "liquidemerald")
+        cls.ASSET_LIQUIDEMERALD = cls._get_from_assets(assets, "liquidemerald.png")
 
     async def run(self):
-        embed_resp = self._get_embed(self._interaction, self._emeralds)
-        await self._interaction.send(embed=embed_resp, file=self.ASSET_LIQUIDEMERALD.file)
+        embed_resp = self.__get_embed(self._interaction, self._emeralds)
+        await self._interaction.send(embed=embed_resp, file=self.ASSET_LIQUIDEMERALD.get_file_to_send())
 
-    def _get_embed(self, interaction: Interaction[Any], emeralds: WynnEmeralds) -> Embed:
+    def __get_embed(self, interaction: Interaction[Any], emeralds: WynnEmeralds) -> Embed:
         set_price_tm, set_price_silverbull = EmeraldUtil.get_set_price(emeralds)
         set_price_tm.simplify()
         set_price_silverbull.simplify()

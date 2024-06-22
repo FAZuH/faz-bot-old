@@ -28,7 +28,7 @@ class TestConvertEmerald(IsolatedAsyncioTestCase):
     async def test_run(self) -> None:
         # PREPARE
         embed = MagicMock()
-        self.obj._get_embed = MagicMock(return_value=embed)
+        self.obj.__get_embed = MagicMock(return_value=embed)
 
         # ACT
         await self.obj.run()
@@ -42,7 +42,7 @@ class TestConvertEmerald(IsolatedAsyncioTestCase):
         self.interaction.user.display_avatar.url = "url"
 
         # ACT 
-        embed = self.obj._get_embed(self.interaction, self.obj._emeralds)
+        embed = self.obj.__get_embed(self.interaction, self.obj._emeralds)
         
         # ASSERT
         self.assertEqual(embed.title, "Emerald Convertor")

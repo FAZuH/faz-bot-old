@@ -1,6 +1,7 @@
 application:
   debug: false
   admin_discord_id: 0
+  dev_server_id: 0
 
 logging:
   discord_log_webhook: ""

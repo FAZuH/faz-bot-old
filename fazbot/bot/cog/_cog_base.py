@@ -7,7 +7,7 @@ from nextcord.ext import commands
 
 if TYPE_CHECKING:
     from sqlalchemy.ext.asyncio import AsyncSession
-    from fazbot import Bot, IFazBotDatabase
+    from fazbot import Bot, IFazBotDatabase, Logger
 
 
 class CogBase(commands.Cog):
@@ -35,8 +35,14 @@ class CogBase(commands.Cog):
         self.__rollout_all_commands(guild_ids)
         self._bot.client.add_cog(self)
 
-        with self._bot.core.enter_logger() as logger:
-            logger.console.info(f"Added cog {self.__class__.__qualname__} to client.")
+        self._bot.logger.console.info(
+            f"Added cog {self.__class__.__qualname__} to client"
+            f"with {len(self.application_commands)} application commands"
+        )
+
+    @property
+    def logger(self) -> Logger:
+        return self._bot.logger
 
     @asynccontextmanager
     async def _enter_db_session(self) -> AsyncGenerator[tuple[IFazBotDatabase, AsyncSession], None]:

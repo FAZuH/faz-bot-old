@@ -1,4 +1,5 @@
 from __future__ import annotations
+from copy import deepcopy
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
@@ -11,9 +12,8 @@ class Asset:
         self._file = file
         self._file_name = file_name
 
-    @property
-    def file(self) -> File:
-        return self._file
+    def get_file_to_send(self) -> File:
+        return deepcopy(self._file)
 
     @property
     def filename(self) -> str:

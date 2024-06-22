@@ -9,7 +9,7 @@ class TestCraftedProbability(TestCase):
 
     def setUp(self) -> None:
         self.image_asset = MagicMock()
-        InvokeCraftedProbability._View = MagicMock
+        InvokeCraftedProbability.__View = MagicMock
         InvokeCraftedProbability.ASSET_CRAFTINGTABLE = self.image_asset
         return super().setUp()
 
