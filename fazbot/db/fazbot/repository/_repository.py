@@ -118,7 +118,7 @@ class Repository[T: BaseModel, ID](ABC):
         bool
             True if the entry exists, False otherwise.
         """
-        async with self.database.enter_session() as session:
+        async with self.database.must_enter_session(session) as session:
             stmt = select(exists().where(self.__get_primary_key() == (id_,)))
             result = await session.execute(stmt)
             is_exist = result.scalar()
