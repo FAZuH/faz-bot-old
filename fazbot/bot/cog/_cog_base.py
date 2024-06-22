@@ -24,11 +24,10 @@ class CogBase(commands.Cog):
 
         with self._bot.core.enter_fazbotdb() as db:
             eventloop = asyncio.get_event_loop()
-            guild_ids = eventloop.run_until_complete(db.whitelisted_guild_repository.get_all_whitelisted_guilds())
-            self.set_whitelisted_guild_ids(set(guild_ids))
+            guild_ids = eventloop.run_until_complete(db.whitelisted_guild_repository.get_all_whitelisted_guild_ids())
 
         for cmd in self.application_commands:
-            for guild_id in self.get_whitelisted_guild_ids():
+            for guild_id in guild_ids:
                 assert isinstance(guild_id, int)
                 cmd.add_guild_rollout(guild=guild_id)
 
@@ -40,14 +39,6 @@ class CogBase(commands.Cog):
         except ClientException:
             # this usually only happens on tests
             pass
-
-    @classmethod
-    def get_whitelisted_guild_ids(cls) -> set[int]:
-        return cls._whitelisted_guild_ids
-
-    @classmethod
-    def set_whitelisted_guild_ids(cls, guild_ids: set[int]) -> None:
-        cls._whitelisted_guild_ids = guild_ids
 
     async def _respond_successful(self, interaction: Interaction[Any], message: str) -> None:
         embed = Embed(

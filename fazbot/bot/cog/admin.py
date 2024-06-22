@@ -1,9 +1,11 @@
 from __future__ import annotations
+from contextlib import asynccontextmanager
 from datetime import datetime
-from typing import TYPE_CHECKING, Any
+from typing import Any, AsyncGenerator, TYPE_CHECKING
 
 import nextcord
 from nextcord import Interaction
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from . import CogBase
 from .. import Utils
@@ -42,18 +44,21 @@ class Admin(CogBase):
         """
         user = await Utils.must_get_user(self._bot.client, user_id)
 
-        with self._bot.core.enter_fazbotdb() as db:
-            if await self.__is_banned(db, user.id):
+        async with self.__enter_db_session() as (db, session):
+            banlist = db.banned_user_repository
+            model_cls = banlist.get_model_cls()
+
+            if await banlist.is_exists(user.id, session):
                 return await self._respond_error(interaction, f"User `{user.name}` (`{user.id}`) is already banned.")
 
-            model_cls = db.banned_user_repository.get_model_cls()
-            banned_user = model_cls(
+            user_to_ban = model_cls(
                 user_id=user.id,
                 reason=reason,
                 from_=datetime.now(),
                 until=Utils.must_parse_date_string(until) if until else None
             )
-            await db.banned_user_repository.insert(banned_user)
+
+            await banlist.insert(user_to_ban)
 
         await self._respond_successful(interaction, f"Banned user `{user.name}` (`{user.id}`).")
 
@@ -68,11 +73,13 @@ class Admin(CogBase):
         """
         user = await Utils.must_get_user(self._bot.client, user_id)
 
-        with self._bot.core.enter_fazbotdb() as db:
-            if not await self.__is_banned(db, user.id):
+        async with self.__enter_db_session() as (db, session):
+            banlist = db.banned_user_repository
+
+            if not await banlist.is_exists(user.id, session):
                 return await self._respond_error(interaction, f"User `{user.name}` (`{user.id}`) is not banned.")
 
-            await db.banned_user_repository.delete(user.id)
+            await banlist.delete(user.id, session)
             
         await self._respond_successful(interaction, f"Unbanned user `{user.name}` (`{user.id}`).")
 
@@ -138,12 +145,14 @@ class Admin(CogBase):
         """        
         guild = await Utils.must_get_guild(self._bot.client, guild_id)
 
-        if not self.__is_whitelisted(guild.id):
-            return await self._respond_error(
-                interaction,
-                f"Guild `{guild.name}` (`{guild.id}`) is not whitelisted. "
-                f"Whitelist it first with `{self._bot.client.command_prefix}{self.whitelist.qualified_name}`"
-            )
+        async with self.__enter_db_session() as (db, session):
+            whitelist = db.whitelisted_guild_repository
+
+            if not whitelist.is_exists(guild.id, session):
+                return await self._respond_error(interaction,
+                    f"Guild `{guild.name}` (`{guild.id}`) is not whitelisted. "
+                    f"Whitelist it first with `{self._bot.client.command_prefix}{self.whitelist.qualified_name}`"
+                )
 
         await self._bot.client.sync_application_commands(guild_id=guild.id)
         await self._respond_successful(interaction, f"Synchronized app commands for guild `{guild.name}` (`{guild.id}`).")
@@ -151,8 +160,11 @@ class Admin(CogBase):
     @admin.subcommand(name="sync")
     async def sync(self, interaction: Interaction[Any]) -> None:
         """Synchronizes app commands across all whitelisted guilds."""
-        for guild_id in self._whitelisted_guild_ids:
-            await self._bot.client.sync_application_commands(guild_id=guild_id)
+        with self._bot.core.enter_fazbotdb() as db:
+            guild_ids = await db.whitelisted_guild_repository.get_all_whitelisted_guild_ids()
+
+        for id_ in guild_ids:
+            await self._bot.client.sync_application_commands(guild_id=id_)
 
         await self._respond_successful(
             interaction,
@@ -199,20 +211,22 @@ class Admin(CogBase):
         """
         guild = await Utils.must_get_guild(self._bot.client, guild_id)
 
-        if self.__is_whitelisted(guild.id):
-            return await self._respond_error(interaction, f"Guild `{guild.name}` (`{guild.id}`) is already whitelisted.")
+        async with self.__enter_db_session() as (db, session):
+            whitelist = db.whitelisted_guild_repository
+            model_cls = whitelist.get_model_cls()
 
-        with self._bot.core.enter_fazbotdb() as db:
-            model_cls = db.whitelisted_guild_repository.get_model_cls()
-            whitelisted_guild = model_cls(
+            if whitelist.is_exists(guild.id, session):
+                return await self._respond_error(interaction, f"Guild `{guild.name}` (`{guild.id}`) is already whitelisted.")
+
+            guild_to_whitelist = model_cls(
                 guild_id=guild.id,
                 guild_name=guild.name,
                 from_=datetime.now(),
                 until=Utils.must_parse_date_string(until) if until else None
             )
-            await db.whitelisted_guild_repository.insert(whitelisted_guild)
             
-        self.get_whitelisted_guild_ids().add(guild.id)
+            await whitelist.insert(guild_to_whitelist, session)
+            
         await self._respond_successful(interaction, f"Whitelisted guild `{guild.name}` (`{guild.id}`).")
 
     @admin.subcommand(name="unwhitelist")
@@ -226,20 +240,21 @@ class Admin(CogBase):
         """
         guild = await Utils.must_get_guild(self._bot.client, guild_id)
 
-        if not self.__is_whitelisted(guild.id):
-            return await self._respond_error(interaction, f"Guild `{guild.name}` (`{guild.id}`) is not whitelisted.")
+        async with self.__enter_db_session() as (db, session):
+            whitelist = db.whitelisted_guild_repository
 
-        with self._bot.core.enter_fazbotdb() as db:
-            await db.whitelisted_guild_repository.delete(guild.id) 
+            if not await whitelist.is_exists(guild.id, session):
+                return await self._respond_error(interaction, f"Guild `{guild.name}` (`{guild.id}`) is not whitelisted.")
 
-        self.get_whitelisted_guild_ids().remove(guild.id)
+            await whitelist.delete(guild.id, session) 
+
         await self._respond_successful(interaction, f"Unwhitelisted guild `{guild.name}` (`{guild.id}`).")
-
-    async def __is_banned(self, db: IFazBotDatabase, user_id: int) -> bool:
-        return await db.banned_user_repository.is_exists(user_id)
 
     def __is_channel_sendable(self, channel: Any) -> bool:
         return hasattr(channel, "send")
 
-    def __is_whitelisted(self, guild_id: int) -> bool:
-        return guild_id in self.get_whitelisted_guild_ids()
+    @asynccontextmanager
+    async def __enter_db_session(self) -> AsyncGenerator[tuple[IFazBotDatabase, AsyncSession], None]:
+        with self._bot.core.enter_fazbotdb() as db:
+            async with db.enter_session() as session:
+                yield db, session
