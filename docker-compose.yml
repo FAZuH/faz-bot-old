@@ -3,8 +3,8 @@ version: "3.8"
 services:
   fazbot:
     build: .
-    image: fazbot:latest
-    container_name: fazbot
+    image: fazbot_img
+    container_name: fazbot_container
     restart: unless-stopped
     volumes:
-      - ./config.yml:/app/config.yml
+      - ./config.yml:/usr/src/app/config.yml
