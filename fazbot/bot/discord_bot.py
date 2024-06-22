@@ -49,10 +49,10 @@ class DiscordBot(Bot):
 
     async def on_ready_setup(self) -> None:
         """Setup after the bot is ready."""
+        await self.__create_all_fazbot_tables()
         whitelisted_guild_ids = await self.__get_whitelisted_guild_ids()
         whitelisted_guild_ids.append(self.core.config.dev_server_id)
         await self.cogs.setup(whitelisted_guild_ids)
-        await self.__create_all_fazbot_tables()
 
     @property
     def asset_manager(self) -> AssetManager:

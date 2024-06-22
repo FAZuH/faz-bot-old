@@ -141,7 +141,7 @@ class Admin(CogBase):
         with self._bot.core.enter_fazbotdb() as db:
             whitelist = db.whitelisted_guild_repository
 
-            if not whitelist.is_exists(guild.id):
+            if not await whitelist.is_exists(guild.id):
                 return await self._respond_error(interaction,
                     f"Guild `{guild.name}` (`{guild.id}`) is not whitelisted. "
                     f"Whitelist it first with `{self._bot.client.command_prefix}{self.whitelist.qualified_name}`"
@@ -208,7 +208,7 @@ class Admin(CogBase):
             whitelist = db.whitelisted_guild_repository
             model_cls = whitelist.get_model_cls()
 
-            if whitelist.is_exists(guild.id, session):
+            if await whitelist.is_exists(guild.id, session):
                 return await self._respond_error(interaction, f"Guild `{guild.name}` (`{guild.id}`) is already whitelisted.")
 
             guild_to_whitelist = model_cls(

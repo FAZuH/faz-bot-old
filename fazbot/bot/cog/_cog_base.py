@@ -18,15 +18,6 @@ class CogBase(commands.Cog):
     def __init__(self, bot: Bot) -> None:
         self._bot = bot
 
-    @classmethod
-    def get_whitelisted_guild_ids(cls) -> list[int]:
-        return cls.__whitelisted_guild_ids
-
-    @classmethod
-    def set_whitelisted_guild_ids(cls, whitelisted_guild_ids: list[int]) -> None:
-        cls.__initialized_whitelisted_guild_ids = True
-        cls.__whitelisted_guild_ids = whitelisted_guild_ids
-
     def setup(self) -> None:
         self.__check_set_whitelisted_guild_ids()
         self._setup()
@@ -40,15 +31,18 @@ class CogBase(commands.Cog):
             f"with {len(self.application_commands)} application commands"
         )
 
+    @classmethod
+    def get_whitelisted_guild_ids(cls) -> list[int]:
+        return cls.__whitelisted_guild_ids
+
+    @classmethod
+    def set_whitelisted_guild_ids(cls, whitelisted_guild_ids: list[int]) -> None:
+        cls.__initialized_whitelisted_guild_ids = True
+        cls.__whitelisted_guild_ids = whitelisted_guild_ids
+
     @property
     def logger(self) -> Logger:
         return self._bot.logger
-
-    @asynccontextmanager
-    async def _enter_db_session(self) -> AsyncGenerator[tuple[IFazBotDatabase, AsyncSession], None]:
-        with self._bot.core.enter_fazbotdb() as db:
-            async with db.enter_session() as session:
-                yield db, session
 
     async def _respond_successful(self, interaction: Interaction[Any], message: str) -> None:
         embed = Embed(
@@ -66,9 +60,15 @@ class CogBase(commands.Cog):
         )
         await interaction.response.send_message(embed=embed)
 
+    @asynccontextmanager
+    async def _enter_db_session(self) -> AsyncGenerator[tuple[IFazBotDatabase, AsyncSession], None]:
+        with self._bot.core.enter_fazbotdb() as db:
+            async with db.enter_session() as session:
+                yield db, session
+
     def _setup(self) -> None:
         """Method to run on cog initialization. Overriding this method is optional."""
-        pass
+        ...
 
     def __rollout_all_commands(self, guild_ids: Sequence[int]) -> None:
         for cmd in self.application_commands:
