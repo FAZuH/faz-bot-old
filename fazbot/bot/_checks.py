@@ -46,7 +46,7 @@ class Checks:
             is_whitelisted = await db.whitelisted_guild_repository.is_exists(guild_id)
 
         if not is_whitelisted:
-            await self._bot.logger.discord.warning(f"is_whitelisted check for user {interaction.guild.name} ({guild_id}) returned False")
+            await self._bot.logger.discord.warning(f"is_whitelisted check for guild {interaction.guild.name} ({guild_id}) returned False")
 
         return is_whitelisted
 

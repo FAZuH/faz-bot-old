@@ -55,7 +55,7 @@ class Events:
         if isinstance(error, errors.ApplicationCheckFailure):
             await interaction.send(
                 ("You do not have permission to use this command. " 
-                "Please contact bot developer if you think believe is a mistake."),
+                "Please contact bot developer if you believe this is a mistake."),
                 ephemeral=True
             )
         else:
