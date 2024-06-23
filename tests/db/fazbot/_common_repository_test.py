@@ -5,6 +5,7 @@ import unittest
 
 from sqlalchemy import inspect, select, text
 
+from fazbot import Config
 from fazbot.db import fazbot
 
 if TYPE_CHECKING:
@@ -20,11 +21,15 @@ class CommonRepositoryTest:
 
         # override
         async def asyncSetUp(self) -> None:
+            conf = Config()
+            conf.read()
+            
             self.database = fazbot.FazBotDatabase(
                 "mysql+aiomysql",
-                "fazbot",
-                "password",
-                "localhost",
+                conf.mysql_username,
+                conf.mysql_password,
+                conf.mysql_host,
+                conf.mysql_port,
                 "fazbot_test"
             )
             async with self.database.enter_session() as session:
