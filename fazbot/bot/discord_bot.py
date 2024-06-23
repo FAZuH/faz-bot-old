@@ -1,12 +1,14 @@
 from __future__ import annotations
 import asyncio
+from datetime import datetime
 from threading import Thread
 from typing import TYPE_CHECKING
 
 from nextcord import Intents
 from nextcord.ext import commands
+from sqlalchemy.exc import IntegrityError
 
-from . import AssetManager, Bot, Checks, Events
+from . import AssetManager, Bot, Checks, Events, Utils
 from .cog import CogCore
 
 if TYPE_CHECKING:
@@ -33,25 +35,27 @@ class DiscordBot(Bot):
         intents.presences = True
 
         self._client = commands.Bot('/', intents=intents, help_command=None)
-        self._discord_bot_thread = Thread(target=self._start, name=self._get_cls_qualname())
+        self._discord_bot_thread = Thread(target=self._start, name=self.__get_cls_qualname())
 
     def start(self) -> None:
-        self.logger.console.info(f"Starting {self._get_cls_qualname()}...")
+        self.logger.console.info(f"Starting {self.__get_cls_qualname()}...")
         self.asset_manager.load_assets()
         self.checks.load_checks()
         self.events.load_events()
         self._discord_bot_thread.start()
-        self.logger.console.info(f"Started {self._get_cls_qualname()}.")
+        self.logger.console.info(f"Started {self.__get_cls_qualname()}.")
 
     def stop(self) -> None:
-        self.logger.console.info(f"Stopping {self._get_cls_qualname()}...")
+        self.logger.console.info(f"Stopping {self.__get_cls_qualname()}...")
         self._event_loop.run_until_complete(self.client.close())
 
     async def on_ready_setup(self) -> None:
         """Setup after the bot is ready."""
         await self.__create_all_fazbot_tables()
+
+        await self.__whitelist_dev_guild()
+
         whitelisted_guild_ids = await self.__get_whitelisted_guild_ids()
-        whitelisted_guild_ids.append(self.core.config.dev_server_id)
         await self.cogs.setup(whitelisted_guild_ids)
 
     @property
@@ -86,7 +90,7 @@ class DiscordBot(Bot):
         bot_token = self._core.config.discord_bot_token
         self._event_loop.run_until_complete(self.client.start(bot_token))
 
-    def _get_cls_qualname(self) -> str:
+    def __get_cls_qualname(self) -> str:
         return self.__class__.__qualname__
 
     async def __create_all_fazbot_tables(self) -> None:
@@ -97,3 +101,20 @@ class DiscordBot(Bot):
         with self.core.enter_fazbotdb() as db:
             guild_ids = await db.whitelisted_guild_repository.get_all_whitelisted_guild_ids()
             return list(guild_ids)
+
+    async def __whitelist_dev_guild(self) -> None:
+        dev_guild_id = self.core.config.dev_server_id
+        guild = await Utils.must_get_guild(self.client, dev_guild_id)
+
+        with self.core.enter_fazbotdb() as db:
+            repo = db.whitelisted_guild_repository
+            model = repo.get_model_cls()
+            dev_guild = model(
+                guild_id=guild.id,
+                guild_name=guild.name,
+                from_=datetime.now()
+            )
+            try:
+                await db.whitelisted_guild_repository.insert(dev_guild)
+            except IntegrityError:
+                pass
