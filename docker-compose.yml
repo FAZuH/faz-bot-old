@@ -3,8 +3,27 @@ version: "3.8"
 services:
   fazbot:
     build: .
-    image: fazbot_img
-    container_name: fazbot_container
     restart: unless-stopped
+    environment:
+      MYSQL_HOST: mysql
+      MYSQL_PORT: 3306
+      MYSQL_USER: fazbot
+      MYSQL_PASSWORD: password
+      MYSQL_FAZBOT_DATABASE: fazbot
+      MYSQL_WYNNDB_DATABASE: wynndb
+    depends_on:
+      - mysql
+
+  mysql:
+    image: mariadb:11.4.2
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: password
+      MYSQL_DATABASE: fazbot
+    expose:
+      - 3306
+    ports:
+      - "3306:3306"
     volumes:
-      - ./config.yml:/usr/src/app/config.yml
+      - ./mysql/data:/var/lib/mysql
+      - ./mysql/init:/docker-entrypoint-initdb.d
