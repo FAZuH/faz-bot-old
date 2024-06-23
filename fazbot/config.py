@@ -1,48 +1,35 @@
-from __future__ import annotations
-from pathlib import Path
-from typing import Any, TYPE_CHECKING
+import os
+from typing import Callable
 
-from yaml import Dumper, Loader, dump, load
-
-if TYPE_CHECKING:
-    from pathlib import Path
+from dotenv import load_dotenv
 
 
 class Config:
 
-    def __init__(self, config_fp: str | Path) -> None:
-        self._fp = Path(config_fp) if isinstance(config_fp, str) else config_fp
-        self._config: dict[str, Any] = {}
-
     def read(self) -> None:
-        with open(self._fp, "r") as stream:
-            self._config = load(stream, Loader=Loader)
+        load_dotenv()
 
-        app = self._config["application"]
-        self.admin_discord_id = int(app["admin_discord_id"])
-        self.dev_server_id = int(app["dev_server_id"])
+        self.discord_bot_token = self.__must_get_env("DISCORD_BOT_TOKEN")
 
-        logging = self._config["logging"]
-        self.discord_log_webhook = logging["discord_log_webhook"]
-        self.discord_status_webhook = logging["discord_status_webhook"]
+        self.admin_discord_id = self.__must_get_env("ADMIN_DISCORD_ID", int)  # type: ignore
+        self.dev_server_id = self.__must_get_env("DEV_SERVER_ID", int)  # type: ignore
 
-        secret = self._config["secret"]
+        self.discord_log_webhook = self.__must_get_env("DISCORD_LOG_WEBHOOK")
+        self.discord_status_webhook = self.__must_get_env("DISCORD_STATUS_WEBHOOK")
 
-        secret_discord = secret["discord"]
-        self.discord_bot_token = secret_discord["bot_token"]
+        self.fazbot_db_max_retries = self.__must_get_env("FAZBOT_DB_MAX_RETRIES", int)
+        self.wynndb_db_max_retries = self.__must_get_env("WYNNDB_DB_MAX_RETRIES", int)
 
-        secret_fazbot = secret["fazbot"]
-        self.fazbot_db_username = secret_fazbot["username"]
-        self.fazbot_db_password = secret_fazbot["password"]
-        self.fazbot_db_max_retries = secret_fazbot["max_retries"]
-        self.fazbot_db_name = secret_fazbot["database_name"]
+        self.mysql_host = self.__must_get_env("MYSQL_HOST")
+        self.mysql_port = self.__must_get_env("MYSQL_PORT", int)
+        self.mysql_username = self.__must_get_env("MYSQL_USER")
+        self.mysql_password = self.__must_get_env("MYSQL_PASSWORD")
+        self.fazbot_db_name = self.__must_get_env("MYSQL_FAZBOT_DATABASE")
+        self.wynndb_db_name = self.__must_get_env("MYSQL_WYNNDB_DATABASE")
 
-        secret_wynndb = secret["wynndb"]
-        self.wynndb_db_username = secret_wynndb["username"]
-        self.wynndb_db_password = secret_wynndb["password"]
-        self.wynndb_db_max_retries = secret_wynndb["max_retries"]
-        self.wynndb_db_name = secret_wynndb["database_name"]
-
-    def save(self) -> None:
-        with open(self._fp, "w") as stream:
-            dump(self._config, stream, Dumper)
+    def __must_get_env[T](self, key: str, type_strategy: Callable[[str], T] = str) -> T:
+        try:
+            env = os.getenv(key)
+            return type_strategy(env)  # type: ignore
+        except ValueError:
+            raise ValueError(f"Failed parsing environment variable {key} into type {type_strategy}")

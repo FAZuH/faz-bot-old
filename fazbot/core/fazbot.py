@@ -22,19 +22,21 @@ class FazBot(Core):
         self._locks: dict[str, Lock] = {}
 
         self._asset = Asset(Constants.ASSET_DIR)
-        self._config = Config(Constants.CONFIG_FP)
+        self._config = Config()
 
         self._asset.read_all()
         self._config.read()
 
+        conf = self.config
         self._fazbotdb = FazBotDatabase(
             "mysql+aiomysql",
-            self.config.fazbot_db_username,
-            self.config.fazbot_db_password,
-            "localhost",
-            self.config.fazbot_db_name
+            conf.mysql_username,
+            conf.mysql_password,
+            conf.mysql_host,
+            conf.mysql_port,
+            conf.fazbot_db_name
         )
-        self._logger = FazBotLogger(self.config.discord_log_webhook, self.config.admin_discord_id)
+        self._logger = FazBotLogger(conf.discord_log_webhook, conf.admin_discord_id)
 
         self._heartbeat = SimpleHeartbeat(self)
         self._bot = DiscordBot(self)

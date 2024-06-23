@@ -6,8 +6,8 @@ from .repository import BannedUserRepository, WhitelistedGuildRepository
 
 class FazBotDatabase(BaseAsyncDatabase[BaseModel], IFazBotDatabase):
 
-    def __init__(self, driver: str, user: str, password: str, host: str, database: str) -> None:
-        super().__init__(driver, user, password, host, database)    
+    def __init__(self, driver: str, user: str, password: str, host: str, port: int, database: str) -> None:
+        super().__init__(driver, user, password, host, port, database)
         self._base_model = BaseModel()
 
         self._banned_user_repository = BannedUserRepository(self)

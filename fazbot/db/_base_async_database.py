@@ -3,6 +3,7 @@ from abc import ABC, abstractmethod
 from contextlib import asynccontextmanager
 from typing import AsyncGenerator, TYPE_CHECKING
 
+from sqlalchemy import URL
 from sqlalchemy.ext.asyncio import async_sessionmaker, create_async_engine
 
 if TYPE_CHECKING:
@@ -18,16 +19,25 @@ class BaseAsyncDatabase[T: DeclarativeBase](ABC):
             user: str,
             password: str,
             host: str,
+            port: int,
             database: str,
         ) -> None:
         self._driver = driver
         self._user = user
         self._password = password
         self._host = host
+        self._port = port
         self._database = database
 
-        db_url = f"{driver}://{user}:{password}@{host}/{database}?charset=utf8mb4"
-        self._engine = create_async_engine(db_url)
+        url = URL.create(
+            driver,
+            user,
+            password,
+            host,
+            port,
+            database
+        )
+        self._engine = create_async_engine(url)
 
     @asynccontextmanager
     async def enter_connection(self) -> AsyncGenerator[AsyncConnection, None]:
