@@ -34,7 +34,7 @@ class FazBot(Core):
             "localhost",
             self.config.fazbot_db_name
         )
-        self._logger = FazBotLogger(self.config.discord_log_webhook, self.config.is_debug, self.config.admin_discord_id)
+        self._logger = FazBotLogger(self.config.discord_log_webhook, self.config.admin_discord_id)
 
         self._heartbeat = SimpleHeartbeat(self)
         self._bot = DiscordBot(self)

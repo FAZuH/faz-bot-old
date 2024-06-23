@@ -11,11 +11,9 @@ class FazBotLogger(Logger):
     def __init__(
         self,
         error_log_webhook: str ,
-        is_debug: bool = False,
         admin_discord_id: int | None = None
     )  -> None:
         self._console_logger = ConsoleLogger()
-        self._console_logger.set_is_debug(is_debug)
         self._discord_logger = DiscordLogger(error_log_webhook, admin_discord_id, self._console_logger)
         self._performance_logger = PerformanceLogger()
 

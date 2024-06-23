@@ -19,7 +19,6 @@ class Config:
             self._config = load(stream, Loader=Loader)
 
         app = self._config["application"]
-        self.is_debug = bool(app["debug"])
         self.admin_discord_id = int(app["admin_discord_id"])
         self.dev_server_id = int(app["dev_server_id"])
 
