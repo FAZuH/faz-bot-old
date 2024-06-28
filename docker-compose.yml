@@ -1,0 +1,13 @@
+version: "3.8"
+
+services:
+  faz-bot:
+    build: .
+    restart: unless-stopped
+    environment:
+      MYSQL_HOST: mysql
+      MYSQL_PORT: 3306
+      MYSQL_USER: faz
+      MYSQL_PASSWORD: password
+      MYSQL_FAZBOT_DATABASE: faz-bot
+      MYSQL_FAZDB_DATABASE: faz-db
