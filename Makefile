@@ -1,6 +1,6 @@
 .PHONY: build
 build:
-	docker-compose -f ./docker-compose.yml up -d --build
+	docker-compose -f ./docker-compose.yml up --detach --build
 
 
 .PHONY: up
@@ -20,6 +20,15 @@ db-up:
 db-down:
 	docker-compose --file ./docker-compose.yml down --detach mysql
 
+.PHONY: bot-up
+db-up:
+	docker-compose --file ./docker-compose.yml up --detach fazbot
+
+.PHONY: bot-down
+db-down:
+	docker-compose --file ./docker-compose.yml down --detach fazbot
+
+
 .PHONY: db
 db:
 	docker-compose -f ./docker-compose.yml exec mysql mariadb -uroot -ppassword fazbot
@@ -31,10 +40,11 @@ up-test-db:
 	docker run \
 			--rm --name fazbot-test-db \
             -e MYSQL_ROOT_PASSWORD=password \
-            -e MYSQL_USER=fazbot -e MYSQL_PASSWORD=password \
+            -e MYSQL_USER=fazbot \
+						-e MYSQL_PASSWORD=password \
             -e MYSQL_DATABASE=fazbot_test \
             -v $(PWD)/mysql/init:/docker-entrypoint-initdb.d \
-            -d -p "3306:3306" mariadb:10.5.11
+            --detach --port "3306:3306" mariadb:10.5.11
 
 .PHONY: test-db-down
 down-test-db:
