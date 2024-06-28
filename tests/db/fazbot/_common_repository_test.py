@@ -21,15 +21,14 @@ class CommonRepositoryTest:
 
         # override
         async def asyncSetUp(self) -> None:
-            conf = Config()
-            conf.read()
+            Config.read()
             
             self.database = fazbot.FazBotDatabase(
                 "mysql+aiomysql",
-                conf.mysql_username,
-                conf.mysql_password,
-                conf.mysql_host,
-                conf.mysql_port,
+                Config.mysql_username,
+                Config.mysql_password,
+                Config.mysql_host,
+                Config.mysql_port,
                 "fazbot_test"
             )
             async with self.database.enter_session() as session:
