@@ -152,6 +152,7 @@ class Admin(CogBase):
         app_commands = self._bot.client.get_all_application_commands()
         for app_cmd in app_commands:
             app_cmd.add_guild_rollout(guild.id)
+
         await self._bot.client.sync_application_commands(guild_id=guild.id)
 
         await self._respond_successful(

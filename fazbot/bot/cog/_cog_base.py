@@ -42,11 +42,11 @@ class CogBase(commands.Cog):
 
     async def _respond_successful(self, interaction: Interaction[Any], message: str) -> None:
         embed = Embed(title="Success", description=message, color=Colour.dark_green())
-        await interaction.response.send_message(embed=embed)
+        await interaction.send(embed=embed)
 
     async def _respond_error(self, interaction: Interaction[Any], message: str) -> None:
         embed = Embed(title="Error", description=message, color=Colour.dark_red())
-        await interaction.response.send_message(embed=embed)
+        await interaction.send(embed=embed)
 
     @asynccontextmanager
     async def _enter_db_session(self) -> AsyncGenerator[tuple[IFazBotDatabase, AsyncSession], None]:
