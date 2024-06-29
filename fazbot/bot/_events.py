@@ -44,8 +44,6 @@ class Events:
             # Loads all cogs and commands to the client
             await self._bot.on_ready_setup()
 
-        self._ready = True
-
     async def on_application_command_completion(self, interaction: Interaction[Any]) -> None:
         self.__log_event_to_console(interaction, self.on_application_command_completion.__name__)
 

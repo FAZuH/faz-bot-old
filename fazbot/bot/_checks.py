@@ -20,7 +20,7 @@ class Checks:
         is_admin = user_id == self._bot.core.config.admin_discord_id
 
         if not is_admin:
-            await self._bot.logger.discord.warning(f"is_admin check for user {interaction.user.global_name} ({user_id}) retruned False")
+            await self._bot.logger.discord.warning(f"is_admin check for user {interaction.user.global_name} ({user_id}) returned False")
 
         return is_admin
 

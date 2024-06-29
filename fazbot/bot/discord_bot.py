@@ -34,7 +34,7 @@ class DiscordBot(Bot):
         intents.members = True
         intents.presences = True
 
-        self._client = commands.Bot('/', intents=intents, help_command=None)
+        self._client = commands.Bot(intents=intents, help_command=None)
         self._discord_bot_thread = Thread(target=self._start, name=self.__get_cls_qualname())
 
     def start(self) -> None:
@@ -52,11 +52,12 @@ class DiscordBot(Bot):
     async def on_ready_setup(self) -> None:
         """Setup after the bot is ready."""
         await self.__create_all_fazbot_tables()
-
         await self.__whitelist_dev_guild()
 
         whitelisted_guild_ids = await self.__get_whitelisted_guild_ids()
         await self.cogs.setup(whitelisted_guild_ids)
+
+        await self.__sync_dev_guild()
 
     @property
     def asset_manager(self) -> AssetManager:
@@ -102,7 +103,14 @@ class DiscordBot(Bot):
             guild_ids = await db.whitelisted_guild_repository.get_all_whitelisted_guild_ids()
             return list(guild_ids)
 
+    async def __sync_dev_guild(self) -> None:
+        """Synchronizes commands registered to dev guild into discord."""
+        dev_server_id = self.core.config.dev_server_id
+        await self.client.sync_application_commands(guild_id=dev_server_id)
+        self.logger.console.info(f"Synchronized application commands for dev guild: {dev_server_id}")
+
     async def __whitelist_dev_guild(self) -> None:
+        """Adds dev guild to whitelist database, if not already added."""
         dev_guild_id = self.core.config.dev_server_id
         guild = await Utils.must_get_guild(self.client, dev_guild_id)
 

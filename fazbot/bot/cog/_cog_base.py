@@ -1,6 +1,6 @@
 from __future__ import annotations
 from contextlib import asynccontextmanager
-from typing import Any, AsyncGenerator, Sequence, TYPE_CHECKING
+from typing import Any, AsyncGenerator, TYPE_CHECKING
 
 from discord import Colour, Embed, Interaction
 from nextcord.ext import commands
@@ -13,31 +13,27 @@ if TYPE_CHECKING:
 class CogBase(commands.Cog):
 
     __whitelisted_guild_ids: list[int] = []
-    __initialized_whitelisted_guild_ids = False
 
     def __init__(self, bot: Bot) -> None:
+        super().__init__()
         self._bot = bot
 
     def setup(self) -> None:
-        self.__check_set_whitelisted_guild_ids()
+        """Adds cog to the bot."""
+        self._bot.client.add_cog(self)
         self._setup()
 
-        guild_ids = self.get_whitelisted_guild_ids()
-        self.__rollout_all_commands(guild_ids)
-        self._bot.client.add_cog(self)
-
         self._bot.logger.console.info(
-            f"Added cog {self.__class__.__qualname__} to client"
+            f"Added cog {self.__class__.__qualname__} to client "
             f"with {len(self.application_commands)} application commands"
         )
-
+ 
     @classmethod
     def get_whitelisted_guild_ids(cls) -> list[int]:
         return cls.__whitelisted_guild_ids
 
     @classmethod
     def set_whitelisted_guild_ids(cls, whitelisted_guild_ids: list[int]) -> None:
-        cls.__initialized_whitelisted_guild_ids = True
         cls.__whitelisted_guild_ids = whitelisted_guild_ids
 
     @property
@@ -45,19 +41,11 @@ class CogBase(commands.Cog):
         return self._bot.logger
 
     async def _respond_successful(self, interaction: Interaction[Any], message: str) -> None:
-        embed = Embed(
-            title="Success",
-            description=message,
-            color=Colour.dark_green()
-        )
+        embed = Embed(title="Success", description=message, color=Colour.dark_green())
         await interaction.response.send_message(embed=embed)
 
     async def _respond_error(self, interaction: Interaction[Any], message: str) -> None:
-        embed = Embed(
-            title="Error",
-            description=message,
-            color=Colour.dark_red()
-        )
+        embed = Embed(title="Error", description=message, color=Colour.dark_red())
         await interaction.response.send_message(embed=embed)
 
     @asynccontextmanager
@@ -67,15 +55,5 @@ class CogBase(commands.Cog):
                 yield db, session
 
     def _setup(self) -> None:
-        """Method to run on cog initialization. Overriding this method is optional."""
+        """Method to run on cog setup."""
         ...
-
-    def __rollout_all_commands(self, guild_ids: Sequence[int]) -> None:
-        for cmd in self.application_commands:
-            for guild_id in guild_ids:
-                cmd.add_guild_rollout(guild=guild_id)
-
-    @classmethod
-    def __check_set_whitelisted_guild_ids(cls) -> None:
-        if not cls.__initialized_whitelisted_guild_ids:
-            raise ValueError("whitelisted_guild_ids is not set. Set first with set_whitelisted_guild_ids()")

@@ -11,7 +11,17 @@ from .. import Utils
 
 class Admin(CogBase):
 
-    # @override
+    # override
+    def _setup(self) -> None:
+        client = self._bot.client
+        dev_server_id = self._bot.core.config.dev_server_id
+
+        client.add_all_application_commands()
+        for app_cmd in self.application_commands:
+            app_cmd.add_guild_rollout(dev_server_id)
+            client.add_application_command(command=app_cmd, use_rollout=True)
+
+    # override
     def cog_application_command_check(self, interaction: Interaction[Any]):  # type: ignore
         return self._bot.checks.is_admin(interaction)
 
@@ -136,33 +146,25 @@ class Admin(CogBase):
         guild_id : str
             The guild ID to sync app commands to.
         """        
+        await interaction.response.defer()
         guild = await Utils.must_get_guild(self._bot.client, guild_id)
 
-        with self._bot.core.enter_fazbotdb() as db:
-            whitelist = db.whitelisted_guild_repository
-
-            if not await whitelist.is_exists(guild.id):
-                return await self._respond_error(interaction,
-                    f"Guild `{guild.name}` (`{guild.id}`) is not whitelisted. "
-                    f"Whitelist it first with `{self._bot.client.command_prefix}{self.whitelist.qualified_name}`"
-                )
-
+        app_commands = self._bot.client.get_all_application_commands()
+        for app_cmd in app_commands:
+            app_cmd.add_guild_rollout(guild.id)
         await self._bot.client.sync_application_commands(guild_id=guild.id)
-        await self._respond_successful(interaction, f"Synchronized app commands for guild `{guild.name}` (`{guild.id}`).")
-
-    @admin.subcommand(name="sync")
-    async def sync(self, interaction: Interaction[Any]) -> None:
-        """(dev only) Synchronizes app commands across all whitelisted guilds."""
-        with self._bot.core.enter_fazbotdb() as db:
-            guild_ids = await db.whitelisted_guild_repository.get_all_whitelisted_guild_ids()
-
-        for id_ in guild_ids:
-            await self._bot.client.sync_application_commands(guild_id=id_)
 
         await self._respond_successful(
             interaction,
-            f"Synchronized app commands across {len(self.get_whitelisted_guild_ids())} guilds."
+            f"Synchronized {len(app_commands)} app commands for guild `{guild.name}` `({guild.id})`."
         )
+
+    @admin.subcommand(name="sync")
+    async def sync(self, interaction: Interaction[Any]) -> None:
+        """(dev only) Synchronizes all app commands with Discord."""
+        await interaction.response.defer()
+        await self._bot.client.sync_all_application_commands()
+        await self._respond_successful(interaction, f"Synchronized app commands.")
 
     @admin.subcommand(name="shutdown", description="Shuts down the bot.")
     async def shutdown(self, interaction: Interaction[Any]) -> None:
