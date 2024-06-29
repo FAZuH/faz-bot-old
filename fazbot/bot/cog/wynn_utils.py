@@ -23,8 +23,8 @@ class WynnUtils(CogBase):
             ingredient5: str = InvokeCraftedProbability.INGSTR_DEFAULT,
             ingredient6: str = InvokeCraftedProbability.INGSTR_DEFAULT,
     ) -> None:
-        """Calculates crafted roll probabilities.
-        improved with help from afterfive.
+        """Computes crafted roll probabilities.
+        Improved with help from afterfive.
 
         Parameters
         -----------
@@ -47,11 +47,18 @@ class WynnUtils(CogBase):
 
     @nextcord.slash_command(name="convert_emerald")
     async def convert_emerald(self, interaction: Interaction[Any], emerald_string: str = "") -> None:
+        """Converts input emeralds into common emerald units.
+
+        Parameters
+        -----------
+        emerald_string: str
+            Examples: "2x 1stx 1le 1eb 1e", "2.5stx 100.5le 100.2eb", "1/3x 1000eb"
+        """
         await InvokeConvertEmerald(interaction, emerald_string).run()
 
     @nextcord.slash_command(name="ingredient_probability")
     async def ingredient_probability(self, interaction: Interaction[Any], base_chance: str, loot_bonus: int = 0, loot_quality: int = 0) -> None:
-        """Calculates ingredient drop probability after loot bonus and loot quality.
+        """Computes boosted ingredient drop probability after loot bonus and loot quality.
 
         Parameters
         -----------
