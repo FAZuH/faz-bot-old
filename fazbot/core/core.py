@@ -3,7 +3,7 @@ from contextlib import contextmanager
 from typing import Generator, Protocol, TYPE_CHECKING
 
 if TYPE_CHECKING:
-    from fazbot import Asset, Bot, Config, Heartbeat, Logger
+    from fazbot import Asset, Bot, Config, Logger
     from fazbot.db.fazbot import IFazBotDatabase
 
 
@@ -21,5 +21,3 @@ class Core(Protocol):
     def enter_bot(self) -> Generator[Bot]: ...
     @contextmanager
     def enter_fazbotdb(self) -> Generator[IFazBotDatabase]: ... 
-    @contextmanager
-    def enter_heartbeat(self) -> Generator[Heartbeat]: ...

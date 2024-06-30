@@ -7,20 +7,18 @@ from fazbot import Asset, Config
 from fazbot.bot import DiscordBot
 from fazbot.constants import Constants
 from fazbot.db.fazbot import FazBotDatabase
-from fazbot.heartbeat import SimpleHeartbeat
 from fazbot.logger import FazBotLogger
 
 from .core import Core
 
 if TYPE_CHECKING:
-    from fazbot import Bot, Heartbeat, Logger, IFazBotDatabase
+    from fazbot import Bot, Logger, IFazBotDatabase
 
 
 class FazBot(Core):
 
     def __init__(self) -> None:
         self._locks: dict[str, Lock] = {}
-
         self._asset = Asset(Constants.ASSET_DIR)
         self._config = Config()
 
@@ -37,16 +35,12 @@ class FazBot(Core):
             conf.fazbot_db_name
         )
         self._logger = FazBotLogger(conf.discord_log_webhook, conf.admin_discord_id)
-
-        self._heartbeat = SimpleHeartbeat(self)
         self._bot = DiscordBot(self)
 
     def start(self) -> None:
-        # self._heartbeat.start()
         self._bot.start()
 
     def stop(self) -> None:
-        # self._heartbeat.stop()
         self._bot.stop()
 
     @property
@@ -71,11 +65,6 @@ class FazBot(Core):
         with self._get_lock("fazbotdb"):
             yield self._fazbotdb
 
-    @contextmanager
-    def enter_heartbeat(self) -> Generator[Heartbeat]:
-        with self._get_lock("heartbeat"):
-            yield self._heartbeat
-
     def _get_lock(self, key: str) -> Lock:
         if key not in self._locks:
             lock = Lock()
@@ -83,4 +72,3 @@ class FazBot(Core):
         else:
             lock = self._locks[key]
         return lock
-
