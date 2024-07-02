@@ -6,12 +6,12 @@ import unittest
 from sqlalchemy import inspect, select, text
 
 from fazbot.core import Config
-from fazbot.db import fazbot
+from fazbot.db import wynndb
 
 if TYPE_CHECKING:
     from sqlalchemy import Connection
-    from fazbot.db.fazbot.model import BaseModel
-    from fazbot.db.fazbot.repository._repository import Repository
+    from fazbot.db.wynndb.model import BaseModel
+    from fazbot.db.wynndb.repository._repository import Repository
 
 
 class CommonRepositoryTest:
@@ -23,7 +23,7 @@ class CommonRepositoryTest:
         async def asyncSetUp(self) -> None:
             Config.read()
             
-            self.database = fazbot.FazBotDatabase(
+            self.database = wynndb.WynndbDatabase(
                 "mysql+aiomysql",
                 Config.mysql_username,
                 Config.mysql_password,

@@ -24,4 +24,3 @@ class BannedUser(BaseModel):
             f"until={self.until}"
             ")>"
         )
-
