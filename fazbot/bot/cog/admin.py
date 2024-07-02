@@ -244,11 +244,38 @@ class Admin(CogBase):
             whitelist = db.whitelisted_guild_repository
 
             if not await whitelist.is_exists(guild.id, session):
-                return await self._respond_error(interaction, f"Guild `{guild.name}` (`{guild.id}`) is not whitelisted.")
+                raise CommandFailure(f"Guild `{guild.name}` (`{guild.id}`) is not whitelisted.")
 
             await whitelist.delete(guild.id, session) 
 
         await self._respond_successful(interaction, f"Unwhitelisted guild `{guild.name}` (`{guild.id}`).")
+
+    @admin.subcommand(name="execute")
+    async def execute(self, interaction: Interaction[Any], command: str) -> None:
+        """(dev only) Execute `command` directly to the host device.
+
+        Parameters
+        ----------
+        command : str
+            The command to execute.
+        """
+        command_ = command.split(' ')
+        result = subprocess.run(command_, capture_output=True, text=True)
+
+        if result.returncode == 0:
+            success_msg = (
+                "Command executed successfully!\n"
+                "Output:\n"
+                f"{result.stdout}"
+            )
+            await self._respond_successful(interaction, success_msg)
+        else:
+            err_msg = (
+                "Error executing command.\n"
+                "Error message:\n"
+                f"{result.stderr}"
+            )
+            raise CommandFailure(err_msg)
 
     def __is_channel_sendable(self, channel: Any) -> bool:
         return hasattr(channel, "send")
