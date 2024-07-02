@@ -9,9 +9,6 @@ from ..invoke import InvokeConvertEmerald, InvokeCraftedProbability, InvokeIngre
 
 class WynnUtils(CogBase):
 
-    def _setup(self) -> None:
-        return super()._setup()
-
     @nextcord.slash_command(name="crafted_probability")
     async def crafted_probability(
             self,
