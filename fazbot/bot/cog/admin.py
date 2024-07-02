@@ -151,15 +151,17 @@ class Admin(CogBase):
         await interaction.response.defer()
         guild = await Utils.must_get_guild(self._bot.client, guild_id)
 
-        app_commands = self._bot.client.get_all_application_commands()
-        for app_cmd in app_commands:
-            app_cmd.add_guild_rollout(guild.id)
-
         await self._bot.client.sync_application_commands(guild_id=guild.id)
+
+        synced_app_cmds = 0
+        for app_cmd in self._bot.client.get_all_application_commands():
+            print(app_cmd.qualified_name, app_cmd.guild_ids)
+            if guild.id in app_cmd.guild_ids:
+                synced_app_cmds += 1
 
         await self._respond_successful(
             interaction,
-            f"Synchronized {len(app_commands)} app commands for guild `{guild.name}` `({guild.id})`."
+            f"Synchronized {synced_app_cmds} app commands for guild `{guild.name}` `({guild.id})`."
         )
 
     @admin.subcommand(name="sync")

@@ -1,9 +1,7 @@
 from __future__ import annotations
-from typing import TYPE_CHECKING
+from typing import Iterable, TYPE_CHECKING
 
-from nextcord.types.interactions import ApplicationCommandType
-
-from . import Admin, Help, Info, WynnAnalyze, WynnStat, WynnTrack, WynnUtils, CogBase
+from . import Admin, CogBase, Help, Info, WynnAnalyze, WynnStat, WynnTrack, WynnUtils
 
 if TYPE_CHECKING:
     from fazbot import Bot
@@ -31,9 +29,8 @@ class CogCore:
         self._cogs.append(self.wynn_track)
         self._cogs.append(self.wynn_utils)
 
-    async def setup(self, whitelisted_guild_ids: list[int]) -> None:
+    async def setup(self, whitelisted_guild_ids: Iterable[int]) -> None:
         """Intansiates all cogs and adds all application commands to the client.
         Should only be run once, that is, during start up"""
-        CogBase.set_whitelisted_guild_ids(whitelisted_guild_ids)
         for cog in self._cogs:
-            cog.setup()
+            cog.setup(whitelisted_guild_ids)
