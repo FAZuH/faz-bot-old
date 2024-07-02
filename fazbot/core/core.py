@@ -3,7 +3,8 @@ from contextlib import contextmanager
 from typing import Generator, Protocol, TYPE_CHECKING
 
 if TYPE_CHECKING:
-    from fazbot import Asset, Bot, Config, Logger
+    from . import Asset, Config
+    from fazbot import Bot, Logger
     from fazbot.db.fazbot import IFazBotDatabase
 
 

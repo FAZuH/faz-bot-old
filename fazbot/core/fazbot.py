@@ -3,13 +3,11 @@ from contextlib import contextmanager
 from threading import Lock
 from typing import Generator, TYPE_CHECKING
 
-from fazbot import Asset, Config
 from fazbot.bot import DiscordBot
-from fazbot.constants import Constants
 from fazbot.db.fazbot import FazBotDatabase
 from fazbot.logger import FazBotLogger
 
-from .core import Core
+from . import Asset, Config, Core, Constants
 
 if TYPE_CHECKING:
     from fazbot import Bot, Logger, IFazBotDatabase

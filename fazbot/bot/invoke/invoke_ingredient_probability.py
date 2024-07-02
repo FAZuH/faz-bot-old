@@ -7,7 +7,7 @@ from nextcord import Embed, Interaction
 
 from fazbot.util import IngredientUtil
 
-from . import Asset, Invoke
+from . import Invoke
 
 if TYPE_CHECKING:
     from nextcord import File
