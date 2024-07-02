@@ -1,6 +1,6 @@
 from fazbot.db import BaseAsyncDatabase
 
-from . import IWynndbDatabase
+from . import IFazdbDatabase
 from .model import BaseModel
 from .repository import (
     CharacterHistoryRepository,
@@ -15,7 +15,7 @@ from .repository import (
     PlayerInfoRepository,
 )
 
-class WynndbDatabase(BaseAsyncDatabase[BaseModel], IWynndbDatabase):
+class FazdbDatabase(BaseAsyncDatabase[BaseModel], IFazdbDatabase):
     
     def __init__(self, driver: str, user: str, password: str, host: str, port: int, database: str) -> None:
         super().__init__(driver, user, password, host, port, database)

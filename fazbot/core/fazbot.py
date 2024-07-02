@@ -4,13 +4,14 @@ from threading import Lock
 from typing import Generator, TYPE_CHECKING
 
 from fazbot.bot import DiscordBot
-from fazbot.db.fazbot import FazBotDatabase
+from fazbot.db.fazbot import FazbotDatabase
+from fazbot.db.fazdb import FazdbDatabase
 from fazbot.logger import FazBotLogger
 
 from . import Asset, Config, Core, Constants
 
 if TYPE_CHECKING:
-    from fazbot import Bot, Logger, IFazBotDatabase
+    from fazbot import Bot, Logger, IFazbotDatabase, IFazdbDatabase
 
 
 class FazBot(Core):
@@ -24,13 +25,21 @@ class FazBot(Core):
         self._config.read()
 
         conf = self.config
-        self._fazbotdb = FazBotDatabase(
+        self._fazbot_db = FazbotDatabase(
             "mysql+aiomysql",
             conf.mysql_username,
             conf.mysql_password,
             conf.mysql_host,
             conf.mysql_port,
             conf.fazbot_db_name
+        )
+        self._fazdb_db = FazdbDatabase(
+            "mysql+aiomysql",
+            conf.mysql_username,
+            conf.mysql_password,
+            conf.mysql_host,
+            conf.mysql_port,
+            conf.fazdb_db_name
         )
         self._logger = FazBotLogger(conf.discord_log_webhook, conf.admin_discord_id)
         self._bot = DiscordBot(self)
@@ -59,9 +68,14 @@ class FazBot(Core):
             yield self._bot
 
     @contextmanager
-    def enter_fazbotdb(self) -> Generator[IFazBotDatabase]:
+    def enter_fazbotdb(self) -> Generator[IFazbotDatabase]:
         with self._get_lock("fazbotdb"):
-            yield self._fazbotdb
+            yield self._fazbot_db
+
+    @contextmanager
+    def enter_fazdbdb(self) -> Generator[IFazdbDatabase]:
+        with self._get_lock("fazdbdb"):
+            yield self._fazdb_db
 
     def _get_lock(self, key: str) -> Lock:
         if key not in self._locks:

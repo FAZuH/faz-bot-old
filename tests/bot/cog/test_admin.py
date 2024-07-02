@@ -7,9 +7,9 @@ from unittest.mock import AsyncMock, MagicMock, PropertyMock, patch
 
 from sqlalchemy import text
 
-from fazbot import IFazBotDatabase
+from fazbot import IFazbotDatabase
 from fazbot.bot.cog import Admin
-from fazbot.db.fazbot import FazBotDatabase
+from fazbot.db.fazbot import FazbotDatabase
 from fazbot.db.fazbot.model import BannedUser, WhitelistedGuild
 
 if TYPE_CHECKING:
@@ -20,14 +20,14 @@ if TYPE_CHECKING:
 class TestAdmin(unittest.IsolatedAsyncioTestCase):
 
     @asynccontextmanager
-    async def __mock_enter_db_session(self) -> AsyncGenerator[tuple[IFazBotDatabase, AsyncSession], None]:
+    async def __mock_enter_db_session(self) -> AsyncGenerator[tuple[IFazbotDatabase, AsyncSession], None]:
         async with self.db.enter_session() as session:
             yield self.db, session
 
     @patch("fazbot.bot.discord_bot.DiscordBot", autospec=True)
     async def asyncSetUp(self, mock_bot: MagicMock) -> None:
         self.mock_bot = mock_bot
-        self.db = FazBotDatabase(
+        self.db = FazbotDatabase(
             "mysql+aiomysql",
             "fazbot",
             "password",

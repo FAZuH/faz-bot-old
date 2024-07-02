@@ -7,7 +7,7 @@ if TYPE_CHECKING:
     from .model import BaseModel
     from .repository import BannedUserRepository, WhitelistedGuildRepository
 
-class IFazBotDatabase(Protocol):
+class IFazbotDatabase(Protocol):
     @property
     def banned_user_repository(self) -> BannedUserRepository: ...
     @property

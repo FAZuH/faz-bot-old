@@ -8,7 +8,7 @@ if TYPE_CHECKING:
     from .repository import *
 
 
-class IWynndbDatabase(Protocol):
+class IFazdbDatabase(Protocol):
     @property
     def character_history_repository(self) -> CharacterHistoryRepository: ...
     @property

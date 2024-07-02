@@ -23,7 +23,7 @@ class CommonRepositoryTest:
         async def asyncSetUp(self) -> None:
             Config.read()
             
-            self.database = fazbot.FazBotDatabase(
+            self.database = fazbot.FazbotDatabase(
                 "mysql+aiomysql",
                 Config.mysql_username,
                 Config.mysql_password,

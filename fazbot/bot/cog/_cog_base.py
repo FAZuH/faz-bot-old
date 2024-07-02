@@ -7,7 +7,7 @@ from nextcord.ext import commands
 
 if TYPE_CHECKING:
     from sqlalchemy.ext.asyncio import AsyncSession
-    from fazbot import Bot, IFazBotDatabase, Logger
+    from fazbot import Bot, IFazbotDatabase, Logger
 
 
 class CogBase(commands.Cog):
@@ -35,7 +35,7 @@ class CogBase(commands.Cog):
         await interaction.send(embed=embed)
 
     @asynccontextmanager
-    async def _enter_db_session(self) -> AsyncGenerator[tuple[IFazBotDatabase, AsyncSession], None]:
+    async def _enter_db_session(self) -> AsyncGenerator[tuple[IFazbotDatabase, AsyncSession], None]:
         with self._bot.core.enter_fazbotdb() as db:
             async with db.enter_session() as session:
                 yield db, session

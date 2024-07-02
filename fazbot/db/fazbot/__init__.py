@@ -1,4 +1,4 @@
-from .ifazbot_database import IFazBotDatabase
+from .ifazbot_database import IFazbotDatabase
 
-from .fazbot_database import FazBotDatabase  # IFazBotDatabase
+from .fazbot_database import FazbotDatabase  # IFazBotDatabase
 

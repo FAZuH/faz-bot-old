@@ -1,10 +1,10 @@
-from . import IFazBotDatabase
+from . import IFazbotDatabase
 from .. import BaseAsyncDatabase
 from .model import BaseModel
 from .repository import BannedUserRepository, WhitelistedGuildRepository
 
 
-class FazBotDatabase(BaseAsyncDatabase[BaseModel], IFazBotDatabase):
+class FazbotDatabase(BaseAsyncDatabase[BaseModel], IFazbotDatabase):
 
     def __init__(self, driver: str, user: str, password: str, host: str, port: int, database: str) -> None:
         super().__init__(driver, user, password, host, port, database)
