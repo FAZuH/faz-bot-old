@@ -1,18 +1,20 @@
 from __future__ import annotations
+from asyncio import subprocess
 from datetime import datetime
-from typing import Any
+import subprocess
+from typing import Any, Iterable
 
 import nextcord
 from nextcord import Interaction
 
 from . import CogBase
-from .. import Utils
+from .. import Utils, CommandFailure
 
 
 class Admin(CogBase):
 
     # override
-    def _setup(self) -> None:
+    def _setup(self, whitelisted_guild_ids: Iterable[int]) -> None:
         client = self._bot.client
         dev_server_id = self._bot.core.config.dev_server_id
 
@@ -54,7 +56,7 @@ class Admin(CogBase):
             model_cls = banlist.get_model_cls()
 
             if await banlist.is_exists(user.id, session):
-                return await self._respond_error(interaction, f"User `{user.name}` (`{user.id}`) is already banned.")
+                raise CommandFailure(f"User `{user.name}` (`{user.id}`) is already banned.")
 
             user_to_ban = model_cls(
                 user_id=user.id,
@@ -82,7 +84,7 @@ class Admin(CogBase):
             banlist = db.banned_user_repository
 
             if not await banlist.is_exists(user.id, session):
-                return await self._respond_error(interaction, f"User `{user.name}` (`{user.id}`) is not banned.")
+                raise CommandFailure(f"User `{user.name}` (`{user.id}`) is not banned.")
 
             await banlist.delete(user.id, session)
             
@@ -128,12 +130,12 @@ class Admin(CogBase):
         channel = await Utils.must_get_channel(self._bot.client, channel_id)
 
         if not self.__is_channel_sendable(channel):
-            return await self._respond_error(interaction, f"Channel of type `{type(channel)}` does not support sending messages.") 
+            raise CommandFailure(f"Channel of type `{type(channel)}` does not support sending messages.") 
 
         try:
             await channel.send(message)  # type: ignore
         except nextcord.DiscordException as e:
-            return await self._respond_error(interaction, f"Failed sending message: {e}")
+            raise CommandFailure(f"Failed sending message: {e}")
 
         await self._respond_successful(interaction, f"Sent message on channel `{channel.name}` (`{channel.id}`).")  # type: ignore
 
@@ -189,7 +191,7 @@ class Admin(CogBase):
         try:
             await user.send(message)
         except nextcord.DiscordException as e:
-            return await self._respond_error(interaction, f"Failed whispering message to user {user.display_name}: `{e}`")
+            raise CommandFailure(f"Failed whispering message to user {user.display_name}: `{e}`")
 
         await self._respond_successful(interaction, f"Whispered message to `{user.name}` (`{user.id}`).")
 
@@ -212,7 +214,7 @@ class Admin(CogBase):
             model_cls = whitelist.get_model_cls()
 
             if await whitelist.is_exists(guild.id, session):
-                return await self._respond_error(interaction, f"Guild `{guild.name}` (`{guild.id}`) is already whitelisted.")
+                raise CommandFailure(f"Guild `{guild.name}` (`{guild.id}`) is already whitelisted.")
 
             guild_to_whitelist = model_cls(
                 guild_id=guild.id,
