@@ -65,7 +65,9 @@ class DiscordLogger:
         embed = Embed(title=title, description=description, colour=colour)
         if exception:
             tb = traceback.format_exception(exception)
-            embed.add_field(name=f"`{exception}`", value=f"```{''.join(tb)}```")
+            tb_msg = f"{'\n'.join(tb)}"[:1000]
+            tb_msg = f"```{tb_msg}```"
+            embed.add_field(name='Traceback', value=tb_msg, inline=False)
         return embed
 
     def __check_console_logger(self, message: str | None) -> bool:

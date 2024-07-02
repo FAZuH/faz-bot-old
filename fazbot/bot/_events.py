@@ -7,7 +7,7 @@ from nextcord import Activity, ActivityType, Colour, Embed, Interaction, errors
 from nextcord.ext import commands
 from nextcord.ext.commands import BucketType, Cooldown, CooldownMapping
 
-from . import BotError, CommandFailure
+from . import BotError
 
 if TYPE_CHECKING:
     from . import Bot
@@ -44,19 +44,20 @@ class Events:
     async def on_application_command_error(self, interaction: Interaction[Any], error: BaseException) -> None:
         await self.__log_event(interaction, self.on_application_command_error.__name__)
 
+        await interaction.response.defer()
         if isinstance(error, errors.ApplicationCheckFailure):
             await interaction.send(
                 ("You do not have permission to use this command. " 
                 "Please contact bot developer if you believe this is a mistake."),
                 ephemeral=True
             )
-        elif isinstance(error, CommandFailure):
+        elif isinstance(error, BotError):
             await self.__send_expected_error(interaction, error)
         else:
             await self.__send_unexpected_error(interaction, error)
 
     async def before_application_invoke(self, interaction: Interaction[Any]) -> None:
-        await self.__log_event(interaction, self.before_application_invoke.__name__)
+        # await self.__log_event(interaction, self.before_application_invoke.__name__)
         self.__ratelimit(interaction)
 
     def __ratelimit(self, interaction: Interaction[Any]) -> None:
@@ -101,12 +102,12 @@ class Events:
         is_admin = await self._bot.checks.is_admin(interaction)
         if is_admin:
             tb = traceback.format_exception(exception)
-            tb_msg = f"{'\n'.join(tb)}"[:1016]
+            tb_msg = f"{'\n'.join(tb)}"[:1000]
             tb_msg = f"```{tb_msg}```"
             embed.add_field(name='Traceback', value=tb_msg, inline=False)
 
         await self._bot.logger.discord.error(exception=exception)
-        await interaction.send(embed=embed, ephemeral=is_admin)
+        await interaction.send(embed=embed)
 
     async def __send_expected_error(self, interaction: Interaction[Any], exception: BotError) -> None:
         embed_description = f"An error occurred while executing the command: \n**{exception}**"

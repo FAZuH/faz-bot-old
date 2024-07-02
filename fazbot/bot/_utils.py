@@ -1,9 +1,10 @@
 from __future__ import annotations
-
 from datetime import datetime
 from typing import TYPE_CHECKING, Any, Callable
 
 import dateparser
+
+from . import ParseError
 
 if TYPE_CHECKING:
     from nextcord import Guild, PartialMessageable, Thread, User
@@ -18,6 +19,13 @@ class Utils:
         return await Utils.must_get_id(bot.get_channel, channel_id)
 
     @staticmethod
+    async def must_get_sendable_channel(bot: Bot, channel_id: Any) -> GuildChannel | Thread | PrivateChannel | PartialMessageable:
+        channel = await Utils.must_get_id(bot.get_channel, channel_id)
+        if not hasattr(channel, "send"):
+            raise ParseError(f"Channel with id {channel_id} does not support sending messages.")
+        return channel
+
+    @staticmethod
     async def must_get_guild(bot: Bot, guild_id: Any) -> Guild:
         return await Utils.must_get_id(bot.get_guild, guild_id)
 
@@ -26,18 +34,18 @@ class Utils:
         return await Utils.must_get_id(bot.get_user, user_id)
 
     @staticmethod
-    async def must_get_id[T](get_strategy: Callable[[int], T | None], id_: str) -> T:
+    async def must_get_id[T](get_strategy: Callable[[int], T | None], id_: Any) -> T:
         try:
             parsed_id = int(id_)
-        except ValueError:
-            raise ValueError(f"Failed parsing {id_} into an integer.")
+        except ParseError:
+            raise ParseError(f"Failed parsing {id_} into an integer.")
         if not (ret := get_strategy(parsed_id)):
-            raise ValueError(f"Failed getting object from ID {id_}")
+            raise ParseError(f"Failed getting object from ID {id_}")
         return ret
 
     @staticmethod
     def must_parse_date_string(datestr: str) -> datetime:
         date = dateparser.parse(datestr)
         if not date:
-            raise ValueError(f"Failed parsing date string {datestr}")
+            raise ParseError(f"Failed parsing date string {datestr}")
         return date

@@ -44,10 +44,8 @@ class CogBase(commands.Cog):
         """Method to run on cog setup.
         By default, this adds whitelisted_guild_ids into
         guild rollouts into all command in the cog."""
-        client = self._bot.client
-
-        client.add_all_application_commands()
         for app_cmd in self.application_commands:
             for guild_id in whitelisted_guild_ids:
                 app_cmd.add_guild_rollout(guild_id)
-            client.add_application_command(command=app_cmd, use_rollout=True)
+                # app_cmd.guild_ids.add(guild_id)
+            self._bot.client.add_application_command(app_cmd, overwrite=True, use_rollout=True)

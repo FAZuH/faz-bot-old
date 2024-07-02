@@ -15,13 +15,10 @@ class Admin(CogBase):
 
     # override
     def _setup(self, whitelisted_guild_ids: Iterable[int]) -> None:
-        client = self._bot.client
-        dev_server_id = self._bot.core.config.dev_server_id
-
-        client.add_all_application_commands()
         for app_cmd in self.application_commands:
-            app_cmd.add_guild_rollout(dev_server_id)
-            client.add_application_command(command=app_cmd, use_rollout=True)
+            # app_cmd.guild_ids.add(dev_server_id)
+            app_cmd.add_guild_rollout(self._bot.core.config.dev_server_id)
+            self._bot.client.add_application_command(app_cmd, overwrite=True, use_rollout=True)
 
     # override
     def cog_application_command_check(self, interaction: Interaction[Any]):  # type: ignore
@@ -155,7 +152,6 @@ class Admin(CogBase):
 
         synced_app_cmds = 0
         for app_cmd in self._bot.client.get_all_application_commands():
-            print(app_cmd.qualified_name, app_cmd.guild_ids)
             if guild.id in app_cmd.guild_ids:
                 synced_app_cmds += 1
 
@@ -277,5 +273,5 @@ class Admin(CogBase):
             )
             raise CommandFailure(err_msg)
 
-    def __is_channel_sendable(self, channel: Any) -> bool:
+    def __is_channel_sendable(self, channel: object) -> bool:
         return hasattr(channel, "send")

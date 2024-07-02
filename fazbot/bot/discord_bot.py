@@ -51,7 +51,6 @@ class DiscordBot(Bot):
 
     async def on_ready_setup(self) -> None:
         """Setup after the bot is ready."""
-        await self.__create_all_fazbot_tables()
         await self.__whitelist_dev_guild()
 
         whitelisted_guild_ids = await self.__get_whitelisted_guild_ids()
@@ -93,10 +92,6 @@ class DiscordBot(Bot):
 
     def __get_cls_qualname(self) -> str:
         return self.__class__.__qualname__
-
-    async def __create_all_fazbot_tables(self) -> None:
-        with self.core.enter_fazbotdb() as db:
-            await db.create_all()
 
     async def __get_whitelisted_guild_ids(self) -> list[int]:
         with self.core.enter_fazbotdb() as db:
