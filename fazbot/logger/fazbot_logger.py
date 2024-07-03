@@ -1,7 +1,6 @@
 from . import (
     ConsoleLogger,
     DiscordLogger,
-    PerformanceLogger,
     Logger
 )
 
@@ -15,7 +14,6 @@ class FazBotLogger(Logger):
     )  -> None:
         self._console_logger = ConsoleLogger()
         self._discord_logger = DiscordLogger(error_log_webhook, admin_discord_id, self._console_logger)
-        self._performance_logger = PerformanceLogger()
 
     @property
     def console(cls) -> ConsoleLogger:
@@ -24,7 +22,3 @@ class FazBotLogger(Logger):
     @property
     def discord(cls) -> DiscordLogger:
         return cls._discord_logger
-
-    @property
-    def performance(cls) -> PerformanceLogger:
-        return cls._performance_logger
