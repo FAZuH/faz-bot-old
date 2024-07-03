@@ -7,7 +7,7 @@ from nextcord import Activity, ActivityType, Colour, Embed, Interaction, errors
 from nextcord.ext import commands
 from nextcord.ext.commands import BucketType, Cooldown, CooldownMapping
 
-from . import BotError
+from . import BotException
 
 if TYPE_CHECKING:
     from . import Bot
@@ -51,7 +51,7 @@ class Events:
                 "Please contact bot developer if you believe this is a mistake."),
                 ephemeral=True
             )
-        elif isinstance(error, BotError):
+        elif isinstance(error, BotException):
             await self.__send_expected_error(interaction, error)
         else:
             await self.__send_unexpected_error(interaction, error)
@@ -109,8 +109,7 @@ class Events:
         await self._bot.logger.discord.error(exception=exception)
         await interaction.send(embed=embed)
 
-    async def __send_expected_error(self, interaction: Interaction[Any], exception: BotError) -> None:
-        embed_description = f"An error occurred while executing the command: \n**{exception}**"
-        embed = Embed(title="Error", description=embed_description, color=Colour.red())
+    async def __send_expected_error(self, interaction: Interaction[Any], exception: BotException) -> None:
+        embed = Embed(title="Error", description=f"{exception}", color=Colour.red())
         embed.add_field(name="Timestamp", value=f"<t:{int(datetime.now().timestamp())}:F>", inline=False)
         await interaction.send(embed=embed)

@@ -8,7 +8,7 @@ import nextcord
 from nextcord import Interaction
 
 from . import CogBase
-from .. import Utils, CommandFailure
+from .. import Utils, CommandException
 
 
 class Admin(CogBase):
@@ -53,7 +53,7 @@ class Admin(CogBase):
             model_cls = banlist.get_model_cls()
 
             if await banlist.is_exists(user.id, session):
-                raise CommandFailure(f"User `{user.name}` (`{user.id}`) is already banned.")
+                raise CommandException(f"User `{user.name}` (`{user.id}`) is already banned.")
 
             user_to_ban = model_cls(
                 user_id=user.id,
@@ -81,7 +81,7 @@ class Admin(CogBase):
             banlist = db.banned_user_repository
 
             if not await banlist.is_exists(user.id, session):
-                raise CommandFailure(f"User `{user.name}` (`{user.id}`) is not banned.")
+                raise CommandException(f"User `{user.name}` (`{user.id}`) is not banned.")
 
             await banlist.delete(user.id, session)
             
@@ -127,12 +127,12 @@ class Admin(CogBase):
         channel = await Utils.must_get_channel(self._bot.client, channel_id)
 
         if not self.__is_channel_sendable(channel):
-            raise CommandFailure(f"Channel of type `{type(channel)}` does not support sending messages.") 
+            raise CommandException(f"Channel of type `{type(channel)}` does not support sending messages.") 
 
         try:
             await channel.send(message)  # type: ignore
         except nextcord.DiscordException as e:
-            raise CommandFailure(f"Failed sending message: {e}")
+            raise CommandException(f"Failed sending message: {e}")
 
         await self._respond_successful(interaction, f"Sent message on channel `{channel.name}` (`{channel.id}`).")  # type: ignore
 
@@ -189,7 +189,7 @@ class Admin(CogBase):
         try:
             await user.send(message)
         except nextcord.DiscordException as e:
-            raise CommandFailure(f"Failed whispering message to user {user.display_name}: `{e}`")
+            raise CommandException(f"Failed whispering message to user {user.display_name}: `{e}`")
 
         await self._respond_successful(interaction, f"Whispered message to `{user.name}` (`{user.id}`).")
 
@@ -212,7 +212,7 @@ class Admin(CogBase):
             model_cls = whitelist.get_model_cls()
 
             if await whitelist.is_exists(guild.id, session):
-                raise CommandFailure(f"Guild `{guild.name}` (`{guild.id}`) is already whitelisted.")
+                raise CommandException(f"Guild `{guild.name}` (`{guild.id}`) is already whitelisted.")
 
             guild_to_whitelist = model_cls(
                 guild_id=guild.id,
@@ -240,7 +240,7 @@ class Admin(CogBase):
             whitelist = db.whitelisted_guild_repository
 
             if not await whitelist.is_exists(guild.id, session):
-                raise CommandFailure(f"Guild `{guild.name}` (`{guild.id}`) is not whitelisted.")
+                raise CommandException(f"Guild `{guild.name}` (`{guild.id}`) is not whitelisted.")
 
             await whitelist.delete(guild.id, session) 
 
@@ -271,7 +271,7 @@ class Admin(CogBase):
                 "Error message:\n"
                 f"{result.stderr}"
             )
-            raise CommandFailure(err_msg)
+            raise CommandException(err_msg)
 
     def __is_channel_sendable(self, channel: object) -> bool:
         return hasattr(channel, "send")

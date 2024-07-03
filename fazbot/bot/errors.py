@@ -1,11 +1,14 @@
 from nextcord import ApplicationCheckFailure
 
 
-class BotError(BaseException):
+class BotException(BaseException):
     """Base exception for all exceptions in fazbot bot module"""
 
-class CommandFailure(BotError, ApplicationCheckFailure):
+class CommandException(BotException, ApplicationCheckFailure):
     pass
 
-class ParseError(BotError):
+class ParseException(CommandException):
+    pass
+
+class BadCommandArgument(CommandException):
     pass
