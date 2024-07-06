@@ -1,13 +1,13 @@
 from __future__ import annotations
 from contextlib import asynccontextmanager
-from typing import Any, AsyncGenerator, TYPE_CHECKING, Iterable
+from typing import Any, AsyncGenerator, Iterable, TYPE_CHECKING
 
 from nextcord import Colour, Embed, Interaction
 from nextcord.ext import commands
 
 if TYPE_CHECKING:
     from sqlalchemy.ext.asyncio import AsyncSession
-    from fazbot import Bot, IFazbotDatabase, Logger
+    from fazbot import Bot, IFazbotDatabase, Logger, IFazdbDatabase
 
 
 class CogBase(commands.Cog):
@@ -35,8 +35,14 @@ class CogBase(commands.Cog):
         await interaction.send(embed=embed)
 
     @asynccontextmanager
-    async def _enter_db_session(self) -> AsyncGenerator[tuple[IFazbotDatabase, AsyncSession], None]:
+    async def _enter_botdb_session(self) -> AsyncGenerator[tuple[IFazbotDatabase, AsyncSession], None]:
         with self._bot.core.enter_fazbotdb() as db:
+            async with db.enter_session() as session:
+                yield db, session
+
+    @asynccontextmanager
+    async def _enter_fazdb_session(self) -> AsyncGenerator[tuple[IFazdbDatabase, AsyncSession], None]:
+        with self._bot.core.enter_fazdbdb() as db:
             async with db.enter_session() as session:
                 yield db, session
 

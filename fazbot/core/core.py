@@ -4,9 +4,7 @@ from typing import Generator, Protocol, TYPE_CHECKING
 
 if TYPE_CHECKING:
     from . import Asset, Config
-    from fazbot import Bot, Logger
-    from fazbot.db.fazbot import IFazBotDatabase
-    from fazbot.db.fazdb import 
+    from fazbot import Bot, Logger, IFazbotDatabase, IFazdbDatabase
 
 
 class Core(Protocol):
@@ -22,6 +20,6 @@ class Core(Protocol):
     @contextmanager
     def enter_bot(self) -> Generator[Bot]: ...
     @contextmanager
-    def enter_fazbotdb(self) -> Generator[IFazBotDatabase]: ... 
+    def enter_fazbotdb(self) -> Generator[IFazbotDatabase]: ... 
     @contextmanager
     def enter_fazdbdb(self) -> Generator[IFazdbDatabase]: ... 

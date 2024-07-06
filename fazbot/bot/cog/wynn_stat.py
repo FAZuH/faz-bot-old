@@ -1,16 +1,19 @@
 from typing import Any
 
 import nextcord
-from nextcord import Interaction
+from nextcord import Interaction, SlashOption
 
 from . import CogBase
-from .. import BadCommandArgument
 
 
 class WynnStat(CogBase):
 
     @nextcord.slash_command(name="worldlist")
-    async def worldlist(self, interaction: Interaction[Any], worlds: int = 10) -> None:
+    async def worldlist(
+            self,
+            interaction: Interaction[Any],
+            worlds: int = SlashOption(min_value=1, max_value=100, default=10)
+        ) -> None:
         """Show list of worlds.
 
         Parameters
@@ -18,9 +21,8 @@ class WynnStat(CogBase):
         worlds : int
             Amount of worlds to show.
         """
-        if worlds <= 0 or worlds >= 30:
-            raise BadCommandArgument("")
-
+        async with self._enter_fazdb_session() as (db, session):
+            pass
 
     # @nextcord.slash_command(name="activity")
     # async def activity(self, interaction: Interaction[Any], player: str | None = None, guild: str | None = None) -> None:

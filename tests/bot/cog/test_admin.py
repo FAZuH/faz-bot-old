@@ -44,7 +44,7 @@ class TestAdmin(unittest.IsolatedAsyncioTestCase):
 
         self.admin = Admin(mock_bot)
         # Admin cog overrides
-        self.admin._enter_db_session = self.__mock_enter_db_session
+        self.admin._enter_botdb_session = self.__mock_enter_db_session
         return await super().asyncSetUp()
 
     @patch("fazbot.bot._utils.Utils.must_get_user")

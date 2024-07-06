@@ -16,7 +16,6 @@ class Admin(CogBase):
     # override
     def _setup(self, whitelisted_guild_ids: Iterable[int]) -> None:
         for app_cmd in self.application_commands:
-            # app_cmd.guild_ids.add(dev_server_id)
             app_cmd.add_guild_rollout(self._bot.core.config.dev_server_id)
             self._bot.client.add_application_command(app_cmd, overwrite=True, use_rollout=True)
 
@@ -48,7 +47,7 @@ class Admin(CogBase):
         """
         user = await Utils.must_get_user(self._bot.client, user_id)
 
-        async with self._enter_db_session() as (db, session):
+        async with self._enter_botdb_session() as (db, session):
             banlist = db.banned_user_repository
             model_cls = banlist.get_model_cls()
 
@@ -77,7 +76,7 @@ class Admin(CogBase):
         """
         user = await Utils.must_get_user(self._bot.client, user_id)
 
-        async with self._enter_db_session() as (db, session):
+        async with self._enter_botdb_session() as (db, session):
             banlist = db.banned_user_repository
 
             if not await banlist.is_exists(user.id, session):
@@ -207,7 +206,7 @@ class Admin(CogBase):
         """
         guild = await Utils.must_get_guild(self._bot.client, guild_id)
 
-        async with self._enter_db_session() as (db, session):
+        async with self._enter_botdb_session() as (db, session):
             whitelist = db.whitelisted_guild_repository
             model_cls = whitelist.get_model_cls()
 
@@ -236,7 +235,7 @@ class Admin(CogBase):
         """
         guild = await Utils.must_get_guild(self._bot.client, guild_id)
 
-        async with self._enter_db_session() as (db, session):
+        async with self._enter_botdb_session() as (db, session):
             whitelist = db.whitelisted_guild_repository
 
             if not await whitelist.is_exists(guild.id, session):

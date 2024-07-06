@@ -1,6 +1,6 @@
 FROM python:3.12.4-slim
 
-WORKDIR /usr/src/app
+WORKDIR /app
 
 COPY . .
 
