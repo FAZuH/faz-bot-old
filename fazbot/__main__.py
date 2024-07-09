@@ -2,12 +2,12 @@ from __future__ import annotations
 import asyncio
 from time import sleep
 
-from fazbot.core import FazBot
+from fazbot.app import Fazbot
 
 
 class Main:
 
-    core = FazBot()
+    core = Fazbot()
 
     @staticmethod
     def main() -> None:

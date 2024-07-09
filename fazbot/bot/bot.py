@@ -5,7 +5,7 @@ from typing import TYPE_CHECKING, Protocol
 if TYPE_CHECKING:
     from nextcord.ext.commands import Bot as Client
 
-    from fazbot import Core, Logger
+    from fazbot import App, Logger
 
     from . import AssetManager, Checks, Events
     from .cog import CogCore
@@ -20,7 +20,7 @@ class Bot(Protocol):
     @property
     def cogs(self) -> CogCore: ...
     @property
-    def core(self) -> Core: ...
+    def core(self) -> App: ...
     @property
     def client(self) -> Client: ...
     @property

@@ -5,7 +5,7 @@ import unittest
 
 from sqlalchemy import inspect, select, text
 
-from fazbot.core import Config
+from fazbot.app import Config
 from fazbot.db import fazbot
 
 if TYPE_CHECKING:

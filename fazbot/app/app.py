@@ -7,7 +7,7 @@ if TYPE_CHECKING:
     from fazbot import Bot, Logger, IFazbotDatabase, IFazdbDatabase
 
 
-class Core(Protocol):
+class App(Protocol):
     """<<interface>>"""
     def start(self) -> None: ...
     def stop(self) -> None: ...

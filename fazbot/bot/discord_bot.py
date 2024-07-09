@@ -12,12 +12,12 @@ from . import AssetManager, Bot, Checks, Events, Utils
 from .cog import CogCore
 
 if TYPE_CHECKING:
-    from fazbot import Core, Logger
+    from fazbot import App, Logger
 
 
 class DiscordBot(Bot):
 
-    def __init__(self, core: Core) -> None:
+    def __init__(self, core: App) -> None:
         self._core = core
         self._logger = core.logger
 
@@ -67,7 +67,7 @@ class DiscordBot(Bot):
         return self._cogs
 
     @property
-    def core(self) -> Core:
+    def core(self) -> App:
         return self._core
 
     @property

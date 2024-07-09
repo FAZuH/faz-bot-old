@@ -8,13 +8,13 @@ from fazbot.db.fazbot import FazbotDatabase
 from fazbot.db.fazdb import FazdbDatabase
 from fazbot.logger import FazBotLogger
 
-from . import Asset, Config, Core, Constants
+from . import Asset, Config, App, Constants
 
 if TYPE_CHECKING:
     from fazbot import Bot, Logger, IFazbotDatabase, IFazdbDatabase
 
 
-class FazBot(Core):
+class Fazbot(App):
 
     def __init__(self) -> None:
         self._locks: dict[str, Lock] = {}
