@@ -1,18 +1,20 @@
-from . import IFazbotDatabase
-from .. import BaseAsyncDatabase
-from .model import BaseModel
-from .repository import BannedUserRepository, WhitelistedGuildRepository
+from .._base_async_database import BaseAsyncDatabase
+from .model import BaseFazbotModel
+from .repository import *
 
 
-class FazbotDatabase(BaseAsyncDatabase[BaseModel], IFazbotDatabase):
+class FazbotDatabase(BaseAsyncDatabase):
 
     def __init__(self, driver: str, user: str, password: str, host: str, port: int, database: str) -> None:
         super().__init__(driver, user, password, host, port, database)
-        self._base_model = BaseModel()
+        self._base_model = BaseFazbotModel()
 
         self._banned_user_repository = BannedUserRepository(self)
         self._whitelisted_guild_repository = WhitelistedGuildRepository(self)
-        
+
+        self.repositories.append(self.banned_user_repository)
+        self.repositories.append(self.whitelisted_guild_repository)
+
     @property
     def banned_user_repository(self) -> BannedUserRepository:
         return self._banned_user_repository
@@ -21,7 +23,6 @@ class FazbotDatabase(BaseAsyncDatabase[BaseModel], IFazbotDatabase):
     def whitelisted_guild_repository(self) -> WhitelistedGuildRepository:
         return self._whitelisted_guild_repository 
 
-    # override
     @property
-    def base_model(self) -> BaseModel:
+    def base_model(self) -> BaseFazbotModel:
         return self._base_model

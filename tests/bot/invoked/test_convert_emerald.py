@@ -1,7 +1,7 @@
 from unittest import IsolatedAsyncioTestCase
 from unittest.mock import AsyncMock, MagicMock
 
-from fazbot.bot.invoke import Asset, InvokeConvertEmerald
+from fazbot.bot.invoke import InvokeConvertEmerald
 
 
 class TestConvertEmerald(IsolatedAsyncioTestCase):
@@ -16,25 +16,25 @@ class TestConvertEmerald(IsolatedAsyncioTestCase):
     def test_set_assets(self) -> None:
         # PREPARE
         file = MagicMock()
-        filename = "liquidemerald"
+        filename = "liquidemerald.png"
 
         # ACT
         self.obj.set_assets({filename: file})
 
         # ASSERT
-        self.assertEqual(file, self.obj.ASSET_LIQUIDEMERALD.file)
+        self.assertEqual(file, self.obj.ASSET_LIQUIDEMERALD._file)
         self.assertEqual(filename, self.obj.ASSET_LIQUIDEMERALD.filename)
 
     async def test_run(self) -> None:
         # PREPARE
         embed = MagicMock()
-        self.obj.__get_embed = MagicMock(return_value=embed)
+        setattr(self.obj, "_InvokeConvertEmerald__get_embed", MagicMock(return_value=embed))
 
         # ACT
         await self.obj.run()
 
         # ASSERT
-        self.obj._interaction.send.assert_called_once_with(embed=embed, file=self.obj.ASSET_LIQUIDEMERALD.file)
+        self.obj._interaction.send.assert_called_once_with(embed=embed, file=self.obj.ASSET_LIQUIDEMERALD._file)  # type: ignore
 
     def test_get_embed(self) -> None:
         # PREPARE
@@ -42,7 +42,8 @@ class TestConvertEmerald(IsolatedAsyncioTestCase):
         self.interaction.user.display_avatar.url = "url"
 
         # ACT 
-        embed = self.obj.__get_embed(self.interaction, self.obj._emeralds)
+        get_embed_method = getattr(self.obj, "_InvokeConvertEmerald__get_embed")
+        embed = get_embed_method(self.interaction, self.obj._emeralds)
         
         # ASSERT
         self.assertEqual(embed.title, "Emerald Convertor")
@@ -52,4 +53,4 @@ class TestConvertEmerald(IsolatedAsyncioTestCase):
         self.assertEqual(embed.fields[1].name, "Silverbull Set Price")
         self.assertEqual(embed.author.name, "name")
         self.assertEqual(embed.author.icon_url, "url")
-        self.assertEqual(embed.thumbnail.url, "attachment://liquidemerald")
+        self.assertEqual(embed.thumbnail.url, "attachment://liquidemerald.png")

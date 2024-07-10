@@ -2,7 +2,7 @@ from __future__ import annotations
 from abc import ABC
 from typing import Any, TYPE_CHECKING
 
-from . import Asset
+from ._asset import Asset
 
 if TYPE_CHECKING:
     from nextcord import Embed, File, Interaction

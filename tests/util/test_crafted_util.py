@@ -1,9 +1,7 @@
-# pyright: basic
 from decimal import Decimal
 from unittest import TestCase
 
-from fazbot.object import WynnIngredientValue
-from fazbot.util import CraftedUtil
+from fazbot.wynn import CraftedUtil, WynnIngredientValue
 
 
 class TestCraftedUtil(TestCase):

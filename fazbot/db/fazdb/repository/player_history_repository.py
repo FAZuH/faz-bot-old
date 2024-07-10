@@ -1,14 +1,14 @@
 from __future__ import annotations
-from typing import TYPE_CHECKING, Any
+from typing import Any, TYPE_CHECKING
 
+from ..._base_repository import BaseRepository
 from ..model import PlayerHistory
-from ._repository import Repository
 
 if TYPE_CHECKING:
-    from ... import BaseAsyncDatabase
+    from ..._base_async_database import BaseAsyncDatabase
 
 
-class PlayerHistoryRepository(Repository[PlayerHistory, Any]):
+class PlayerHistoryRepository(BaseRepository[PlayerHistory, Any]):
 
     def __init__(self, database: BaseAsyncDatabase[Any]) -> None:
         super().__init__(database, PlayerHistory)

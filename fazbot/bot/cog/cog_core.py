@@ -1,10 +1,11 @@
 from __future__ import annotations
 from typing import Iterable, TYPE_CHECKING
 
-from . import Admin, CogBase, Help, Info, WynnAnalyze, WynnStat, WynnTrack, WynnUtils
+from . import Admin, Help, Info, WynnAnalyze, WynnStat, WynnTrack, WynnUtils
+from ._cog_base import CogBase
 
 if TYPE_CHECKING:
-    from fazbot import Bot
+    from .. import Bot
 
 
 class CogCore:

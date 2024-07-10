@@ -7,8 +7,9 @@ from typing import Any, Iterable
 import nextcord
 from nextcord import Interaction
 
-from . import CogBase
-from .. import Utils, CommandException
+from ..errors import CommandException
+from .._utils import Utils
+from ._cog_base import CogBase
 
 
 class Admin(CogBase):
@@ -16,7 +17,7 @@ class Admin(CogBase):
     # override
     def _setup(self, whitelisted_guild_ids: Iterable[int]) -> None:
         for app_cmd in self.application_commands:
-            app_cmd.add_guild_rollout(self._bot.core.config.dev_server_id)
+            app_cmd.add_guild_rollout(self._bot.app.properties.DEV_SERVER_ID)
             self._bot.client.add_application_command(app_cmd, overwrite=True, use_rollout=True)
 
     # override
@@ -51,7 +52,7 @@ class Admin(CogBase):
             banlist = db.banned_user_repository
             model_cls = banlist.get_model_cls()
 
-            if await banlist.is_exists(user.id, session):
+            if await banlist.is_exists(user.id, session=session):
                 raise CommandException(f"User `{user.name}` (`{user.id}`) is already banned.")
 
             user_to_ban = model_cls(
@@ -79,10 +80,10 @@ class Admin(CogBase):
         async with self._enter_botdb_session() as (db, session):
             banlist = db.banned_user_repository
 
-            if not await banlist.is_exists(user.id, session):
+            if not await banlist.is_exists(user.id, session=session):
                 raise CommandException(f"User `{user.name}` (`{user.id}`) is not banned.")
 
-            await banlist.delete(user.id, session)
+            await banlist.delete(user.id, session=session)
             
         await self._respond_successful(interaction, f"Unbanned user `{user.name}` (`{user.id}`).")
 
@@ -100,17 +101,10 @@ class Admin(CogBase):
     @admin.subcommand(name="reload_asset")
     async def reload_asset(self, interaction: Interaction[Any]) -> None:
         """(dev only) Reloads asset."""
-        self._bot.core.asset.read_all()
+        self._bot.app.properties.ASSET.read_all()
 
         self._bot.asset_manager.load_assets()
         await self._respond_successful(interaction, "Reloaded asset successfully.")
-
-    @admin.subcommand(name="reload_config")
-    async def reload_config(self, interaction: Interaction[Any]) -> None:
-        """(dev only) Reloads configs."""
-        self._bot.core.config.read()
-
-        await self._respond_successful(interaction, "Reloaded config successfully.")
 
     @admin.subcommand(name="send")
     async def send(self, interaction: Interaction[Any], channel_id: str, message: str) -> None:
@@ -210,7 +204,7 @@ class Admin(CogBase):
             whitelist = db.whitelisted_guild_repository
             model_cls = whitelist.get_model_cls()
 
-            if await whitelist.is_exists(guild.id, session):
+            if await whitelist.is_exists(guild.id, session=session):
                 raise CommandException(f"Guild `{guild.name}` (`{guild.id}`) is already whitelisted.")
 
             guild_to_whitelist = model_cls(
@@ -220,7 +214,7 @@ class Admin(CogBase):
                 until=Utils.must_parse_date_string(until) if until else None
             )
             
-            await whitelist.insert(guild_to_whitelist, session)
+            await whitelist.insert(guild_to_whitelist, session=session)
             
         await self._respond_successful(interaction, f"Whitelisted guild `{guild.name}` (`{guild.id}`).")
 
@@ -238,10 +232,10 @@ class Admin(CogBase):
         async with self._enter_botdb_session() as (db, session):
             whitelist = db.whitelisted_guild_repository
 
-            if not await whitelist.is_exists(guild.id, session):
+            if not await whitelist.is_exists(guild.id, session=session):
                 raise CommandException(f"Guild `{guild.name}` (`{guild.id}`) is not whitelisted.")
 
-            await whitelist.delete(guild.id, session) 
+            await whitelist.delete(guild.id, session=session) 
 
         await self._respond_successful(interaction, f"Unwhitelisted guild `{guild.name}` (`{guild.id}`).")
 

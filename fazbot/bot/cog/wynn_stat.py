@@ -3,7 +3,7 @@ from typing import Any
 import nextcord
 from nextcord import Interaction, SlashOption
 
-from . import CogBase
+from ._cog_base import CogBase
 
 
 class WynnStat(CogBase):

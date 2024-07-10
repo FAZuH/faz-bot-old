@@ -1,4 +1,3 @@
-# pyright: reportUnknownMemberType=false, reportUnknownArgumentType=false, reportUnknownVariableType=false
 from __future__ import annotations
 from decimal import Decimal
 from typing import TYPE_CHECKING
@@ -6,7 +5,7 @@ from typing import TYPE_CHECKING
 import numpy as np
 
 if TYPE_CHECKING:
-    from fazbot.object import WynnIngredientValue
+    from fazbot.wynn import WynnIngredientValue
 
 
 class CraftedUtil:

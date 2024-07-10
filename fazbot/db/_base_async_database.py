@@ -1,17 +1,17 @@
 from __future__ import annotations
-from abc import ABC, abstractmethod
+from abc import ABC
 from contextlib import asynccontextmanager
-from typing import AsyncGenerator, TYPE_CHECKING
+from typing import Any, AsyncGenerator, TYPE_CHECKING
 
 from sqlalchemy import URL
 from sqlalchemy.ext.asyncio import async_sessionmaker, create_async_engine
 
 if TYPE_CHECKING:
     from sqlalchemy.ext.asyncio import AsyncConnection, AsyncEngine, AsyncSession
-    from sqlalchemy.orm import DeclarativeBase
+    from ._base_repository import BaseRepository
 
 
-class BaseAsyncDatabase[T: DeclarativeBase](ABC):
+class BaseAsyncDatabase(ABC):
 
     def __init__(
             self,
@@ -38,6 +38,11 @@ class BaseAsyncDatabase[T: DeclarativeBase](ABC):
             database
         )
         self._engine = create_async_engine(url)
+        self._repositories: list[BaseRepository[Any, Any]] = []
+
+    async def create_all(self) -> None:
+        for repo in self.repositories:
+            await repo.create_table()
 
     @asynccontextmanager
     async def enter_connection(self) -> AsyncGenerator[AsyncConnection, None]:
@@ -66,35 +71,10 @@ class BaseAsyncDatabase[T: DeclarativeBase](ABC):
             async with self.enter_session() as session:
                 yield session
 
-    async def create_all(self) -> None:
-        async with self.enter_connection() as connection:
-            await connection.run_sync(self.base_model.metadata.create_all)
-
     @property
     def engine(self) -> AsyncEngine:
         return self._engine
 
     @property
-    def driver(self) -> str:
-        return self._driver
-
-    @property
-    def user(self) -> str:
-        return self._user
-
-    @property
-    def password(self) -> str:
-        return self._password
-
-    @property
-    def host(self) -> str:
-        return self._host
-
-    @property
-    def database(self) -> str:
-        return self._database
-
-    @property
-    @abstractmethod
-    def base_model(self) -> T: ...
-
+    def repositories(self) -> list[BaseRepository[Any, Any]]:
+        return self._repositories

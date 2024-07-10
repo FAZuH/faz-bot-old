@@ -4,10 +4,10 @@ from sqlalchemy import Index
 from sqlalchemy.dialects.mysql import BINARY, DATETIME
 from sqlalchemy.orm import Mapped, mapped_column
 
-from . import BaseModel
+from .base_fazdb_model import BaseFazdbModel
 
 
-class PlayerActivityHistory(BaseModel):
+class PlayerActivityHistory(BaseFazdbModel):
     __tablename__ = "player_activity_history"
 
     uuid: Mapped[bytes] = mapped_column(BINARY(16), nullable=False, primary_key=True)

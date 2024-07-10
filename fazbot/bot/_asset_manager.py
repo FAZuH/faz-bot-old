@@ -1,14 +1,19 @@
 from __future__ import annotations
+from asyncio import wait
 from io import BytesIO
 from pathlib import Path
 from typing import TYPE_CHECKING
 
 from nextcord import File
 
-from .invoke import InvokeConvertEmerald, InvokeCraftedProbability, InvokeIngredientProbability
+from .invoke import (
+    InvokeConvertEmerald,
+    InvokeCraftedProbability,
+    InvokeIngredientProbability,
+)
 
 if TYPE_CHECKING:
-    from fazbot import Bot
+    from . import Bot
 
 
 class AssetManager:
@@ -18,13 +23,10 @@ class AssetManager:
 
     def __init__(self, bot: Bot) -> None:
         self._bot = bot
-    
-    def load_assets(self) -> None:
-        asset = self._bot.core.asset
-        self._assets = self.__convert_asset_file_type(asset.files)
-        self.__set_invoke_assets()
+        self.setup()
 
-    def __set_invoke_assets(self) -> None:
+    def setup(self) -> None:
+        self._assets = self.__convert_asset_file_type(self._bot.app.properties.ASSET.files)
         InvokeConvertEmerald.set_assets(self._assets)
         InvokeCraftedProbability.set_assets(self._assets)
         InvokeIngredientProbability.set_assets(self._assets)

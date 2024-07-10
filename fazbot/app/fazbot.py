@@ -1,66 +1,63 @@
 from __future__ import annotations
 from contextlib import contextmanager
 from threading import Lock
-from typing import Generator, TYPE_CHECKING
+from typing import TYPE_CHECKING, Generator
 
-from fazbot.bot import DiscordBot
+from loguru import logger
+
+from fazbot.bot import Bot
 from fazbot.db.fazbot import FazbotDatabase
 from fazbot.db.fazdb import FazdbDatabase
-from fazbot.logger import FazBotLogger
 
-from . import Asset, Config, App, Constants
+from ._logger import Logger
+from .properties import Properties
 
 if TYPE_CHECKING:
-    from fazbot import Bot, Logger, IFazbotDatabase, IFazdbDatabase
+    from fazbot.db.fazbot import FazbotDatabase
+    from fazbot.db.fazdb import FazdbDatabase
 
 
-class Fazbot(App):
+class App:
 
     def __init__(self) -> None:
         self._locks: dict[str, Lock] = {}
-        self._asset = Asset(Constants.ASSET_DIR)
-        self._config = Config()
 
-        self._asset.read_all()
-        self._config.read()
+        self._properties = Properties()
+        p = self.properties
+        p.setup()
+        Logger.setup(p.LOG_DIR, p.DISCORD_LOG_WEBHOOK, p.ADMIN_DISCORD_ID)
 
-        conf = self.config
         self._fazbot_db = FazbotDatabase(
             "mysql+aiomysql",
-            conf.mysql_username,
-            conf.mysql_password,
-            conf.mysql_host,
-            conf.mysql_port,
-            conf.fazbot_db_name
+            p.MYSQL_USERNAME,
+            p.MYSQL_PASSWORD,
+            p.MYSQL_HOST,
+            p.MYSQL_PORT,
+            p.FAZBOT_DB_NAME
         )
         self._fazdb_db = FazdbDatabase(
             "mysql+aiomysql",
-            conf.mysql_username,
-            conf.mysql_password,
-            conf.mysql_host,
-            conf.mysql_port,
-            conf.fazdb_db_name
+            p.MYSQL_USERNAME,
+            p.MYSQL_PASSWORD,
+            p.MYSQL_HOST,
+            p.MYSQL_PORT,
+            p.FAZDB_DB_NAME
         )
-        self._logger = FazBotLogger(conf.discord_log_webhook, conf.admin_discord_id)
-        self._bot = DiscordBot(self)
+        self._bot = Bot(self)
 
     def start(self) -> None:
+        logger.info("Starting fazbot.app")
         self._bot.start()
+        logger.success("Started fazbot.app", discord=True)
 
     def stop(self) -> None:
+        logger.info("Stopping fazbot.app")
         self._bot.stop()
+        logger.success("Stopped fazbot.app", discord=True)
 
     @property
-    def asset(self) -> Asset:
-        return self._asset
-
-    @property
-    def config(self) -> Config:
-        return self._config
-
-    @property
-    def logger(self) -> Logger:
-        return self._logger
+    def properties(self) -> Properties:
+        return self._properties
 
     @contextmanager
     def enter_bot(self) -> Generator[Bot]:
@@ -68,12 +65,12 @@ class Fazbot(App):
             yield self._bot
 
     @contextmanager
-    def enter_fazbotdb(self) -> Generator[IFazbotDatabase]:
+    def enter_fazbot_db(self) -> Generator[FazbotDatabase]:
         with self._get_lock("fazbotdb"):
             yield self._fazbot_db
 
     @contextmanager
-    def enter_fazdbdb(self) -> Generator[IFazdbDatabase]:
+    def enter_fazdb_db(self) -> Generator[FazdbDatabase]:
         with self._get_lock("fazdbdb"):
             yield self._fazdb_db
 

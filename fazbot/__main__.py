@@ -1,25 +1,25 @@
 from __future__ import annotations
-import asyncio
 from time import sleep
 
-from fazbot.app import Fazbot
+from loguru import logger
+
+from fazbot.app import App
 
 
 class Main:
 
-    core = Fazbot()
+    app = App()
 
-    @staticmethod
-    def main() -> None:
-        Main.core.start()
+    @classmethod
+    def main(cls) -> None:
+        cls.app.start()
         while True:  # keep-alive
             sleep(69_420)
 
+
 if __name__ == "__main__":
     try:
-        Main.main()
-    except Exception as e:
-        logger = Main.core.logger
-        logger.console.exception(str(e))
-        asyncio.run(logger.discord.error(f"FATAL ERROR", e))
-        exit(1)
+        with logger.catch(level="CRITICAL", reraise=True):
+            Main.main()
+    finally:
+        Main.app.stop()

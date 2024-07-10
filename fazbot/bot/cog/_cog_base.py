@@ -2,12 +2,14 @@ from __future__ import annotations
 from contextlib import asynccontextmanager
 from typing import Any, AsyncGenerator, Iterable, TYPE_CHECKING
 
+from loguru import logger
 from nextcord import Colour, Embed, Interaction
 from nextcord.ext import commands
 
 if TYPE_CHECKING:
     from sqlalchemy.ext.asyncio import AsyncSession
-    from fazbot import Bot, IFazbotDatabase, Logger, IFazdbDatabase
+    from .. import Bot
+    from fazbot.db import FazdbDatabase, FazbotDatabase
 
 
 class CogBase(commands.Cog):
@@ -21,28 +23,24 @@ class CogBase(commands.Cog):
         self._bot.client.add_cog(self)
         self._setup(whitelisted_guild_ids)
 
-        self._bot.logger.console.info(
-            f"Added cog {self.__class__.__qualname__} to client "
+        logger.info(
+            f"Added cog {self.__class__.__qualname__} "
             f"with {len(self.application_commands)} application commands"
         )
  
-    @property
-    def logger(self) -> Logger:
-        return self._bot.logger
-
     async def _respond_successful(self, interaction: Interaction[Any], message: str) -> None:
         embed = Embed(title="Success", description=message, color=Colour.dark_green())
         await interaction.send(embed=embed)
 
     @asynccontextmanager
-    async def _enter_botdb_session(self) -> AsyncGenerator[tuple[IFazbotDatabase, AsyncSession], None]:
-        with self._bot.core.enter_fazbotdb() as db:
+    async def _enter_botdb_session(self) -> AsyncGenerator[tuple[FazbotDatabase, AsyncSession], None]:
+        with self._bot.app.enter_fazbot_db() as db:
             async with db.enter_session() as session:
                 yield db, session
 
     @asynccontextmanager
-    async def _enter_fazdb_session(self) -> AsyncGenerator[tuple[IFazdbDatabase, AsyncSession], None]:
-        with self._bot.core.enter_fazdbdb() as db:
+    async def _enter_fazdb_session(self) -> AsyncGenerator[tuple[FazdbDatabase, AsyncSession], None]:
+        with self._bot.app.enter_fazdb_db() as db:
             async with db.enter_session() as session:
                 yield db, session
 

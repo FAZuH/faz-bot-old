@@ -1,26 +1,36 @@
 from __future__ import annotations
 from typing import Any, TYPE_CHECKING
 
+from loguru import logger
 from nextcord import Interaction
 
 if TYPE_CHECKING:
-    from fazbot import Bot
+    from . import Bot
 
 
 class Checks:
 
     def __init__(self, bot: Bot) -> None:
         self._bot = bot
+        self.load_checks()
+
+    def load_checks(self) -> None:
+        """Loads global checks to the client."""
+        self.bot.client.add_application_command_check(self.is_not_banned)
+        self.bot.client.add_application_command_check(self.is_whitelisted)
 
     async def is_admin(self, interaction: Interaction[Any]) -> bool:
         if not interaction.user:
             return False
 
         user_id = interaction.user.id
-        is_admin = user_id == self._bot.core.config.admin_discord_id
+        is_admin = user_id == self.bot.app.properties.ADMIN_DISCORD_ID
 
         if not is_admin:
-            await self._bot.logger.discord.warning(f"is_admin check for user {interaction.user.global_name} ({user_id}) returned False")
+            logger.warning(
+                f"is_admin check for user {interaction.user.global_name} ({user_id}) returned False",
+                discord=True
+            )
 
         return is_admin
 
@@ -29,11 +39,14 @@ class Checks:
             return False
 
         user_id = interaction.user.id
-        with self._bot.core.enter_fazbotdb() as db:
+        with self.bot.app.enter_fazbot_db() as db:
             is_banned = await db.banned_user_repository.is_exists(user_id)
 
         if is_banned:
-            await self._bot.logger.discord.warning(f"is_banned check for user {interaction.user.global_name} ({user_id}) returned True")
+            logger.warning(
+                f"is_banned check for user {interaction.user.global_name} ({user_id}) returned True",
+                discord=True
+            )
 
         return is_banned
 
@@ -42,11 +55,14 @@ class Checks:
             return False
 
         guild_id = interaction.guild.id
-        with self._bot.core.enter_fazbotdb() as db:
+        with self.bot.app.enter_fazbot_db() as db:
             is_whitelisted = await db.whitelisted_guild_repository.is_exists(guild_id)
 
         if not is_whitelisted:
-            await self._bot.logger.discord.warning(f"is_whitelisted check for guild {interaction.guild.name} ({guild_id}) returned False")
+            logger.warning(
+                f"is_whitelisted check for guild {interaction.guild.name} ({guild_id}) returned False",
+                discord=True
+            )
 
         return is_whitelisted
 
@@ -54,7 +70,6 @@ class Checks:
         is_banned = await self.is_banned(interaction)
         return not is_banned
 
-    def load_checks(self) -> None:
-        """Loads global checks to the client."""
-        self._bot.client.add_application_command_check(self.is_not_banned)
-        self._bot.client.add_application_command_check(self.is_whitelisted)
+    @property
+    def bot(self) -> Bot:
+        return self._bot

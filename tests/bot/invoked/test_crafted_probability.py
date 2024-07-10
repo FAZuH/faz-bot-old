@@ -1,11 +1,10 @@
-# pyright: basic
-from unittest import TestCase
+import unittest
 from unittest.mock import MagicMock
 
 from fazbot.bot.invoke import InvokeCraftedProbability
 
 
-class TestCraftedProbability(TestCase):
+class TestCraftedProbability(unittest.IsolatedAsyncioTestCase):
 
     def setUp(self) -> None:
         self.image_asset = MagicMock()
@@ -13,7 +12,7 @@ class TestCraftedProbability(TestCase):
         InvokeCraftedProbability.ASSET_CRAFTINGTABLE = self.image_asset
         return super().setUp()
 
-    def test_run(self) -> None:
+    async def test_run(self) -> None:
         interaction = MagicMock()
         ing_strs = [
             "1,2,50",

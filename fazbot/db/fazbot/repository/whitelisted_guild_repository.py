@@ -1,17 +1,17 @@
 from __future__ import annotations
-from typing import TYPE_CHECKING, Any, Sequence
+from typing import Any, Sequence, TYPE_CHECKING
 
 from sqlalchemy import select
 
+from ..._base_repository import BaseRepository
 from ..model import WhitelistedGuild
-from ._repository import Repository
 
 if TYPE_CHECKING:
     from sqlalchemy.ext.asyncio import AsyncSession
-    from ... import BaseAsyncDatabase
+    from ..._base_async_database import BaseAsyncDatabase
 
 
-class WhitelistedGuildRepository(Repository[WhitelistedGuild, int]):
+class WhitelistedGuildRepository(BaseRepository[WhitelistedGuild, int]):
 
     def __init__(self, database: BaseAsyncDatabase[Any]) -> None:
         super().__init__(database, WhitelistedGuild)

@@ -1,26 +1,16 @@
 from datetime import datetime
 from typing import Optional
 
-from sqlalchemy import BigInteger, String
+from sqlalchemy.dialects.mysql import BIGINT, VARCHAR
 from sqlalchemy.orm import Mapped, mapped_column
 
-from . import BaseModel
+from . import BaseFazbotModel
 
 
-class WhitelistedGuild(BaseModel):
+class WhitelistedGuild(BaseFazbotModel):
     __tablename__ = "whitelisted_guild"
 
-    guild_id: Mapped[int] = mapped_column(BigInteger, primary_key=True)
-    guild_name: Mapped[str] = mapped_column(String(32))
+    guild_id: Mapped[int] = mapped_column(BIGINT, primary_key=True)
+    guild_name: Mapped[str] = mapped_column(VARCHAR(32))
     from_: Mapped[datetime] = mapped_column(name="from")
     until: Mapped[Optional[datetime]] = mapped_column(default=None)
-
-    def __repr__(self) -> str:
-        return (
-            "<WhitelistedGuild("
-            f"guild_id={self.guild_id},"
-            f"guild_name='{self.guild_name}',"
-            f"from_={self.from_},"
-            f"until={self.until}"
-            ")>"
-        )

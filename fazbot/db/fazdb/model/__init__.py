@@ -1,4 +1,4 @@
-from ._base_model import BaseModel
+from .base_fazdb_model import BaseFazdbModel
 
 from .character_history import CharacterHistory
 from .character_info import CharacterInfo
@@ -10,3 +10,4 @@ from .online_players import OnlinePlayers
 from .player_activity_history import PlayerActivityHistory
 from .player_history import PlayerHistory
 from .player_info import PlayerInfo
+from .worlds import Worlds

@@ -1,10 +1,10 @@
 from __future__ import annotations
 from datetime import datetime
-from typing import TYPE_CHECKING, Any, Callable
+from typing import Any, Callable, TYPE_CHECKING
 
 import dateparser
 
-from . import ParseException
+from .errors import ParseException
 
 if TYPE_CHECKING:
     from nextcord import Guild, PartialMessageable, Thread, User

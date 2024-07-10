@@ -13,7 +13,7 @@ from nextcord import (
 )
 from nextcord.ui import Button, View, button
 
-from . import Invoke
+from ._invoke import Invoke
 
 
 class InvokeHelp(Invoke):

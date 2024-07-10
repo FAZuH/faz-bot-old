@@ -5,14 +5,13 @@ from typing import Any, TYPE_CHECKING
 
 from nextcord import Embed, Interaction
 
-from fazbot.util import IngredientUtil
+from fazbot.wynn import IngredientUtil
 
-from . import Invoke
+from ._invoke import Invoke
 
 if TYPE_CHECKING:
     from nextcord import File
-
-    from . import Asset
+    from ._asset import Asset
 
 
 class InvokeIngredientProbability(Invoke):

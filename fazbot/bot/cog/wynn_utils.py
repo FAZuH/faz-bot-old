@@ -3,8 +3,12 @@ from typing import Any
 import nextcord
 from nextcord import Interaction
 
-from . import CogBase
-from ..invoke import InvokeConvertEmerald, InvokeCraftedProbability, InvokeIngredientProbability
+from ..invoke import (
+    InvokeConvertEmerald,
+    InvokeCraftedProbability,
+    InvokeIngredientProbability,
+)
+from ._cog_base import CogBase
 
 
 class WynnUtils(CogBase):

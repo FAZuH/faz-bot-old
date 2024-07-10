@@ -1,8 +1,7 @@
-from __future__ import annotations
 from decimal import Decimal
 from math import floor
 
-from fazbot.object import WynnEmeralds
+from .wynn_emeralds import WynnEmeralds
 
 
 class EmeraldUtil:

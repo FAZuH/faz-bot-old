@@ -3,11 +3,12 @@ from datetime import datetime
 import traceback
 from typing import Any, TYPE_CHECKING
 
+from loguru import logger
 from nextcord import Activity, ActivityType, Colour, Embed, Interaction, errors
 from nextcord.ext import commands
 from nextcord.ext.commands import BucketType, Cooldown, CooldownMapping
 
-from . import BotException
+from .errors import BotException
 
 if TYPE_CHECKING:
     from . import Bot
@@ -19,6 +20,7 @@ class Events:
         self._bot = bot
         self._cooldown = CooldownMapping(Cooldown(1, 3.), BucketType.user)
         self._ready = False
+        self.load_events()
 
     def load_events(self) -> None:
         """Loads events to the client."""
@@ -29,7 +31,7 @@ class Events:
 
     async def on_ready(self) -> None:
         if self._bot.client.user is not None:
-            await self._bot.logger.discord.success(f"DiscordBot is ready!.")
+            logger.success(f"Started discord client")
 
         await self._bot.client.change_presence(activity=Activity(type=ActivityType.playing, name="/help"))
 
@@ -72,31 +74,36 @@ class Events:
     async def __log_event(self, interaction: Interaction[Any], event: str = '') -> None:
         if not interaction.application_command:
             return
-
         cmdname = interaction.application_command.name
         author = interaction.user.display_name if interaction.user else None
         guildname = interaction.guild.name if interaction.guild else None
         channelname = interaction.channel.name if interaction.channel and hasattr(interaction.channel, "name") else None  # type: ignore
         data = interaction.data
-
         args = []
         if data and "options" in data:
             for opt in data["options"]:
                 if "options" in opt:
-                    args.append(opt["options"])
-        message = f"fired event {event}. name={cmdname}, author={author}"
+                    # Convert to string to avoid potential formatting issues
+                    args.append(str(opt["options"]))
+        
+        message_parts = [
+            f"fired event {event}",
+            f"name={cmdname}",
+            f"author={author}"
+        ]
         if guildname:
-            message += f", guild={guildname}"
+            message_parts.append(f"guild={guildname}")
         if channelname:
-            message += f", channel={channelname}"
-        message += f", args={args}"
+            message_parts.append(f"channel={channelname}")
 
-        self._bot.logger.console.info(message)
-        await self._bot.logger.discord.info(message)
+        message_parts.append(f"args={args}")
+        message = ", ".join(message_parts).replace("{", "{{").replace("}", "}}")
+        
+        logger.info(message, discord=True)
 
     async def __send_unexpected_error(self, interaction: Interaction[Any], exception: BaseException) -> None:
-        embed_description = f"An unexpected error occurred while executing the command: \n**{exception}**"
-        embed = Embed(title="Error", description=embed_description, color=Colour.red())
+        description = f"An unexpected error occurred while executing the command: \n**{exception}**"
+        embed = Embed(title="Error", description=description, color=Colour.red())
         embed.add_field(name="Timestamp", value=f"<t:{int(datetime.now().timestamp())}:F>", inline=False)
 
         is_admin = await self._bot.checks.is_admin(interaction)
@@ -106,10 +113,13 @@ class Events:
             tb_msg = f"```{tb_msg}```"
             embed.add_field(name='Traceback', value=tb_msg, inline=False)
 
-        await self._bot.logger.discord.error(exception=exception)
         await interaction.send(embed=embed)
+        logger.opt(exception=exception).error(description)
 
     async def __send_expected_error(self, interaction: Interaction[Any], exception: BotException) -> None:
-        embed = Embed(title="Error", description=f"{exception}", color=Colour.red())
+        description = f"**{exception}**"
+        embed = Embed(title="Error", description=description, color=Colour.red())
         embed.add_field(name="Timestamp", value=f"<t:{int(datetime.now().timestamp())}:F>", inline=False)
+
         await interaction.send(embed=embed)
+        logger.opt(exception=exception).warning(description, discord=True)

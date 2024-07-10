@@ -1,9 +1,6 @@
-# pyright: basic
-from decimal import Decimal
 from unittest import TestCase
 
-from fazbot.object import WynnEmeralds
-from fazbot.util import EmeraldUtil
+from fazbot.wynn import WynnEmeralds, EmeraldUtil
 
 
 class TestEmeraldUtil(TestCase):

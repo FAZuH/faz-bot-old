@@ -1,36 +1,33 @@
-from datetime import datetime, timedelta
+from loguru import logger
+from fazbot.db.fazbot.repository import WhitelistedGuildRepository
 
-from fazbot.db.fazbot.model import WhitelistedGuild
-
-from ._common_repository_test import CommonRepositoryTest
+from ._common_fazbot_repository_test import CommonFazbotRepositoryTest
 
 
-class TestWhitelistedGuildRepository(CommonRepositoryTest.Test[WhitelistedGuild, int]):
+class TestWhitelistedGuildRepository(CommonFazbotRepositoryTest.Test[WhitelistedGuildRepository]):
 
     async def test_get_all_whitelisted_guilds_ids_return_value(self) -> None:
-        test_guild_ids = set([guild.guild_id for guild in self.test_data])
+        mock_data = self._get_mock_data()
+        to_insert = mock_data[0], mock_data[2]
 
-        await self.repo.insert(self.test_data)
+        await self.repo.insert(to_insert)
 
         guild_ids = set(await self.repo.get_all_whitelisted_guild_ids())
-        self.assertSetEqual(guild_ids, test_guild_ids)
+        self.assertSetEqual(guild_ids, {guild.guild_id for guild in to_insert})
         
     # override
-    def get_data(self):
-        self.guild_name = "test"
-        self.from_ = datetime.now().replace(microsecond=0)
-        self.until = self.from_ + timedelta(days=1)
+    def _get_mock_data(self):
+        model = self.repo.get_model_cls()
 
-        self.guild_id1 = 1
-        self.guild_id2 = 2
-        self.guild_id3 = 3
+        mock_data1 = model(guild_id=1, guild_name='a', from_=self._get_mock_datetime(), until=self._get_mock_datetime())
+        mock_data2 = mock_data1.clone()
+        mock_data3 = mock_data1.clone()
+        mock_data3.guild_id = 2
+        mock_data4 = mock_data1.clone()
+        mock_data4.guild_name = 'b'
 
-        test_data1 = self.model_cls(guild_id=self.guild_id1, guild_name=self.guild_name, from_=self.from_, until=self.until)
-        test_data2 = self.model_cls(guild_id=self.guild_id2, guild_name=self.guild_name, from_=self.from_, until=self.until)
-        test_data3 = self.model_cls(guild_id=self.guild_id3, guild_name=self.guild_name, from_=self.from_, until=self.until)
+        return (mock_data1, mock_data2, mock_data3, mock_data4, "guild_name")
 
-        test_data = (test_data1, test_data2, test_data3)
-        return test_data
 
     # override
     @property

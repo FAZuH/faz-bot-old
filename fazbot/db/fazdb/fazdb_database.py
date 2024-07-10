@@ -1,27 +1,14 @@
-from fazbot.db import BaseAsyncDatabase
+from .._base_async_database import BaseAsyncDatabase
+from .model.base_fazdb_model import BaseFazdbModel
+from .repository import *
 
-from . import IFazdbDatabase
-from .model import BaseModel
-from .repository import (
-    CharacterHistoryRepository,
-    CharacterInfoRepository,
-    FazdbUptimeRepository,
-    GuildHistoryRepository,
-    GuildInfoRepository,
-    GuildMemberHistoryRepository,
-    OnlinePlayersRepository,
-    PlayerActivityHistoryRepository,
-    PlayerHistoryRepository,
-    PlayerInfoRepository,
-)
 
-class FazdbDatabase(BaseAsyncDatabase[BaseModel], IFazdbDatabase):
+class FazdbDatabase(BaseAsyncDatabase):
     
     def __init__(self, driver: str, user: str, password: str, host: str, port: int, database: str) -> None:
         super().__init__(driver, user, password, host, port, database)
-        self._base_model = BaseModel()
+        self._base_model = BaseFazdbModel()
 
-        self._character_history_repository = CharacterHistoryRepository(self)
         self._character_history_repository = CharacterHistoryRepository(self)
         self._character_info_repository = CharacterInfoRepository(self)
         self._fazdb_uptime_repository = FazdbUptimeRepository(self)
@@ -32,6 +19,21 @@ class FazdbDatabase(BaseAsyncDatabase[BaseModel], IFazdbDatabase):
         self._player_activity_history_repository = PlayerActivityHistoryRepository(self)
         self._player_history_repository = PlayerHistoryRepository(self)
         self._player_info_repository = PlayerInfoRepository(self)
+        self._worlds_repository = WorldsRepository(self)
+
+        self.repositories.extend([
+            self._character_history_repository,
+            self._character_info_repository,
+            self._fazdb_uptime_repository,
+            self._guild_history_repository,
+            self._guild_info_repository,
+            self._guild_member_history_repository,
+            self._online_players_repository,
+            self._player_activity_history_repository,
+            self._player_history_repository,
+            self._player_info_repository,
+            self._worlds_repository
+        ])
 
     @property
     def character_history_repository(self) -> CharacterHistoryRepository:
@@ -73,7 +75,10 @@ class FazdbDatabase(BaseAsyncDatabase[BaseModel], IFazdbDatabase):
     def player_info_repository(self) -> PlayerInfoRepository:
         return self._player_info_repository
 
-    # override
     @property
-    def base_model(self) -> BaseModel:
+    def worlds_repository(self) -> WorldsRepository:
+        return self._worlds_repository
+
+    @property
+    def base_model(self) -> BaseFazdbModel:
         return self._base_model

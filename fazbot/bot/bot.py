@@ -1,31 +1,128 @@
 from __future__ import annotations
+import asyncio
+from datetime import datetime
+from threading import Thread
+from typing import TYPE_CHECKING
 
-from typing import TYPE_CHECKING, Protocol
+from loguru import logger
+from nextcord import Intents
+from nextcord.ext import commands
+from sqlalchemy.exc import IntegrityError
+
+from ._asset_manager import AssetManager
+from ._checks import Checks
+from ._events import Events
+from ._utils import Utils
+from .cog import CogCore
 
 if TYPE_CHECKING:
-    from nextcord.ext.commands import Bot as Client
-
-    from fazbot import App, Logger
-
-    from . import AssetManager, Checks, Events
-    from .cog import CogCore
+    from fazbot.app import App
 
 
-class Bot(Protocol):
-    def start(self) -> None: ...
-    def stop(self) -> None: ...
-    async def on_ready_setup(self) -> None: ...
+class Bot:
+
+    def __init__(self, app: App) -> None:
+        self._app = app
+
+        # set intents
+        intents = Intents.default()
+        intents.message_content = True
+        intents.members = True
+        intents.presences = True
+        self._client = commands.Bot(intents=intents, help_command=None)
+        
+        self._event_loop = asyncio.new_event_loop()
+        asyncio.set_event_loop(self._event_loop)
+        self._discord_bot_thread = Thread(target=self._start, name=self.__get_cls_qualname())
+
+        # Define self._client before initializing the modules below
+        self._asset_manager = AssetManager(self)
+        self._checks = Checks(self)
+        self._cogs = CogCore(self)
+        self._events = Events(self)
+
+    def start(self) -> None:
+        logger.info(f"Starting fazbot.bot")
+        self._discord_bot_thread.start()
+        # Note: thread.start() runs self._start()
+        logger.success(f"Started discord thread")
+
+    def stop(self) -> None:
+        logger.info(f"Stopping fazbot.bot")
+        asyncio.run_coroutine_threadsafe(self._client.close(), self._event_loop).result()
+        self._event_loop.stop()
+        logger.info(f"Stopped fazbot.bot")
+
+    async def on_ready_setup(self) -> None:
+        """Setup after the bot is ready."""
+        with self.app.enter_fazbot_db() as db:
+            await db.create_all()
+
+        await self.__whitelist_dev_guild()
+
+        whitelisted_guild_ids = await self.__get_whitelisted_guild_ids()
+        await self.cogs.setup(whitelisted_guild_ids)
+
+        await self.__sync_dev_guild()
+
     @property
-    def asset_manager(self) -> AssetManager: ...
+    def asset_manager(self) -> AssetManager:
+        return self._asset_manager
+
     @property
-    def cogs(self) -> CogCore: ...
+    def cogs(self) -> CogCore:
+        return self._cogs
+
     @property
-    def core(self) -> App: ...
+    def app(self) -> App:
+        return self._app
+
     @property
-    def client(self) -> Client: ...
+    def client(self) -> commands.Bot:
+        return self._client
+
     @property
-    def checks(self) -> Checks: ...
+    def checks(self) -> Checks:
+        return self._checks
+
     @property
-    def events(self) -> Events: ...
-    @property
-    def logger(self) -> Logger: ...
+    def events(self) -> Events:
+        return self._events
+
+    def _start(self) -> None:
+        logger.info(f"Starting discord client")
+        asyncio.set_event_loop(self._event_loop)
+        coro = self.client.start(self.app.properties.DISCORD_BOT_TOKEN)
+        self._event_loop.create_task(coro)
+        self._event_loop.run_forever()
+
+    def __get_cls_qualname(self) -> str:
+        return self.__class__.__qualname__
+
+    async def __get_whitelisted_guild_ids(self) -> list[int]:
+        with self.app.enter_fazbot_db() as db:
+            guild_ids = await db.whitelisted_guild_repository.get_all_whitelisted_guild_ids()
+            return list(guild_ids)
+
+    async def __sync_dev_guild(self) -> None:
+        """Synchronizes commands registered to dev guild into discord."""
+        dev_server_id = self.app.properties.DEV_SERVER_ID
+        await self.client.sync_application_commands(guild_id=dev_server_id)
+        logger.info(f"Synchronized application commands for dev guild id {dev_server_id}")
+
+    async def __whitelist_dev_guild(self) -> None:
+        """Adds dev guild to whitelist database, if not already added."""
+        guild = await Utils.must_get_guild(self.client, self.app.properties.DEV_SERVER_ID)
+
+        with self.app.enter_fazbot_db() as db:
+            repo = db.whitelisted_guild_repository
+            model = repo.get_model_cls()
+            dev_guild = model(
+                guild_id=guild.id,
+                guild_name=guild.name,
+                from_=datetime.now()
+            )
+            try:
+                await db.whitelisted_guild_repository.insert(dev_guild)
+            except IntegrityError:
+                pass

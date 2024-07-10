@@ -1,5 +1,5 @@
-from ._base_model import BaseModel
+from .base_fazbot_model import BaseFazbotModel
 
-from .banned_user import BannedUser  # depends: BaseModel
-from .whitelisted_guild import WhitelistedGuild  # depends: BaseModel
+from .banned_user import BannedUser
+from .whitelisted_guild import WhitelistedGuild
 
