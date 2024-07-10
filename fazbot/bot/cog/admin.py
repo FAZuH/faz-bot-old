@@ -164,7 +164,7 @@ class Admin(CogBase):
     async def shutdown(self, interaction: Interaction[Any]) -> None:
         """(dev only) Shutdowns the bot enitirely."""
         await self._respond_successful(interaction, "Shutting down...")
-        self._bot.stop()
+        self._bot.app.stop()
 
     @admin.subcommand(name="whisper")
     async def whisper(self, interaction: Interaction[Any], user_id: str, message: str) -> None:
