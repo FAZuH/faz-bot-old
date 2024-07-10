@@ -1,6 +1,8 @@
-# faz-bot
+# faz-bot (IN DEVELOPMENT)
 
 Wynncraft's Utility and Statistics Bot.
+
+This repository is currently in the development phase and may undergo many breaking changes.
 
 ## Installation & Production
 
