@@ -6,7 +6,7 @@ from loguru import logger
 from nextcord import Colour, Embed, SyncWebhook
 
 
-class Logger:
+class LoggerSetup:
 
     @classmethod
     def setup(cls, log_directory: str, webhook_url: str, admin_discord_id: int) -> None:
@@ -69,5 +69,9 @@ class Logger:
         webhook = SyncWebhook.from_url(cls._webhook_url)
         embed = Embed(title=title, description=f"```{description[:4090]}```", colour=colour)
         embed.add_field(name="Timestamp", value=f"<t:{int(datetime.now().timestamp())}:R>")
+
         admin_ping = f"<@{cls._admin_discord_id}>"
-        webhook.send(content=admin_ping if is_admin_ping else None, embed=embed)
+        if is_admin_ping:
+            webhook.send(content=admin_ping, embed=embed)
+        else:
+            webhook.send(embed=embed)

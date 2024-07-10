@@ -1,7 +1,7 @@
 from __future__ import annotations
 from contextlib import contextmanager
 from threading import Lock
-from typing import TYPE_CHECKING, Generator
+from typing import Generator
 
 from loguru import logger
 
@@ -9,13 +9,8 @@ from fazbot.bot import Bot
 from fazbot.db.fazbot import FazbotDatabase
 from fazbot.db.fazdb import FazdbDatabase
 
-from ._logger import Logger
+from ._logger_setup import LoggerSetup
 from .properties import Properties
-
-if TYPE_CHECKING:
-    from fazbot.db.fazbot import FazbotDatabase
-    from fazbot.db.fazdb import FazdbDatabase
-
 
 class App:
 
@@ -25,7 +20,7 @@ class App:
         self._properties = Properties()
         p = self.properties
         p.setup()
-        Logger.setup(p.LOG_DIR, p.DISCORD_LOG_WEBHOOK, p.ADMIN_DISCORD_ID)
+        LoggerSetup.setup(p.LOG_DIR, p.DISCORD_LOG_WEBHOOK, p.ADMIN_DISCORD_ID)
 
         self._fazbot_db = FazbotDatabase(
             "mysql+aiomysql",
