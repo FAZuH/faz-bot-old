@@ -4,7 +4,6 @@ from datetime import datetime
 from typing import Any, Sequence, TYPE_CHECKING
 import unittest
 
-from loguru import logger
 from sqlalchemy import inspect, select
 
 from fazbot.app.properties import Properties
@@ -30,7 +29,7 @@ class CommonDbRepositoryTest:
                 Properties.MYSQL_PASSWORD,
                 Properties.MYSQL_HOST,
                 Properties.MYSQL_PORT,
-                Properties.FAZDB_DB_NAME
+                f"{Properties.FAZDB_DB_NAME}_test"
             )
             async with self.database.enter_session() as session:
                 await self.repo.create_table(session=session)
