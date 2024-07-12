@@ -1,12 +1,12 @@
 from .._base_async_database import BaseAsyncDatabase
-from .model import BaseFazbotModel
+from .model.base_fazbot_model import BaseFazbotModel
 from .repository import *
 
 
 class FazbotDatabase(BaseAsyncDatabase):
 
-    def __init__(self, driver: str, user: str, password: str, host: str, port: int, database: str) -> None:
-        super().__init__(driver, user, password, host, port, database)
+    def __init__(self, user: str, password: str, host: str, port: int, database: str) -> None:
+        super().__init__(user, password, host, port, database)
         self._base_model = BaseFazbotModel()
 
         self._banned_user_repository = BannedUserRepository(self)

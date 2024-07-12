@@ -1,0 +1,1 @@
+from .manga_notify_database import MangaNotifyDatabase

@@ -7,7 +7,7 @@ class TestFazdbUptimeRepository(CommonFazdbRepositoryTest.Test[FazdbUptimeReposi
 
     # override
     def _get_mock_data(self):
-        model = self.repo.get_model_cls()
+        model = self.repo.model
 
         mock_data1 = model(
             start_time=self._get_mock_datetime().replace(day=1),

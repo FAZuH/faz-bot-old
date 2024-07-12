@@ -5,8 +5,8 @@ from .repository import *
 
 class FazdbDatabase(BaseAsyncDatabase):
     
-    def __init__(self, driver: str, user: str, password: str, host: str, port: int, database: str) -> None:
-        super().__init__(driver, user, password, host, port, database)
+    def __init__(self, user: str, password: str, host: str, port: int, database: str) -> None:
+        super().__init__(user, password, host, port, database)
         self._base_model = BaseFazdbModel()
 
         self._character_history_repository = CharacterHistoryRepository(self)

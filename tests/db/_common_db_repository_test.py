@@ -24,23 +24,20 @@ class CommonDbRepositoryTest:
         async def asyncSetUp(self) -> None:
             Properties.setup()
             self._database = self.database_type(
-                "mysql+aiomysql",
                 Properties.MYSQL_USERNAME,
                 Properties.MYSQL_PASSWORD,
                 Properties.MYSQL_HOST,
                 Properties.MYSQL_PORT,
-                f"{Properties.FAZDB_DB_NAME}_test"
+                self.db_name
             )
-            async with self.database.enter_session() as session:
-                await self.repo.create_table(session=session)
-                await self.repo.truncate(session=session)
-            return await super().asyncSetUp()
+            self._database.drop_all()
+            self._database.create_all()
 
         async def test_create_table_successful(self) -> None:
             """Test if create_table() method successfully creates table."""
             await self.repo.create_table()
 
-            async with self.database.enter_connection() as connection:
+            async with self.database.enter_async_connection() as connection:
                 result = await connection.run_sync(self._get_table_names)
 
             self.assertTrue(self.repo.table_name in result)
@@ -71,15 +68,10 @@ class CommonDbRepositoryTest:
             mock_data = self._get_mock_data()
             await self.repo.insert(mock_data[0])
 
-            rows = await self._get_all_inserted_rows()
-            self.assertEqual(len(rows), 1)
-            self.assertSetEqual(
-                set(rows),
-                set((mock_data[0],))
-            )
-
             # Insert the same data again. This shouldn't insert.
-            await self.repo.insert(mock_data[1], ignore_on_duplicate=True)
+            await self.repo.insert(mock_data[0], ignore_on_duplicate=True)
+
+            rows = await self._get_all_inserted_rows()
             self.assertEqual(len(rows), 1)
             self.assertSetEqual(
                 set(rows),
@@ -145,17 +137,17 @@ class CommonDbRepositoryTest:
         # override
         async def asyncTearDown(self) -> None:
             await self.repo.truncate()
-            await self.database.engine.dispose()
+            await self.database.async_engine.dispose()
             return await super().asyncTearDown()
 
         async def _get_all_inserted_rows(self) -> Sequence[BaseModel]:
-            async with self.database.enter_session() as session:
-                result = await session.execute(select(self.repo.get_model_cls()))
+            async with self.database.enter_async_session() as session:
+                result = await session.execute(select(self.repo.model))
                 rows = result.scalars().all()
             return rows
 
         def _get_value_of_primary_key(self, entity: BaseModel) -> Any:
-            pk_columns = inspect(self.repo.get_model_cls()).primary_key
+            pk_columns = inspect(self.repo.model).primary_key
             if len(pk_columns) == 1:
                 col_ = pk_columns[0]
                 value = getattr(entity, col_.name)
@@ -201,4 +193,10 @@ class CommonDbRepositoryTest:
         @abstractmethod
         def repo(self) -> R:
             """Database repository corresponding to the repository being tested."""
+            ...
+
+        @property
+        @abstractmethod
+        def db_name(self) -> str:
+            """Database name to be tested."""
             ...

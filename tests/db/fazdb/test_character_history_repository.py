@@ -12,7 +12,7 @@ class TestCharacterHistoryRepository(CommonFazdbRepositoryTest.Test[CharacterHis
         uuid1 = UUID("b30f5e97-957d-47f6-bf1e-9e48d9fea200").bytes
         uuid2 = UUID("33c3ad56-5e9b-4bfe-9685-9fc4df2a67fa").bytes
 
-        model = self.repo.get_model_cls()
+        model = self.repo.model
         mock_data1 = model(
             character_uuid=uuid1, level=1, xp=1, wars=1, playtime=1.0,
             mobs_killed=1, chests_found=1, logins=1, deaths=1, discoveries=1,

@@ -56,7 +56,7 @@ class Bot:
     async def on_ready_setup(self) -> None:
         """Setup after the bot is ready."""
         with self.app.enter_fazbot_db() as db:
-            await db.create_all()
+            db.create_all()
 
         await self.__whitelist_dev_guild()
 
@@ -116,7 +116,7 @@ class Bot:
 
         with self.app.enter_fazbot_db() as db:
             repo = db.whitelisted_guild_repository
-            model = repo.get_model_cls()
+            model = repo.model
             dev_guild = model(
                 guild_id=guild.id,
                 guild_name=guild.name,

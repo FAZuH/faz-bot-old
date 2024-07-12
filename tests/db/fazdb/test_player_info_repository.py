@@ -9,7 +9,7 @@ class TestPlayerInfoRepository(CommonFazdbRepositoryTest.Test[PlayerInfoReposito
 
     # override
     def _get_mock_data(self):
-        model = self.repo.get_model_cls()
+        model = self.repo.model
 
         uuid1 = UUID("b30f5e97-957d-47f6-bf1e-9e48d9fea200").bytes
         uuid2 = UUID("33c3ad56-5e9b-4bfe-9685-9fc4df2a67fa").bytes

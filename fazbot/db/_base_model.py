@@ -15,6 +15,7 @@ class BaseModel(DeclarativeBase):
     def get_table(cls) -> Table:
         return cls.__table__  # type: ignore
 
+
     def clone(self) -> Self:
         return self.__class__(**dict(self.items()))
 

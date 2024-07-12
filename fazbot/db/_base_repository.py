@@ -3,9 +3,11 @@ from abc import ABC
 from decimal import Decimal
 from typing import Any, Iterable, TYPE_CHECKING
 
+from loguru import logger
 from sqlalchemy import Column, Tuple, exists, select, text, tuple_
 from sqlalchemy.dialects.mysql import insert
 from sqlalchemy.schema import CreateTable
+from typing_extensions import deprecated
 
 if TYPE_CHECKING:
     from sqlalchemy import Table
@@ -44,11 +46,11 @@ class BaseRepository[T: BaseModel, ID](ABC):
                 AND table_name = :table_name;
         """
         params = {
-            "schema": self._database.engine.url.database,
+            "schema": self._database.async_engine.url.database,
             "table_name": self.table_name
         }
 
-        async with self._database.must_enter_session(session) as session:
+        async with self._database.must_enter_async_session(session) as session:
             result = await session.execute(text(SQL), params)
 
         row = result.fetchone()
@@ -65,7 +67,7 @@ class BaseRepository[T: BaseModel, ID](ABC):
             If not provided, a new session will be created.
         """
         stmt = CreateTable(self.table, if_not_exists=True)
-        async with self.database.must_enter_session(session) as session:
+        async with self.database.must_enter_async_session(session) as session:
             await session.execute(stmt)
 
     async def insert(
@@ -91,19 +93,18 @@ class BaseRepository[T: BaseModel, ID](ABC):
             raise ValueError("ignore_on_duplicate and replace_on_duplicate cannot be both True")
 
         entities = self._ensure_iterable(entity)
-        table = self.get_model_cls().get_table()
         entity_d = [dict(e.items(trim_end_underscore=True)) for e in entities]
-        stmt = insert(table).values(entity_d)
+        stmt = insert(self.table).values(entity_d)
 
         if replace_on_duplicate:
             if columns_to_replace is None:
-                columns_to_replace = [c.name for c in table.columns if not c.primary_key]
+                columns_to_replace = [c.name for c in self.table.columns if not c.primary_key]
             stmt = stmt.on_duplicate_key_update(**{c: getattr(stmt.inserted, c) for c in columns_to_replace})
 
         if ignore_on_duplicate:
             stmt = stmt.prefix_with("IGNORE")
 
-        async with self.database.must_enter_session(session) as session:
+        async with self.database.must_enter_async_session(session) as session:
             await session.execute(stmt)
 
     async def delete(self, id_: ID, *, session: AsyncSession | None = None) -> None:
@@ -120,7 +121,24 @@ class BaseRepository[T: BaseModel, ID](ABC):
         """
         primary_keys = self._get_primary_key()
         stmt = self.table.delete().where(primary_keys == id_)
-        async with self.database.must_enter_session(session) as session:
+        async with self.database.must_enter_async_session(session) as session:
+            await session.execute(stmt)
+
+    async def delete_many(self, id_: list[ID], *, session: AsyncSession | None = None) -> None:
+        """Deletes an entry from the repository based on `id_`
+
+        Parameters
+        ----------
+        id_: Any
+            Primary_key value of the entry to delete.
+
+        conn : AsyncSession, optional
+            Optional AsyncSession object to use for the database connection.
+            If not provided, a new session will be created.
+        """
+        primary_keys = self._get_primary_key()
+        stmt = self.table.delete().where(primary_keys.in_(id_))
+        async with self.database.must_enter_async_session(session) as session:
             await session.execute(stmt)
 
     async def is_exists(self, id_: ID, *, session: None | AsyncSession = None) -> bool:
@@ -141,7 +159,7 @@ class BaseRepository[T: BaseModel, ID](ABC):
         """
         primary_keys = self._get_primary_key()
         stmt = select(exists().where(primary_keys == id_))
-        async with self.database.must_enter_session(session) as session:
+        async with self.database.must_enter_async_session(session) as session:
             result = await session.execute(stmt)
 
         is_exist = result.scalar()
@@ -156,10 +174,10 @@ class BaseRepository[T: BaseModel, ID](ABC):
             Optional AsyncSession object to use for the database connection.
             If not provided, a new session will be created.
         """
-        model = self.get_model_cls()
-        async with self.database.must_enter_session(session) as session:
-            await session.execute(model.get_table().delete())
+        async with self.database.must_enter_async_session(session) as session:
+            await session.execute(self.table.delete())
 
+    @deprecated("replaced by self.model property. will be removed soon.")
     def get_model_cls(self) -> type[T]:
         return self._model_cls
 
@@ -169,7 +187,7 @@ class BaseRepository[T: BaseModel, ID](ABC):
 
     @property
     def model(self) -> type[T]:
-        return self.get_model_cls()
+        return self._model_cls
 
     @property
     def table(self) -> Table:
@@ -180,7 +198,7 @@ class BaseRepository[T: BaseModel, ID](ABC):
         return self.model.__tablename__
 
     def _get_primary_key(self) -> Tuple[Column[Any], ...] | Column[Any]:
-        model_cls = self.get_model_cls()
+        model_cls = self.model
         primary_keys: tuple[Column[Any], ...] | Column[Any] = model_cls.__mapper__.primary_key
 
         if not isinstance(primary_keys, tuple):  # type: ignore

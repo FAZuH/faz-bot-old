@@ -18,3 +18,8 @@ class CommonFazdbRepositoryTest:
         @property
         def database_type(self) -> type[FazdbDatabase]:
             return FazdbDatabase
+
+        @property
+        def db_name(self) -> str:
+            """Database name to be tested."""
+            return "faz-db_test"

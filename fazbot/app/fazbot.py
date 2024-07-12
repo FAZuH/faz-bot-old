@@ -6,8 +6,7 @@ from typing import Generator
 from loguru import logger
 
 from fazbot.bot import Bot
-from fazbot.db.fazbot import FazbotDatabase
-from fazbot.db.fazdb import FazdbDatabase
+from fazbot.db import FazbotDatabase, FazdbDatabase, MangaNotifyDatabase
 
 from ._logger_setup import LoggerSetup
 from .properties import Properties
@@ -23,7 +22,6 @@ class App:
         LoggerSetup.setup(p.LOG_DIR, p.DISCORD_LOG_WEBHOOK, p.ADMIN_DISCORD_ID)
 
         self._fazbot_db = FazbotDatabase(
-            "mysql+aiomysql",
             p.MYSQL_USERNAME,
             p.MYSQL_PASSWORD,
             p.MYSQL_HOST,
@@ -31,12 +29,18 @@ class App:
             p.FAZBOT_DB_NAME
         )
         self._fazdb_db = FazdbDatabase(
-            "mysql+aiomysql",
             p.MYSQL_USERNAME,
             p.MYSQL_PASSWORD,
             p.MYSQL_HOST,
             p.MYSQL_PORT,
             p.FAZDB_DB_NAME
+        )
+        self._manga_notify_db = MangaNotifyDatabase(
+            p.MYSQL_USERNAME,
+            p.MYSQL_PASSWORD,
+            p.MYSQL_HOST,
+            p.MYSQL_PORT,
+            p.MANGA_NOTIFY_DB_NAME
         )
         self._bot = Bot(self)
 

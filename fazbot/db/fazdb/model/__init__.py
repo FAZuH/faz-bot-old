@@ -1,5 +1,3 @@
-from .base_fazdb_model import BaseFazdbModel
-
 from .character_history import CharacterHistory
 from .character_info import CharacterInfo
 from .fazdb_uptime import FazdbUptime

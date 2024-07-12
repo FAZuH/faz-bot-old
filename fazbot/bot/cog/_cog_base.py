@@ -35,13 +35,13 @@ class CogBase(commands.Cog):
     @asynccontextmanager
     async def _enter_botdb_session(self) -> AsyncGenerator[tuple[FazbotDatabase, AsyncSession], None]:
         with self._bot.app.enter_fazbot_db() as db:
-            async with db.enter_session() as session:
+            async with db.enter_async_session() as session:
                 yield db, session
 
     @asynccontextmanager
     async def _enter_fazdb_session(self) -> AsyncGenerator[tuple[FazdbDatabase, AsyncSession], None]:
         with self._bot.app.enter_fazdb_db() as db:
-            async with db.enter_session() as session:
+            async with db.enter_async_session() as session:
                 yield db, session
 
     def _setup(self, whitelisted_guild_ids: Iterable[int]) -> None:

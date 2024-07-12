@@ -5,11 +5,9 @@ from typing import AsyncGenerator, TYPE_CHECKING
 import unittest
 from unittest.mock import AsyncMock, MagicMock, patch
 
-from sqlalchemy import text
-
 from fazbot.app.properties import Properties
-from fazbot.bot._errors import CommandException
 from fazbot.bot.cog import Admin
+from fazbot.bot.errors import CommandException
 from fazbot.db.fazbot import FazbotDatabase
 from fazbot.db.fazbot.model import BannedUser, WhitelistedGuild
 
@@ -22,7 +20,7 @@ class TestAdmin(unittest.IsolatedAsyncioTestCase):
 
     @asynccontextmanager
     async def __mock_enter_db_session(self) -> AsyncGenerator[tuple[FazbotDatabase, AsyncSession], None]:
-        async with self.db.enter_session() as session:
+        async with self.db.enter_async_session() as session:
             yield self.db, session
 
     @patch("fazbot.bot.bot.Bot", autospec=True)
@@ -30,20 +28,19 @@ class TestAdmin(unittest.IsolatedAsyncioTestCase):
         self.mock_bot = mock_bot
         Properties.setup()
         self.db = FazbotDatabase(
-            "mysql+aiomysql",
             Properties.MYSQL_USERNAME,
             Properties.MYSQL_PASSWORD,
             Properties.MYSQL_HOST,
             Properties.MYSQL_PORT,
-            Properties.FAZDB_DB_NAME
+            f"{Properties.FAZDB_DB_NAME}_test"
         )
         whitelisted_guild_repo = self.db.whitelisted_guild_repository
         banned_user_repo = self.db.banned_user_repository
-        async with self.db.enter_session() as session:
-            await whitelisted_guild_repo.create_table(session=session)
-            await banned_user_repo.create_table(session=session)
-            await session.execute(text(f"TRUNCATE TABLE {whitelisted_guild_repo.table_name}"))
-            await session.execute(text(f"TRUNCATE TABLE {banned_user_repo.table_name}"))
+
+        self.db.create_all()
+        async with self.db.enter_async_session() as session:
+            await whitelisted_guild_repo.truncate(session=session)
+            await banned_user_repo.truncate(session=session)
 
         self.admin = Admin(mock_bot)
         # Admin cog overrides
@@ -104,7 +101,7 @@ class TestAdmin(unittest.IsolatedAsyncioTestCase):
     #     pass
 
     async def asyncTearDown(self) -> None:
-        await self.db.engine.dispose()
+        await self.db.async_engine.dispose()
         return await super().asyncTearDown()
 
     @staticmethod

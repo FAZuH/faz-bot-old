@@ -42,7 +42,7 @@ class TestWorldsRepository(CommonFazdbRepositoryTest.Test[WorldsRepository]):
 
     # override
     def _get_mock_data(self):
-        model = self.repo.get_model_cls()
+        model = self.repo.model
 
         mock_data1 = model(name="WC1", player_count=50, time_created=self._get_mock_datetime().replace(day=1))
         mock_data2 = mock_data1.clone()

@@ -1,5 +1,5 @@
 from __future__ import annotations
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING
 
 from ..._base_repository import BaseRepository
 from ..model import BannedUser
@@ -10,5 +10,5 @@ if TYPE_CHECKING:
 
 class BannedUserRepository(BaseRepository[BannedUser, int]):
 
-    def __init__(self, database: BaseAsyncDatabase[Any]) -> None:
+    def __init__(self, database: BaseAsyncDatabase) -> None:
         super().__init__(database, BannedUser)
