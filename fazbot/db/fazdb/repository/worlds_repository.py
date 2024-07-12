@@ -6,12 +6,12 @@ from ..model import Worlds
 
 if TYPE_CHECKING:
     from sqlalchemy.ext.asyncio import AsyncSession
-    from ..._base_async_database import BaseAsyncDatabase
+    from ..._base_mysql_database import BaseMySQLDatabase
 
 
 class WorldsRepository(BaseRepository[Worlds, Any]):
 
-    def __init__(self, database: BaseAsyncDatabase[Any]) -> None:
+    def __init__(self, database: BaseMySQLDatabase[Any]) -> None:
         super().__init__(database, Worlds)
 
     async def update_worlds(self, entity: Iterable[Worlds], *, session: AsyncSession | None = None) -> None:

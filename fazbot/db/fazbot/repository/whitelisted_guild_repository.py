@@ -8,12 +8,12 @@ from ..model import WhitelistedGuild
 
 if TYPE_CHECKING:
     from sqlalchemy.ext.asyncio import AsyncSession
-    from ..._base_async_database import BaseAsyncDatabase
+    from ..._base_mysql_database import BaseMySQLDatabase
 
 
 class WhitelistedGuildRepository(BaseRepository[WhitelistedGuild, int]):
 
-    def __init__(self, database: BaseAsyncDatabase) -> None:
+    def __init__(self, database: BaseMySQLDatabase) -> None:
         super().__init__(database, WhitelistedGuild)
 
     async def get_all_whitelisted_guild_ids(self, session: None | AsyncSession = None) -> Sequence[int]:

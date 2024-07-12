@@ -11,14 +11,14 @@ from fazbot.db._base_model import BaseModel
 
 if TYPE_CHECKING:
     from sqlalchemy import Connection
-    from fazbot.db._base_async_database import BaseAsyncDatabase
+    from fazbot.db._base_mysql_database import BaseMySQLDatabase
     from fazbot.db._base_repository import BaseRepository
 
 
 class CommonDbRepositoryTest:
 
     # Nesting test classes like this prevents CommonDbRepositoryTest.Test from being run by unittest.
-    class Test[DB: BaseAsyncDatabase, R: BaseRepository](unittest.IsolatedAsyncioTestCase, ABC):
+    class Test[DB: BaseMySQLDatabase, R: BaseRepository](unittest.IsolatedAsyncioTestCase, ABC):
 
         # override
         async def asyncSetUp(self) -> None:

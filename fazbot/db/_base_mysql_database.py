@@ -13,7 +13,7 @@ if TYPE_CHECKING:
     from . import BaseRepository, BaseModel
 
 
-class BaseAsyncDatabase(ABC):
+class BaseMySQLDatabase(ABC):
 
     def __init__(
             self,

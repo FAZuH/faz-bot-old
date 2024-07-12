@@ -12,13 +12,13 @@ from typing_extensions import deprecated
 if TYPE_CHECKING:
     from sqlalchemy import Table
     from sqlalchemy.ext.asyncio import AsyncSession
-    from ._base_async_database import BaseAsyncDatabase
+    from ._base_mysql_database import BaseMySQLDatabase
     from ._base_model import BaseModel
 
 
 class BaseRepository[T: BaseModel, ID](ABC):
 
-    def __init__(self, database: BaseAsyncDatabase, model_cls: type[T]) -> None:
+    def __init__(self, database: BaseMySQLDatabase, model_cls: type[T]) -> None:
         self._database = database
         self._model_cls = model_cls
 
@@ -182,7 +182,7 @@ class BaseRepository[T: BaseModel, ID](ABC):
         return self._model_cls
 
     @property
-    def database(self) -> BaseAsyncDatabase:
+    def database(self) -> BaseMySQLDatabase:
         return self._database
 
     @property

@@ -1,9 +1,9 @@
-from .._base_async_database import BaseAsyncDatabase
+from .._base_mysql_database import BaseMySQLDatabase
 from .model.base_manga_notify_model import BaseMangaNotifyModel
 from .repository import *
 
 
-class MangaNotifyDatabase(BaseAsyncDatabase):
+class MangaNotifyDatabase(BaseMySQLDatabase):
 
     def __init__(self, user: str, password: str, host: str, port: int, database: str) -> None:
         super().__init__(user, password, host, port, database)

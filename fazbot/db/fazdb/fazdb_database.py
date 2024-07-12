@@ -1,9 +1,9 @@
-from .._base_async_database import BaseAsyncDatabase
+from .._base_mysql_database import BaseMySQLDatabase
 from .model.base_fazdb_model import BaseFazdbModel
 from .repository import *
 
 
-class FazdbDatabase(BaseAsyncDatabase):
+class FazdbDatabase(BaseMySQLDatabase):
     
     def __init__(self, user: str, password: str, host: str, port: int, database: str) -> None:
         super().__init__(user, password, host, port, database)
