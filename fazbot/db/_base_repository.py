@@ -1,9 +1,8 @@
 from __future__ import annotations
 from abc import ABC
 from decimal import Decimal
-from typing import Any, Iterable, TYPE_CHECKING
+from typing import Any, Iterable, Sequence, TYPE_CHECKING
 
-from loguru import logger
 from sqlalchemy import Column, Tuple, exists, select, text, tuple_
 from sqlalchemy.dialects.mysql import insert
 from sqlalchemy.schema import CreateTable
@@ -176,6 +175,12 @@ class BaseRepository[T: BaseModel, ID](ABC):
         """
         async with self.database.must_enter_async_session(session) as session:
             await session.execute(self.table.delete())
+
+    async def select_all(self, *, session: AsyncSession | None = None) -> Sequence[T]:
+        stmt = select(self.model)
+        async with self.database.must_enter_async_session(session) as session:
+            result = await session.execute(stmt)
+            return result.scalars().all()
 
     @deprecated("replaced by self.model property. will be removed soon.")
     def get_model_cls(self) -> type[T]:
