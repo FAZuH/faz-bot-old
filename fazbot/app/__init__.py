@@ -1,2 +1,1 @@
-# type: ignore
-from .fazbot import App
+from .app import App

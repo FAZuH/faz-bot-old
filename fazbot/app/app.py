@@ -11,6 +11,7 @@ from fazbot.db import FazbotDatabase, FazdbDatabase, MangaNotifyDatabase
 from ._logger_setup import LoggerSetup
 from .properties import Properties
 
+
 class App:
 
     def __init__(self) -> None:
@@ -65,13 +66,18 @@ class App:
 
     @contextmanager
     def enter_fazbot_db(self) -> Generator[FazbotDatabase]:
-        with self._get_lock("fazbotdb"):
+        with self._get_lock("fazbot_db"):
             yield self._fazbot_db
 
     @contextmanager
     def enter_fazdb_db(self) -> Generator[FazdbDatabase]:
-        with self._get_lock("fazdbdb"):
+        with self._get_lock("fazdb_db"):
             yield self._fazdb_db
+
+    @contextmanager
+    def enter_manga_notify_db(self) -> Generator[MangaNotifyDatabase]:
+        with self._get_lock("manga_notify_db"):
+            yield self._manga_notify_db
 
     def _get_lock(self, key: str) -> Lock:
         if key not in self._locks:
