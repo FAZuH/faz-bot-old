@@ -30,7 +30,7 @@ class LoggerSetup:
 
     @classmethod
     def _error_discord_sink(cls, message: str) -> None:
-        cls._send_embed_to_webhook("ERROR", message, colour=Colour.orange(), is_admin_ping=True)
+        cls._send_embed_to_webhook("ERROR", message, colour=Colour.orange())
 
     @classmethod
     def _warning_discord_sink(cls, message: str) -> None:
