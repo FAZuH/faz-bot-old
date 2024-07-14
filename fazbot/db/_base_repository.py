@@ -176,6 +176,13 @@ class BaseRepository[T: BaseModel, ID](ABC):
         async with self.database.must_enter_async_session(session) as session:
             await session.execute(self.table.delete())
 
+    async def select(self, id: ID, *, session: AsyncSession | None = None) -> T | None:
+        primary_keys = self._get_primary_key()
+        stmt = select(self.model).where(primary_keys == id)
+        async with self.database.must_enter_async_session(session) as session:
+            result = await session.execute(stmt)
+            return result.scalar()
+
     async def select_all(self, *, session: AsyncSession | None = None) -> Sequence[T]:
         stmt = select(self.model)
         async with self.database.must_enter_async_session(session) as session:
