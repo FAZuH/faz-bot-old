@@ -5,6 +5,7 @@ from typing import Any, Sequence, TYPE_CHECKING
 import unittest
 
 from sqlalchemy import inspect, select
+from sqlalchemy.engine import mock
 
 from fazbot.app.properties import Properties
 from fazbot.db._base_model import BaseModel
@@ -18,7 +19,7 @@ if TYPE_CHECKING:
 class CommonDbRepositoryTest:
 
     # Nesting test classes like this prevents CommonDbRepositoryTest.Test from being run by unittest.
-    class Test[DB: BaseMySQLDatabase, R: BaseRepository](unittest.IsolatedAsyncioTestCase, ABC):
+    class Test[DB: BaseMySQLDatabase, R: BaseRepository[BaseModel, Any]](unittest.IsolatedAsyncioTestCase, ABC):
 
         # override
         async def asyncSetUp(self) -> None:
@@ -34,7 +35,7 @@ class CommonDbRepositoryTest:
             self._database.create_all()
 
         async def test_create_table_successful(self) -> None:
-            """Test if create_table() method successfully creates table."""
+            """Test if create_table method successfully creates table."""
             await self.repo.create_table()
 
             async with self.database.enter_async_connection() as connection:
@@ -120,7 +121,7 @@ class CommonDbRepositoryTest:
             self.assertEqual(len(rows), 0)
 
         async def test_is_exists_return_correct_value(self) -> None:
-            """Test if is_exist() method correctly finds if value exists."""
+            """Test if is_exist method correctly finds if value exists."""
             mock_data = self._get_mock_data()
 
             mock_data0 = mock_data[0]
@@ -134,6 +135,14 @@ class CommonDbRepositoryTest:
             is_exist2 = await self.repo.is_exists(id2)  # type: ignore
             self.assertFalse(is_exist2)
 
+        async def test_select_all_successful(self) -> None:
+            """Test if select_all method properly selects all rows in table"""
+            mock_data = self._get_mock_data()
+            await self.repo.insert([mock_data[0], mock_data[2]])
+            res = await self.repo.select_all()
+            self.assertEqual(len(res), 2)
+            self.assertSetEqual(set(res), {mock_data[0], mock_data[2]})
+        
         # override
         async def asyncTearDown(self) -> None:
             await self.repo.truncate()
