@@ -42,6 +42,11 @@ class BaseMySQLDatabase(ABC):
     def drop_all(self) -> None:
         self.base_model.metadata.drop_all(bind=self.engine, checkfirst=True)
 
+    async def teardown(self) -> None:
+        """Dispose database resources. This object cannot be used for database operations after this."""
+        await self.async_engine.dispose()
+        self.engine.dispose()
+
     @contextmanager
     def enter_connection(self) -> Generator[Connection, None]:
         with self.engine.begin() as conn:

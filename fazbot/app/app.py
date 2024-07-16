@@ -23,26 +23,17 @@ class App:
         p.setup()
         LoggerSetup.setup(p.LOG_DIR, p.DISCORD_LOG_WEBHOOK, p.ADMIN_DISCORD_ID)
 
-        self._fazbot_db = self.create_fazbot_db()
-        self._fazdb_db = self.create_fazdb_db()
-        self._manga_notify_db = self.create_manga_notify_db()
         self._bot = Bot(self)
         self._heartbeat = Heartbeat(self)
 
     def start(self) -> None:
         logger.info("Starting App")
-        self._fazdb_db.create_all()
-        self._fazbot_db.create_all()
-        self._manga_notify_db.create_all()
         self._bot.start()
         self._heartbeat.start()
         logger.success("Started App", discord=True)
 
     def stop(self) -> None:
         logger.info("Stopping App")
-        self._fazdb_db.engine.dispose()
-        self._fazbot_db.engine.dispose()
-        self._manga_notify_db.engine.dispose()
         self._bot.stop()
         self._heartbeat.stop()
         logger.success("Stopped App", discord=True)

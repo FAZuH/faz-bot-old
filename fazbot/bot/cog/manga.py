@@ -38,7 +38,7 @@ class Manga(CogBase):
 
         guild = interaction.guild
         user = interaction.user
-        db = self._bot.app.create_manga_notify_db()
+        db = self._bot.manga_db
 
         guild_subs_repo = db.guild_subscription_repository
         user_subs_model = db.user_subscription_repository.model

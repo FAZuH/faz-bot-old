@@ -39,10 +39,14 @@ class TaskMangaNotify(ITask):
         logger.info(f"Tearing down {self.name}.")
         self._db.engine.dispose()
         if self._event_loop.is_running():
-            asyncio.run_coroutine_threadsafe(self._api.close(), self._event_loop).result()
+            asyncio.run_coroutine_threadsafe(self._async_teardown(), self._event_loop).result()
         else:
             asyncio.run(self._api.close())
         self._event_loop.close()
+
+    async def _async_teardown(self) -> None:
+        await self._api.close()
+        await self._db.teardown()
 
     @override
     def run(self) -> None:

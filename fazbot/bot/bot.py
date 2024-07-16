@@ -54,9 +54,14 @@ class Bot:
 
     def stop(self) -> None:
         logger.info(f"Stopping Bot")
-        asyncio.run_coroutine_threadsafe(self._client.close(), self._event_loop).result()
+        asyncio.run_coroutine_threadsafe(self._async_teardown(), self._event_loop).result()
         self._event_loop.stop()
         logger.success(f"Stopped Bot")
+
+    async def _async_teardown(self) -> None:
+        await self.client.close()
+        await self.fazbot_db.teardown()
+        await self.manga_db.teardown()
 
     async def on_ready_setup(self) -> None:
         """Setup after the bot is ready."""
