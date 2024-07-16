@@ -24,6 +24,9 @@ class Bot:
     def __init__(self, app: App) -> None:
         self._app = app
 
+        self._fazbot_db = app.create_fazbot_db()
+        self._manga_db = app.create_manga_notify_db()
+
         # set intents
         intents = Intents.default()
         intents.message_content = True
@@ -41,6 +44,8 @@ class Bot:
         self._cogs = CogCore(self)
         self._events = Events(self)
 
+        self.fazbot_db.create_all()
+
     def start(self) -> None:
         logger.info(f"Starting Bot")
         self._discord_bot_thread.start()
@@ -55,15 +60,18 @@ class Bot:
 
     async def on_ready_setup(self) -> None:
         """Setup after the bot is ready."""
-        with self.app.enter_fazbot_db() as db:
-            db.create_all()
-
         await self.__whitelist_dev_guild()
-
         whitelisted_guild_ids = await self.__get_whitelisted_guild_ids()
         await self.cogs.setup(whitelisted_guild_ids)
-
         await self.__sync_dev_guild()
+
+    @property
+    def fazbot_db(self):
+        return self._fazbot_db
+
+    @property
+    def manga_db(self):
+        return self._manga_db
 
     @property
     def asset_manager(self) -> AssetManager:
@@ -100,9 +108,9 @@ class Bot:
         return self.__class__.__qualname__
 
     async def __get_whitelisted_guild_ids(self) -> list[int]:
-        with self.app.enter_fazbot_db() as db:
-            guild_ids = await db.whitelisted_guild_repository.get_all_whitelisted_guild_ids()
-            return list(guild_ids)
+        db = self.fazbot_db
+        guild_ids = await db.whitelisted_guild_repository.get_all_whitelisted_guild_ids()
+        return list(guild_ids)
 
     async def __sync_dev_guild(self) -> None:
         """Synchronizes commands registered to dev guild into discord."""
@@ -114,15 +122,13 @@ class Bot:
         """Adds dev guild to whitelist database, if not already added."""
         guild = await Utils.must_get_guild(self.client, self.app.properties.DEV_SERVER_ID)
 
-        with self.app.enter_fazbot_db() as db:
-            repo = db.whitelisted_guild_repository
-            model = repo.model
-            dev_guild = model(
-                guild_id=guild.id,
-                guild_name=guild.name,
-                from_=datetime.now()
-            )
-            try:
-                await db.whitelisted_guild_repository.insert(dev_guild)
-            except IntegrityError:
-                pass
+        repo = self.fazbot_db.whitelisted_guild_repository
+        dev_guild = repo.model(
+            guild_id=guild.id,
+            guild_name=guild.name,
+            from_=datetime.now()
+        )
+        try:
+            await repo.insert(dev_guild)
+        except IntegrityError:
+            pass

@@ -9,7 +9,7 @@ from nextcord.ext import commands
 if TYPE_CHECKING:
     from sqlalchemy.ext.asyncio import AsyncSession
     from .. import Bot
-    from fazbot.db import FazdbDatabase, FazbotDatabase
+    from fazbot.db import FazbotDatabase
 
 
 class CogBase(commands.Cog):
@@ -34,15 +34,15 @@ class CogBase(commands.Cog):
 
     @asynccontextmanager
     async def _enter_botdb_session(self) -> AsyncGenerator[tuple[FazbotDatabase, AsyncSession], None]:
-        with self._bot.app.enter_fazbot_db() as db:
-            async with db.enter_async_session() as session:
-                yield db, session
+        db = self._bot.fazbot_db
+        async with db.enter_async_session() as session:
+            yield db, session
 
-    @asynccontextmanager
-    async def _enter_fazdb_session(self) -> AsyncGenerator[tuple[FazdbDatabase, AsyncSession], None]:
-        with self._bot.app.enter_fazdb_db() as db:
-            async with db.enter_async_session() as session:
-                yield db, session
+    # @asynccontextmanager
+    # async def _enter_fazdb_session(self) -> AsyncGenerator[tuple[FazdbDatabase, AsyncSession], None]:
+    #     with self._bot.app.enter_fazdb_db() as db:
+    #         async with db.enter_async_session() as session:
+    #             yield db, session
 
     def _setup(self, whitelisted_guild_ids: Iterable[int]) -> None:
         """Method to run on cog setup.

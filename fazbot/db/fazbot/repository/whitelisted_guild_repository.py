@@ -17,9 +17,8 @@ class WhitelistedGuildRepository(BaseRepository[WhitelistedGuild, int]):
         super().__init__(database, WhitelistedGuild)
 
     async def get_all_whitelisted_guild_ids(self, session: None | AsyncSession = None) -> Sequence[int]:
-        model = self.get_model_cls()
         async with self.database.must_enter_async_session(session) as session:
-            stmt = select(model.guild_id)
+            stmt = select(self.model.guild_id)
             result = await session.execute(stmt)
             whitelisted_guilds = result.scalars().all()
         return whitelisted_guilds

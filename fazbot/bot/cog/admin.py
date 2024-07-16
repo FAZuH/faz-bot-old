@@ -50,12 +50,12 @@ class Admin(CogBase):
 
         async with self._enter_botdb_session() as (db, session):
             banlist = db.banned_user_repository
-            model_cls = banlist.get_model_cls()
+            model = banlist.model
 
             if await banlist.is_exists(user.id, session=session):
                 raise ApplicationException(f"User `{user.name}` (`{user.id}`) is already banned.")
 
-            user_to_ban = model_cls(
+            user_to_ban = model(
                 user_id=user.id,
                 reason=reason,
                 from_=datetime.now(),
@@ -201,12 +201,12 @@ class Admin(CogBase):
 
         async with self._enter_botdb_session() as (db, session):
             whitelist = db.whitelisted_guild_repository
-            model_cls = whitelist.get_model_cls()
+            model = whitelist.model
 
             if await whitelist.is_exists(guild.id, session=session):
                 raise ApplicationException(f"Guild `{guild.name}` (`{guild.id}`) is already whitelisted.")
 
-            guild_to_whitelist = model_cls(
+            guild_to_whitelist = model(
                 guild_id=guild.id,
                 guild_name=guild.name,
                 from_=datetime.now(),

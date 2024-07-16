@@ -7,7 +7,7 @@ class TestBannedUserRepository(CommonFazbotRepositoryTest.Test[BannedUserReposit
 
     # override
     def _get_mock_data(self):
-        model = self.repo.get_model_cls()
+        model = self.repo.model
 
         mock_data1 = model(user_id=1, reason='a', from_=self._get_mock_datetime(), until=self._get_mock_datetime())
         mock_data2 = mock_data1.clone()

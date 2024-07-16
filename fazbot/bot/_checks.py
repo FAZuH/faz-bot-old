@@ -39,8 +39,8 @@ class Checks:
             return False
 
         user_id = interaction.user.id
-        with self.bot.app.enter_fazbot_db() as db:
-            is_banned = await db.banned_user_repository.is_exists(user_id)
+        db = self.bot.fazbot_db
+        is_banned = await db.banned_user_repository.is_exists(user_id)
 
         if is_banned:
             logger.warning(
@@ -55,8 +55,8 @@ class Checks:
             return False
 
         guild_id = interaction.guild.id
-        with self.bot.app.enter_fazbot_db() as db:
-            is_whitelisted = await db.whitelisted_guild_repository.is_exists(guild_id)
+        db = self.bot.fazbot_db
+        is_whitelisted = await db.whitelisted_guild_repository.is_exists(guild_id)
 
         if not is_whitelisted:
             logger.warning(

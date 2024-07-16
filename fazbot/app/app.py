@@ -4,7 +4,6 @@ from threading import Lock
 from typing import Generator
 
 from loguru import logger
-from typing_extensions import deprecated
 
 from fazbot.bot import Bot
 from fazbot.db import FazbotDatabase, FazdbDatabase, MangaNotifyDatabase
@@ -56,24 +55,6 @@ class App:
     def enter_bot(self) -> Generator[Bot]:
         with self._get_lock("bot"):
             yield self._bot
-
-    @deprecated("Removed soon. replace with create db")
-    @contextmanager
-    def enter_fazbot_db(self) -> Generator[FazbotDatabase]:
-        with self._get_lock("fazbot_db"):
-            yield self._fazbot_db
-
-    @deprecated("Removed soon. replace with create db")
-    @contextmanager
-    def enter_fazdb_db(self) -> Generator[FazdbDatabase]:
-        with self._get_lock("fazdb_db"):
-            yield self._fazdb_db
-
-    @deprecated("Removed soon. replace with create db")
-    @contextmanager
-    def enter_manga_notify_db(self) -> Generator[MangaNotifyDatabase]:
-        with self._get_lock("manga_notify_db"):
-            yield self._manga_notify_db
 
     def create_fazbot_db(self) -> FazbotDatabase:
         p = self.properties

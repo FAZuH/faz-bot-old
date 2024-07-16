@@ -3,10 +3,8 @@ from abc import ABC
 from decimal import Decimal
 from typing import Any, Iterable, Sequence, TYPE_CHECKING
 
-from loguru import logger
 from sqlalchemy import Column, Tuple, select, text, tuple_
 from sqlalchemy.dialects.mysql import insert
-from typing_extensions import deprecated
 
 if TYPE_CHECKING:
     from sqlalchemy import Table
@@ -56,21 +54,9 @@ class BaseRepository[T: BaseModel, ID](ABC):
         ret = Decimal(row["size_bytes"]) if (row and row["size_bytes"] is not None) else Decimal(0)  # type: ignore
         return ret
 
-    @deprecated("will be made as a sync function soon")
-    async def create_table(self, *, session: None | AsyncSession = None) -> None:
-        """Create the table associated with the repository if it does not already exist.
-
-        Parameters
-        ----------
-        session : AsyncSession, optional
-            Optional AsyncSession object to use for the database connection.
-            If not provided, a new session will be created.
-        """
-        # TODO: make this sync
+    async def create_table(self) -> None:
+        """Create the table associated with the repository if it does not already exist."""
         self.table.create(self.database.engine, checkfirst=True)
-        # stmt = CreateTable(self.table, if_not_exists=True)
-        # async with self.database.must_enter_async_session(session) as session:
-        #     await session.execute(stmt)
 
     async def insert(
         self,
@@ -190,10 +176,6 @@ class BaseRepository[T: BaseModel, ID](ABC):
         async with self.database.must_enter_async_session(session) as session:
             result = await session.execute(stmt)
             return result.scalars().all()
-
-    @deprecated("replaced by self.model property. will be removed soon.")
-    def get_model_cls(self) -> type[T]:
-        return self._model_cls
 
     @property
     def database(self) -> BaseMySQLDatabase:

@@ -8,21 +8,22 @@ from ._cog_base import CogBase
 
 class WynnStat(CogBase):
 
-    @nextcord.slash_command(name="worldlist")
-    async def worldlist(
-            self,
-            interaction: Interaction[Any],
-            worlds: int = SlashOption(min_value=1, max_value=100, default=10)
-        ) -> None:
-        """Show list of worlds.
-
-        Parameters
-        ----------
-        worlds : int
-            Amount of worlds to show.
-        """
-        async with self._enter_fazdb_session() as (db, session):
-            pass
+    pass
+    # @nextcord.slash_command(name="worldlist")
+    # async def worldlist(
+    #         self,
+    #         interaction: Interaction[Any],
+    #         worlds: int = SlashOption(min_value=1, max_value=100, default=10)
+    #     ) -> None:
+    #     """Show list of worlds.
+    #
+    #     Parameters
+    #     ----------
+    #     worlds : int
+    #         Amount of worlds to show.
+    #     """
+    #     async with self._enter_fazdb_session() as (db, session):
+    #         pass
 
     # @nextcord.slash_command(name="activity")
     # async def activity(self, interaction: Interaction[Any], player: str | None = None, guild: str | None = None) -> None:
