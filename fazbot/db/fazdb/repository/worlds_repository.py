@@ -11,7 +11,7 @@ if TYPE_CHECKING:
 
 class WorldsRepository(BaseRepository[Worlds, Any]):
 
-    def __init__(self, database: BaseMySQLDatabase[Any]) -> None:
+    def __init__(self, database: BaseMySQLDatabase) -> None:
         super().__init__(database, Worlds)
 
     async def update_worlds(self, entity: Iterable[Worlds], *, session: AsyncSession | None = None) -> None:

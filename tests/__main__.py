@@ -1,9 +1,11 @@
-import unittest
 import sys
-
-from tests.db.manga_notify.test_user_subscription_repository import TestUserSubscriptionRepository
+import unittest
 
 from loguru import logger
+
+from tests.db.manga_notify.test_user_subscription_repository import (
+    TestUserSubscriptionRepository,
+)
 
 
 if __name__ == "__main__":

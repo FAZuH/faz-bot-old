@@ -1,6 +1,6 @@
 import unittest
-from unittest.mock import MagicMock
 from unittest import IsolatedAsyncioTestCase
+from unittest.mock import MagicMock
 
 from nextcord import Guild, Interaction, User
 

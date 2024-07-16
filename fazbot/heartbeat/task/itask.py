@@ -1,5 +1,5 @@
 from __future__ import annotations
-from typing import TYPE_CHECKING, Protocol
+from typing import Protocol, TYPE_CHECKING
 
 if TYPE_CHECKING:
     from datetime import datetime

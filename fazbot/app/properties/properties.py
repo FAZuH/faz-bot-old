@@ -1,5 +1,5 @@
-from typing import Callable
 import os
+from typing import Callable
 
 from dotenv import load_dotenv
 

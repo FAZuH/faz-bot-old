@@ -1,6 +1,8 @@
 from uuid import UUID
 
-from fazbot.db.fazdb.repository.guild_member_history_repository import GuildMemberHistoryRepository
+from fazbot.db.fazdb.repository.guild_member_history_repository import (
+    GuildMemberHistoryRepository,
+)
 
 from ._common_fazdb_repository_test import CommonFazdbRepositoryTest
 

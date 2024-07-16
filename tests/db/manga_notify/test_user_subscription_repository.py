@@ -1,6 +1,7 @@
 from typing import override
 
 from sqlalchemy.engine import mock
+
 from fazbot.db.manga_notify.repository import *
 
 from ._common_manga_notify_repository_test import CommonMangaNotifyRepositoryTest

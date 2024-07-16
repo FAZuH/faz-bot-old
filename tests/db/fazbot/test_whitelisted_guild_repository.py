@@ -1,4 +1,5 @@
 from loguru import logger
+
 from fazbot.db.fazbot.repository import WhitelistedGuildRepository
 
 from ._common_fazbot_repository_test import CommonFazbotRepositoryTest

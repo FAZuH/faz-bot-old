@@ -10,5 +10,5 @@ if TYPE_CHECKING:
 
 class GuildMemberHistoryRepository(BaseRepository[GuildMemberHistory, Any]):
 
-    def __init__(self, database: BaseMySQLDatabase[Any]) -> None:
+    def __init__(self, database: BaseMySQLDatabase) -> None:
         super().__init__(database, GuildMemberHistory)
