@@ -1,8 +1,8 @@
-from nextcord import ApplicationCheckFailure
+from nextcord import ApplicationError
 
 
 class BotException(BaseException):
-    """Base exception for all exceptions in fazbot bot module"""
+    """Base exception for all exceptions in fazbot.bot package"""
 
     # def __init__(self, *args):
     #     if message:
@@ -12,11 +12,14 @@ class BotException(BaseException):
     #     super().__init__(message, args)
 
 
-class CommandException(BotException, ApplicationCheckFailure):
-    pass
+class ApplicationException(BotException, ApplicationError):
+    ...
 
-class ParseException(CommandException):
-    pass
+class ArgumentValidationFailure(ApplicationException):
+    ...
 
-class BadCommandArgument(CommandException):
-    pass
+class ParseFailure(ApplicationException):
+    ...
+
+class BadArgument(ApplicationException):
+    ...

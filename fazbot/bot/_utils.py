@@ -4,7 +4,7 @@ from typing import Any, Callable, TYPE_CHECKING
 
 import dateparser
 
-from .errors import ParseException
+from .errors import ParseFailure
 
 if TYPE_CHECKING:
     from nextcord import Guild, PartialMessageable, Thread, User
@@ -22,7 +22,7 @@ class Utils:
     async def must_get_sendable_channel(bot: Bot, channel_id: Any) -> GuildChannel | Thread | PrivateChannel | PartialMessageable:
         channel = await Utils.must_get_id(bot.get_channel, channel_id)
         if not hasattr(channel, "send"):
-            raise ParseException(f"Channel with id {channel_id} does not support sending messages.")
+            raise ParseFailure(f"Channel with id {channel_id} does not support sending messages.")
         return channel
 
     @staticmethod
@@ -37,15 +37,15 @@ class Utils:
     async def must_get_id[T](get_strategy: Callable[[int], T | None], id_: Any) -> T:
         try:
             parsed_id = int(id_)
-        except ParseException:
-            raise ParseException(f"Failed parsing {id_} into an integer.")
+        except ParseFailure:
+            raise ParseFailure(f"Failed parsing {id_} into an integer.")
         if not (ret := get_strategy(parsed_id)):
-            raise ParseException(f"Failed getting object from ID {id_}")
+            raise ParseFailure(f"Failed getting object from ID {id_}")
         return ret
 
     @staticmethod
     def must_parse_date_string(datestr: str) -> datetime:
         date = dateparser.parse(datestr)
         if not date:
-            raise ParseException(f"Failed parsing date string {datestr}")
+            raise ParseFailure(f"Failed parsing date string {datestr}")
         return date

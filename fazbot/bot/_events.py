@@ -8,7 +8,7 @@ from nextcord import Activity, ActivityType, Colour, Embed, Interaction, errors
 from nextcord.ext import commands
 from nextcord.ext.commands import BucketType, Cooldown, CooldownMapping
 
-from .errors import BotException
+from .errors import ApplicationException
 
 if TYPE_CHECKING:
     from . import Bot
@@ -43,17 +43,18 @@ class Events:
     async def on_application_command_completion(self, interaction: Interaction[Any]) -> None:
         await self.__log_event(interaction, self.on_application_command_completion.__name__)
 
-    async def on_application_command_error(self, interaction: Interaction[Any], error: BaseException) -> None:
+    async def on_application_command_error(self, interaction: Interaction[Any], error: Exception) -> None:
         await self.__log_event(interaction, self.on_application_command_error.__name__)
-
-        await interaction.response.defer()
+        # NOTE: Error is being wrapped by ApplicationInvokeError. Unwrap is first
+        if isinstance(error, errors.ApplicationInvokeError) and isinstance(error.original, ApplicationException):
+            error = error.original
         if isinstance(error, errors.ApplicationCheckFailure):
             await interaction.send(
                 ("You do not have permission to use this command. " 
                 "Please contact bot developer if you believe this is a mistake."),
                 ephemeral=True
             )
-        elif isinstance(error, BotException):
+        elif isinstance(error, ApplicationException):
             await self.__send_expected_error(interaction, error)
         else:
             await self.__send_unexpected_error(interaction, error)
@@ -101,25 +102,22 @@ class Events:
         
         logger.info(message, discord=True)
 
-    async def __send_unexpected_error(self, interaction: Interaction[Any], exception: BaseException) -> None:
+    async def __send_unexpected_error(self, interaction: Interaction[Any], exception: Exception) -> None:
         description = f"An unexpected error occurred while executing the command: \n**{exception}**"
-        embed = Embed(title="Error", description=description, color=Colour.red())
+        embed = Embed(title="Unexpected Error", description=description, color=Colour.red())
         embed.add_field(name="Timestamp", value=f"<t:{int(datetime.now().timestamp())}:F>", inline=False)
-
         is_admin = await self._bot.checks.is_admin(interaction)
         if is_admin:
             tb = traceback.format_exception(exception)
             tb_msg = f"{'\n'.join(tb)}"[:1000]
             tb_msg = f"```{tb_msg}```"
             embed.add_field(name='Traceback', value=tb_msg, inline=False)
-
         await interaction.send(embed=embed)
         logger.opt(exception=exception).error(description)
 
-    async def __send_expected_error(self, interaction: Interaction[Any], exception: BotException) -> None:
+    async def __send_expected_error(self, interaction: Interaction[Any], exception: ApplicationException) -> None:
         description = f"**{exception}**"
         embed = Embed(title="Error", description=description, color=Colour.red())
         embed.add_field(name="Timestamp", value=f"<t:{int(datetime.now().timestamp())}:F>", inline=False)
-
         await interaction.send(embed=embed)
         logger.opt(exception=exception).warning(description, discord=True)
