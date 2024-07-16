@@ -13,7 +13,7 @@ from ._asset_manager import AssetManager
 from ._checks import Checks
 from ._events import Events
 from ._utils import Utils
-from .cog import CogCore
+from .cog.cog_core import CogCore
 
 if TYPE_CHECKING:
     from fazbot.app import App
@@ -42,16 +42,16 @@ class Bot:
         self._events = Events(self)
 
     def start(self) -> None:
-        logger.info(f"Starting fazbot.bot")
+        logger.info(f"Starting Bot")
         self._discord_bot_thread.start()
         # Note: thread.start() runs self._start()
         logger.success(f"Started discord thread")
 
     def stop(self) -> None:
-        logger.info(f"Stopping fazbot.bot")
+        logger.info(f"Stopping Bot")
         asyncio.run_coroutine_threadsafe(self._client.close(), self._event_loop).result()
         self._event_loop.stop()
-        logger.info(f"Stopped fazbot.bot")
+        logger.success(f"Stopped Bot")
 
     async def on_ready_setup(self) -> None:
         """Setup after the bot is ready."""

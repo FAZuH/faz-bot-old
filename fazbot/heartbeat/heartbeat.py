@@ -26,12 +26,16 @@ class Heartbeat(Thread):
         self._add_task(db_insert)
 
     def start(self) -> None:
+        logger.info("Starting Heartbeat")
         for task in self._tasks:
             task.start()
+        logger.success("Started Heartbeat")
 
     def stop(self) -> None:
+        logger.info("Stopping Heartbeat")
         for task in self._tasks:
             task.cancel()
+        logger.success("Stopped Heartbeat")
 
     def _add_task(self, task: ITask) -> None:
         self._tasks.append(HeartbeatTask(task))

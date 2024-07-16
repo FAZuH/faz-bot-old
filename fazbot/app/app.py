@@ -8,6 +8,7 @@ from typing_extensions import deprecated
 
 from fazbot.bot import Bot
 from fazbot.db import FazbotDatabase, FazdbDatabase, MangaNotifyDatabase
+from fazbot.heartbeat import Heartbeat
 
 from ._logger_setup import LoggerSetup
 from .properties import Properties
@@ -29,14 +30,22 @@ class App:
         self._bot = Bot(self)
 
     def start(self) -> None:
-        logger.info("Starting fazbot.app")
+        logger.info("Starting App")
+        self._fazdb_db.create_all()
+        self._fazbot_db.create_all()
+        self._manga_notify_db.create_all()
         self._bot.start()
-        logger.success("Started fazbot.app", discord=True)
+        self._heartbeat.start()
+        logger.success("Started App", discord=True)
 
     def stop(self) -> None:
-        logger.info("Stopping fazbot.app")
+        logger.info("Stopping App")
+        self._fazdb_db.engine.dispose()
+        self._fazbot_db.engine.dispose()
+        self._manga_notify_db.engine.dispose()
         self._bot.stop()
-        logger.success("Stopped fazbot.app", discord=True)
+        self._heartbeat.stop()
+        logger.success("Stopped App", discord=True)
 
     @property
     def properties(self) -> Properties:
@@ -47,19 +56,19 @@ class App:
         with self._get_lock("bot"):
             yield self._bot
 
-    @deprecated("replace with create db")
+    @deprecated("Removed soon. replace with create db")
     @contextmanager
     def enter_fazbot_db(self) -> Generator[FazbotDatabase]:
         with self._get_lock("fazbot_db"):
             yield self._fazbot_db
 
-    @deprecated("replace with create db")
+    @deprecated("Removed soon. replace with create db")
     @contextmanager
     def enter_fazdb_db(self) -> Generator[FazdbDatabase]:
         with self._get_lock("fazdb_db"):
             yield self._fazdb_db
 
-    @deprecated("replace with create db")
+    @deprecated("Removed soon. replace with create db")
     @contextmanager
     def enter_manga_notify_db(self) -> Generator[MangaNotifyDatabase]:
         with self._get_lock("manga_notify_db"):

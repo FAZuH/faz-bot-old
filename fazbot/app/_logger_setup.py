@@ -1,5 +1,6 @@
 from datetime import datetime
 import os
+import sys
 import traceback
 
 from loguru import logger
@@ -14,15 +15,19 @@ class LoggerSetup:
         cls._webhook_url = webhook_url
         cls._admin_discord_id = admin_discord_id
 
+        logger.remove()
+        logger.add(sink=sys.stderr, level="DEBUG", backtrace=False, diagnose=False, enqueue=True)
+
         os.makedirs(log_directory, exist_ok=True)
         log_file = os.path.join(log_directory, "fazdb.log")
-        logger.add(log_file, level="INFO", rotation="10 MB", compression="zip", enqueue=True, backtrace=True)
+        logger.add(sink=log_file, level="DEBUG", rotation="10 MB", compression="zip", enqueue=True, backtrace=True)
 
-        logger.add(sink=cls._critical_discord_sink, filter=cls._discord_filter("CRITICAL"), format=cls._discord_exception_formatter)
-        logger.add(sink=cls._error_discord_sink, filter=cls._discord_filter("ERROR"), format=cls._discord_exception_formatter)
-        logger.add(sink=cls._warning_discord_sink, filter=cls._discord_filter("WARNING"), format=cls._discord_exception_formatter)
-        logger.add(sink=cls._success_discord_sink, filter=cls._discord_filter("SUCCESS"), format=cls._discord_exception_formatter)
-        logger.add(sink=cls._info_discord_sink, filter=cls._discord_filter("INFO"), format=cls._discord_exception_formatter)
+        default_disc = {"format": cls._discord_exception_formatter, "enqueue": True}
+        logger.add(sink=cls._critical_discord_sink, filter=cls._discord_filter("CRITICAL"), **default_disc)
+        logger.add(sink=cls._error_discord_sink, filter=cls._discord_filter("ERROR"), **default_disc)
+        logger.add(sink=cls._warning_discord_sink, filter=cls._discord_filter("WARNING"), **default_disc)
+        logger.add(sink=cls._success_discord_sink, filter=cls._discord_filter("SUCCESS"), **default_disc)
+        logger.add(sink=cls._info_discord_sink, filter=cls._discord_filter("INFO"), **default_disc)
 
     @classmethod
     def _critical_discord_sink(cls, message: str) -> None:
@@ -69,7 +74,6 @@ class LoggerSetup:
         webhook = SyncWebhook.from_url(cls._webhook_url)
         embed = Embed(title=title, description=f"```{description[:4090]}```", colour=colour)
         embed.add_field(name="Timestamp", value=f"<t:{int(datetime.now().timestamp())}:R>")
-
         admin_ping = f"<@{cls._admin_discord_id}>"
         if is_admin_ping:
             webhook.send(content=admin_ping, embed=embed)

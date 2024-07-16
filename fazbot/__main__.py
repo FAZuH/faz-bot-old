@@ -1,4 +1,5 @@
 from __future__ import annotations
+import asyncio
 from time import sleep
 
 from loguru import logger
@@ -14,8 +15,7 @@ class Main:
     def main(cls) -> None:
         cls.app.start()
         while True:  # keep-alive
-            sleep(69_420)
-
+            sleep(5)
 
 if __name__ == "__main__":
     try:
@@ -23,3 +23,6 @@ if __name__ == "__main__":
             Main.main()
     finally:
         Main.app.stop()
+        async def _cleanup_logger_queue():
+            await logger.complete()
+        asyncio.run(_cleanup_logger_queue())
