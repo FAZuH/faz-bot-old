@@ -30,7 +30,7 @@ class TestWorldsRepository(CommonFazdbRepositoryTest.Test[WorldsRepository]):
         wc3_future.player_count = 40
         await self.repo.update_worlds([wc2, wc3_future])
 
-        rows = await self._get_all_inserted_rows()
+        rows = await self.repo.select_all()
 
         self.assertEqual(len(rows), 2)
         self.assertNotIn(wc1, rows)

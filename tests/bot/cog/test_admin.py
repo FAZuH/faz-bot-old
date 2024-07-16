@@ -7,7 +7,7 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 from fazbot.app.properties import Properties
 from fazbot.bot.cog import Admin
-from fazbot.bot.errors import CommandException
+from fazbot.bot.errors import ApplicationError
 from fazbot.db.fazbot import FazbotDatabase
 from fazbot.db.fazbot.model import BannedUser, WhitelistedGuild
 
@@ -67,7 +67,7 @@ class TestAdmin(unittest.IsolatedAsyncioTestCase):
 
         repo = self.db.banned_user_repository
         await repo.insert(self.__insert_dummy_banned_user_entity())
-        with self.assertRaises(CommandException):
+        with self.assertRaises(ApplicationError):
             await self.admin.ban.invoke_callback(mock_interaction, user_id="10", reason="test")
 
     # async def test_unban(self) -> None:
