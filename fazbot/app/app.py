@@ -28,6 +28,7 @@ class App:
         self._fazdb_db = self.create_fazdb_db()
         self._manga_notify_db = self.create_manga_notify_db()
         self._bot = Bot(self)
+        self._heartbeat = Heartbeat(self)
 
     def start(self) -> None:
         logger.info("Starting App")

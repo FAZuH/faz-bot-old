@@ -2,28 +2,24 @@ from __future__ import annotations
 from threading import Thread
 from typing import TYPE_CHECKING
 
+from loguru import logger
+
 from ._heartbeat_task import HeartbeatTask
-from .task import RequestQueue, ResponseQueue, TaskApiRequest, TaskDbInsert
+from .task import TaskMangaNotify
 
 if TYPE_CHECKING:
     from .task import ITask
-    from fazdb.api import WynnApi
-    from fazdb.db.fazdb import FazdbDatabase
+    from fazbot.app import App
 
 
 class Heartbeat(Thread):
 
-    def __init__(self, api: WynnApi, db: FazdbDatabase) -> None:
+    def __init__(self, app: App) -> None:
         super().__init__(target=self.run, daemon=True)
         self._tasks: list[HeartbeatTask] = []
 
-        request_queue = RequestQueue()
-        response_queue = ResponseQueue()
-        api_request = TaskApiRequest(api, request_queue, response_queue)
-        db_insert = TaskDbInsert(api, db, request_queue, response_queue)
-
-        self._add_task(api_request)
-        self._add_task(db_insert)
+        self._task_manga_notify = TaskMangaNotify(app)
+        self._add_task(self._task_manga_notify)
 
     def start(self) -> None:
         logger.info("Starting Heartbeat")

@@ -9,33 +9,35 @@ class MangaNotifyDatabase(BaseMySQLDatabase):
         super().__init__(user, password, host, port, database)
         self._base_model = BaseMangaNotifyModel()
 
-        self._chapter_repository = ChapterRepository(self)
+        self._guild_subscription_repository = GuildSubscriptionRepository(self)
         self._manga_repository = MangaRepository(self)
-        # self._notification_history_repository = NotificationHistoryRepository(self)
         self._user_subscription_repository = UserSubscriptionRepository(self)
 
         self.repositories.extend([
-            self.chapter_repository,
+            self.guild_subscription_repository,
             self.manga_repository,
-            # self.notification_history_repository,
             self.user_subscription_repository,
         ])
 
+        self._manga_user_subscription_association = MangaUserSubscriptionAssociation(
+            self, self.manga_repository, self.user_subscription_repository
+        )
+
     @property
-    def chapter_repository(self):
-        return self._chapter_repository
+    def guild_subscription_repository(self):
+        return self._guild_subscription_repository
 
     @property
     def manga_repository(self):
         return self._manga_repository
 
-    # @property
-    # def notification_history_repository(self):
-    #     return self._notification_history_repository
-
     @property
     def user_subscription_repository(self):
         return self._user_subscription_repository
+
+    @property
+    def manga_user_subscription_association(self):
+        return self._manga_user_subscription_association
 
     @property
     def base_model(self) -> BaseMangaNotifyModel:
