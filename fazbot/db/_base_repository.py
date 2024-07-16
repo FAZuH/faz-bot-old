@@ -3,9 +3,9 @@ from abc import ABC
 from decimal import Decimal
 from typing import Any, Iterable, Sequence, TYPE_CHECKING
 
-from sqlalchemy import Column, Tuple, exists, select, text, tuple_
+from loguru import logger
+from sqlalchemy import Column, Tuple, select, text, tuple_
 from sqlalchemy.dialects.mysql import insert
-from sqlalchemy.schema import CreateTable
 from typing_extensions import deprecated
 
 if TYPE_CHECKING:
@@ -56,6 +56,7 @@ class BaseRepository[T: BaseModel, ID](ABC):
         ret = Decimal(row["size_bytes"]) if (row and row["size_bytes"] is not None) else Decimal(0)  # type: ignore
         return ret
 
+    @deprecated("will be made as a sync function soon")
     async def create_table(self, *, session: None | AsyncSession = None) -> None:
         """Create the table associated with the repository if it does not already exist.
 
@@ -65,9 +66,11 @@ class BaseRepository[T: BaseModel, ID](ABC):
             Optional AsyncSession object to use for the database connection.
             If not provided, a new session will be created.
         """
-        stmt = CreateTable(self.table, if_not_exists=True)
-        async with self.database.must_enter_async_session(session) as session:
-            await session.execute(stmt)
+        # TODO: make this sync
+        self.table.create(self.database.engine, checkfirst=True)
+        # stmt = CreateTable(self.table, if_not_exists=True)
+        # async with self.database.must_enter_async_session(session) as session:
+        #     await session.execute(stmt)
 
     async def insert(
         self,
@@ -92,13 +95,20 @@ class BaseRepository[T: BaseModel, ID](ABC):
             raise ValueError("ignore_on_duplicate and replace_on_duplicate cannot be both True")
 
         entities = self._ensure_iterable(entity)
-        entity_d = [dict(e.items(trim_end_underscore=True)) for e in entities]
-        stmt = insert(self.table).values(entity_d)
+
+        if not ignore_on_duplicate and not replace_on_duplicate:
+            async with self.database.must_enter_async_session(session) as session:
+                session.add_all(entities)
+            return
+
+        entities_dict = [e.to_dict(actual_column_names=False) for e in entities]
+        stmt = insert(self.table).values(entities_dict)
 
         if replace_on_duplicate:
             if columns_to_replace is None:
-                columns_to_replace = [c.name for c in self.table.columns if not c.primary_key]
-            stmt = stmt.on_duplicate_key_update(**{c: getattr(stmt.inserted, c) for c in columns_to_replace})
+                columns_to_replace = [c.name for c in self.table.c if not c.primary_key]
+            update_cols = {c: getattr(stmt.inserted, c) for c in columns_to_replace}
+            stmt = stmt.on_duplicate_key_update(**update_cols)
 
         if ignore_on_duplicate:
             stmt = stmt.prefix_with("IGNORE")
@@ -156,13 +166,8 @@ class BaseRepository[T: BaseModel, ID](ABC):
         bool
             True if the entry exists, False otherwise.
         """
-        primary_keys = self._get_primary_key()
-        stmt = select(exists().where(primary_keys == id_))
-        async with self.database.must_enter_async_session(session) as session:
-            result = await session.execute(stmt)
-
-        is_exist = result.scalar()
-        return is_exist or False
+        res = await self.select(id_, session=session)
+        return res is not None
 
     async def truncate(self, *, session: None | AsyncSession = None) -> None:
         """Truncates the table.
@@ -177,11 +182,8 @@ class BaseRepository[T: BaseModel, ID](ABC):
             await session.execute(self.table.delete())
 
     async def select(self, id: ID, *, session: AsyncSession | None = None) -> T | None:
-        primary_keys = self._get_primary_key()
-        stmt = select(self.model).where(primary_keys == id)
         async with self.database.must_enter_async_session(session) as session:
-            result = await session.execute(stmt)
-            return result.scalar()
+            return await session.get(self.model, id)
 
     async def select_all(self, *, session: AsyncSession | None = None) -> Sequence[T]:
         stmt = select(self.model)

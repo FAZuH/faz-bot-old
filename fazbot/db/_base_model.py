@@ -2,34 +2,53 @@ from __future__ import annotations
 from decimal import Decimal
 from typing import Any, Generator, Self, TYPE_CHECKING
 
-from sqlalchemy.orm import DeclarativeBase
+from sqlalchemy.ext.asyncio import AsyncAttrs
+from sqlalchemy.orm import ColumnProperty, DeclarativeBase, class_mapper
 
 if TYPE_CHECKING:
     from sqlalchemy.sql.schema import Table
 
 
-class BaseModel(DeclarativeBase):
+class BaseModel(AsyncAttrs, DeclarativeBase):
     __abstract__ = True
 
     @classmethod
     def get_table(cls) -> Table:
         return cls.__table__  # type: ignore
 
-
     def clone(self) -> Self:
-        return self.__class__(**dict(self.items()))
+        return self.__class__(**self.to_dict())
 
-    def items(self, *, trim_end_underscore: bool = False) -> Generator[tuple[str, Any], None, None]:
-        items = vars(self)
-        for k, v in items.items():
-            if k.startswith('_'):
-                continue
-            if trim_end_underscore and k.endswith('_'):
-                k = k[:-1]
-            yield k, v
+    def to_dict(self, *, actual_column_names = True) -> dict[str, Any]:
+        if actual_column_names:
+            return {
+                k: getattr(self, k)
+                for k in self.get_column_attribute_names()
+            }
+        else:
+            return {
+                getattr(self.__class__, k).name: getattr(self, k)
+                for k in self.get_column_attribute_names()
+            }
+
+    @classmethod
+    def get_column_attribute_names(cls, *, includes_primary_key: bool = True) -> Generator[str, None, None]:
+        return (
+            p.key for p in class_mapper(cls).iterate_properties
+            if isinstance(p, ColumnProperty) and (includes_primary_key or not p.columns[0].primary_key)
+        )
+
+    @classmethod
+    def get_primarykey_attribute_names(cls) -> Generator[str, None, None]:
+        return (
+            p.key for p in class_mapper(cls).iterate_properties
+            if isinstance(p, ColumnProperty) and p.columns[0].primary_key
+        )
 
     def __eq__(self, other: object) -> bool:
-        for k, v in self.items():
+        primary_key = self.get_table().primary_key
+        for k, v in self.to_dict().items():
+            if k not in primary_key: continue
             v_other = getattr(other, k)
             if v != v_other:
                 return False
@@ -39,8 +58,8 @@ class BaseModel(DeclarativeBase):
         return hash(self.__repr__())
 
     def __repr__(self) -> str:
-        items = self.items()
-        sorted_items = sorted(items, key=lambda x: x[0])
+        items = self.to_dict()
+        sorted_items = sorted(items.items(), key=lambda x: x[0])
         params = ', '.join(f'{k}={self.__handle_repr_types(v)}' for k, v in sorted_items)
         return f"{self.__class__.__name__}({params})"
 
