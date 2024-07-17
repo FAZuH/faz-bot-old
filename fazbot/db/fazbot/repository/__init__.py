@@ -1,2 +1,3 @@
 from .banned_user_repository import BannedUserRepository
+from .whitelist_group_repository import WhitelistGroupRepository
 from .whitelisted_guild_repository import WhitelistedGuildRepository

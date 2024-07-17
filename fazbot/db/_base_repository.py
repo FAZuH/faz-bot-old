@@ -102,7 +102,7 @@ class BaseRepository[T: BaseModel, ID](ABC):
         async with self.database.must_enter_async_session(session) as session:
             await session.execute(stmt)
 
-    async def delete(self, id_: ID, *, session: AsyncSession | None = None) -> None:
+    async def delete(self, id_: ID | list[ID], *, session: AsyncSession | None = None) -> None:
         """Deletes an entry from the repository based on `id_`
 
         Parameters

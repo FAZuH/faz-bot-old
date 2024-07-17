@@ -32,7 +32,7 @@ class Admin(CogBase):
             self,
             interaction: Interaction[Any],
             user_id: str,
-            reason: str = '',
+            reason: str | None = None,
             until: str | None = None
         ) -> None:
         """(dev only) Bans an user from using the bot.
@@ -49,20 +49,15 @@ class Admin(CogBase):
         user = await Utils.must_get_user(self._bot.client, user_id)
 
         async with self._enter_botdb_session() as (db, session):
-            banlist = db.banned_user_repository
-            model = banlist.model
+            repo = db.whitelist_group_repository
 
-            if await banlist.is_exists(user.id, session=session):
+            if await repo.is_banned_user(user.id, session=session):
                 raise ApplicationException(f"User `{user.name}` (`{user.id}`) is already banned.")
 
-            user_to_ban = model(
-                user_id=user.id,
-                reason=reason,
-                from_=datetime.now(),
-                until=Utils.must_parse_date_string(until) if until else None
+            await repo.ban_user(
+                user.id, reason, Utils.must_parse_date_string(until) if until else None,
+                session=session
             )
-
-            await banlist.insert(user_to_ban)
 
         await self._respond_successful(interaction, f"Banned user `{user.name}` (`{user.id}`).")
 
@@ -78,13 +73,13 @@ class Admin(CogBase):
         user = await Utils.must_get_user(self._bot.client, user_id)
 
         async with self._enter_botdb_session() as (db, session):
-            banlist = db.banned_user_repository
+            repo = db.whitelist_group_repository
 
-            if not await banlist.is_exists(user.id, session=session):
+            if not await repo.is_banned_user(user.id, session=session):
                 raise ApplicationException(f"User `{user.name}` (`{user.id}`) is not banned.")
 
-            await banlist.delete(user.id, session=session)
-            
+            await repo.unban_user(user.id, session=session)
+
         await self._respond_successful(interaction, f"Unbanned user `{user.name}` (`{user.id}`).")
 
     @admin.subcommand(name="echo")
@@ -200,20 +195,14 @@ class Admin(CogBase):
         guild = await Utils.must_get_guild(self._bot.client, guild_id)
 
         async with self._enter_botdb_session() as (db, session):
-            whitelist = db.whitelisted_guild_repository
-            model = whitelist.model
+            repo = db.whitelist_group_repository
 
-            if await whitelist.is_exists(guild.id, session=session):
+            if await repo.is_whitelisted_guild(guild.id, session=session):
                 raise ApplicationException(f"Guild `{guild.name}` (`{guild.id}`) is already whitelisted.")
 
-            guild_to_whitelist = model(
-                guild_id=guild.id,
-                guild_name=guild.name,
-                from_=datetime.now(),
-                until=Utils.must_parse_date_string(until) if until else None
+            await repo.whitelist_guild(
+                guild.id, until=Utils.must_parse_date_string(until) if until else None, session=session
             )
-            
-            await whitelist.insert(guild_to_whitelist, session=session)
             
         await self._respond_successful(interaction, f"Whitelisted guild `{guild.name}` (`{guild.id}`).")
 
@@ -229,12 +218,12 @@ class Admin(CogBase):
         guild = await Utils.must_get_guild(self._bot.client, guild_id)
 
         async with self._enter_botdb_session() as (db, session):
-            whitelist = db.whitelisted_guild_repository
+            repo = db.whitelist_group_repository
 
-            if not await whitelist.is_exists(guild.id, session=session):
+            if not await repo.is_whitelisted_guild(guild.id, session=session):
                 raise ApplicationException(f"Guild `{guild.name}` (`{guild.id}`) is not whitelisted.")
 
-            await whitelist.delete(guild.id, session=session) 
+            await repo.unwhitelist_guild(guild.id, session=session)
 
         await self._respond_successful(interaction, f"Unwhitelisted guild `{guild.name}` (`{guild.id}`).")
 

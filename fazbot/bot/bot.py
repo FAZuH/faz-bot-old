@@ -108,7 +108,7 @@ class Bot:
 
     async def _get_whitelisted_guild_ids(self) -> list[int]:
         db = self.fazbot_db
-        guild_ids = await db.whitelisted_guild_repository.get_all_whitelisted_guild_ids()
+        guild_ids = await db.whitelist_group_repository.get_all_whitelisted_guild_ids()
         return list(guild_ids)
 
     async def _sync_dev_guild(self) -> None:
@@ -120,14 +120,10 @@ class Bot:
     async def _whitelist_dev_guild(self) -> None:
         """Adds dev guild to whitelist database, if not already added."""
         guild = await Utils.must_get_guild(self.client, self.app.properties.DEV_SERVER_ID)
-
-        repo = self.fazbot_db.whitelisted_guild_repository
-        dev_guild = repo.model(
-            guild_id=guild.id,
-            guild_name=guild.name,
-            from_=datetime.now()
-        )
         try:
-            await repo.insert(dev_guild)
+            await self.fazbot_db.whitelist_group_repository.whitelist_guild(
+                guild.id,
+                reason="DEV GUILD"
+            )
         except IntegrityError:
             pass

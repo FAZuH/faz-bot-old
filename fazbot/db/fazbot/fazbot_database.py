@@ -9,19 +9,12 @@ class FazbotDatabase(BaseMySQLDatabase):
         super().__init__(user, password, host, port, database)
         self._base_model = BaseFazbotModel()
 
-        self._banned_user_repository = BannedUserRepository(self)
-        self._whitelisted_guild_repository = WhitelistedGuildRepository(self)
-
-        self.repositories.append(self.banned_user_repository)
-        self.repositories.append(self.whitelisted_guild_repository)
+        self._whitelist_group_repository = WhitelistGroupRepository(self)
+        self.repositories.append(self.whitelist_group_repository)
 
     @property
-    def banned_user_repository(self) -> BannedUserRepository:
-        return self._banned_user_repository
-
-    @property
-    def whitelisted_guild_repository(self) -> WhitelistedGuildRepository:
-        return self._whitelisted_guild_repository 
+    def whitelist_group_repository(self) -> WhitelistGroupRepository:
+        return self._whitelist_group_repository
 
     @property
     def base_model(self) -> BaseFazbotModel:
