@@ -10,6 +10,7 @@ from fazbot.bot.cog import Admin
 from fazbot.bot.errors import ApplicationError
 from fazbot.db.fazbot import FazbotDatabase
 from fazbot.db.fazbot.model import BannedUser, WhitelistedGuild
+from fazbot.db.fazbot.model.whitelist_group import WhitelistGroup
 
 if TYPE_CHECKING:
     from sqlalchemy.ext.asyncio import AsyncSession
@@ -19,7 +20,7 @@ if TYPE_CHECKING:
 class TestAdmin(unittest.IsolatedAsyncioTestCase):
 
     @asynccontextmanager
-    async def __mock_enter_db_session(self) -> AsyncGenerator[tuple[FazbotDatabase, AsyncSession], None]:
+    async def _mock_enter_db_session(self) -> AsyncGenerator[tuple[FazbotDatabase, AsyncSession], None]:
         async with self.db.enter_async_session() as session:
             yield self.db, session
 
@@ -34,17 +35,13 @@ class TestAdmin(unittest.IsolatedAsyncioTestCase):
             Properties.MYSQL_PORT,
             f"{Properties.FAZDB_DB_NAME}_test"
         )
-        whitelisted_guild_repo = self.db.whitelisted_guild_repository
-        banned_user_repo = self.db.banned_user_repository
 
         self.db.create_all()
-        async with self.db.enter_async_session() as session:
-            await whitelisted_guild_repo.truncate(session=session)
-            await banned_user_repo.truncate(session=session)
+        await self.db.whitelist_group_repository.truncate()
 
         self.admin = Admin(mock_bot)
         # Admin cog overrides
-        self.admin._enter_botdb_session = self.__mock_enter_db_session
+        self.admin._enter_botdb_session = self._mock_enter_db_session
         return await super().asyncSetUp()
 
     @unittest.skip("not ready")
@@ -52,10 +49,9 @@ class TestAdmin(unittest.IsolatedAsyncioTestCase):
     async def test_ban_user_not_banned(self, mock_must_get_user: MagicMock, mock_interaction: MagicMock) -> None:
         """Test if ban() method successfully bans user that's not already banned."""
         self.admin._respond_successful = AsyncMock()
-        mock_must_get_user.return_value = self.__get_mock_user()
+        mock_must_get_user.return_value = self._get_mock_user()
 
         await self.admin.ban.invoke_callback(mock_interaction, user_id="10", reason="test")
-
         self.admin._respond_successful.assert_awaited_once()
 
 
@@ -63,10 +59,10 @@ class TestAdmin(unittest.IsolatedAsyncioTestCase):
     async def test_ban_user_already_banned(self, mock_must_get_user: MagicMock, mock_interaction: MagicMock) -> None:
         """Test if ban() method fails banning user that's already banned."""
         self.admin._respond_error = AsyncMock()  # type: ignore
-        mock_must_get_user.return_value = self.__get_mock_user()
+        mock_must_get_user.return_value = self._get_mock_user()
 
-        repo = self.db.banned_user_repository
-        await repo.insert(self.__insert_dummy_banned_user_entity())
+        repo = self.db.whitelist_group_repository
+        await repo.insert(self._get_dummy_banned_user_entity())
         with self.assertRaises(ApplicationError):
             await self.admin.ban.invoke_callback(mock_interaction, user_id="10", reason="test")
 
@@ -105,9 +101,10 @@ class TestAdmin(unittest.IsolatedAsyncioTestCase):
         return await super().asyncTearDown()
 
     @staticmethod
-    def __insert_dummy_whitelisted_guild_entity() -> WhitelistedGuild:
-        entity = WhitelistedGuild(
-            guild_id=10,
+    def _get_dummy_whitelisted_guild_entity() -> WhitelistGroup:
+        entity = WhitelistGroup(
+            id=10,
+            type="guild",
             guild_name="test",
             from_=datetime.now().replace(microsecond=0),
             until=(datetime.now() + timedelta(days=1)).replace(microsecond=0)
@@ -115,9 +112,10 @@ class TestAdmin(unittest.IsolatedAsyncioTestCase):
         return entity
 
     @staticmethod
-    def __insert_dummy_banned_user_entity() -> BannedUser:
-        entity = BannedUser(
-            user_id=10,
+    def _get_dummy_banned_user_entity() -> WhitelistGroup:
+        entity = WhitelistGroup(
+            id=10,
+            type="guild",
             reason="test",
             from_=datetime.now().replace(microsecond=0),
             until=(datetime.now() + timedelta(days=1)).replace(microsecond=0)
@@ -125,7 +123,7 @@ class TestAdmin(unittest.IsolatedAsyncioTestCase):
         return entity
 
     @staticmethod
-    def __get_mock_user() -> MagicMock:
+    def _get_mock_user() -> MagicMock:
         mock_user = MagicMock()
         mock_user.id = 10
         return mock_user

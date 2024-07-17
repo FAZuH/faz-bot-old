@@ -110,14 +110,21 @@ class CommonDbRepositoryTest:
 
         async def test_delete_successful(self) -> None:
             """Test if delete() method deletes 1 target entry properly."""
-            mock_data0 = self._get_mock_data()[0]
-            await self.repo.insert(mock_data0)
-            id_ = self._get_value_of_primary_key(mock_data0)
+            mock_data = self._get_mock_data()
+            await self.repo.insert(mock_data[0])
+            id_ = self._get_value_of_primary_key(mock_data[0])
 
             await self.repo.delete(id_)
 
             rows = await self.repo.select_all()
             self.assertEqual(len(rows), 0)
+            #
+            # await self.repo.insert([mock_data[0], mock_data[2]])
+            # id2 = self._get_value_of_primary_key(mock_data[2])
+            # await self.repo.delete([id_, id2])
+            #
+            # rows = await self.repo.select_all()
+            # self.assertEqual(len(rows), 0)
 
         async def test_is_exists_return_correct_value(self) -> None:
             """Test if is_exist method correctly finds if value exists."""
