@@ -14,6 +14,7 @@ if TYPE_CHECKING:
 
 
 class BaseDatabase(ABC):
+    """Abstract base class for database operations, supporting both synchronous and asynchronous drivers."""
 
     def __init__(
             self,
@@ -25,6 +26,17 @@ class BaseDatabase(ABC):
             port: int,
             database: str,
         ) -> None:
+        """Initialize the database with connection parameters.
+
+        Args:
+            sync_driver (str): Synchronous database driver.
+            async_driver (str): Asynchronous database driver.
+            user (str): Database user.
+            password (str): Database password.
+            host (str): Database host.
+            port (int): Database port.
+            database (str): Database name.
+        """
         self._sync_driver = sync_driver
         self._async_driver = async_driver
         self._user = user
@@ -41,9 +53,11 @@ class BaseDatabase(ABC):
         self._repositories: list[BaseRepository[Any, Any]] = []
 
     def create_all(self) -> None:
+        """Create all tables in the database."""
         self.base_model.metadata.create_all(bind=self.engine, checkfirst=True)
 
     def drop_all(self) -> None:
+        """Drop all tables in the database."""
         self.base_model.metadata.drop_all(bind=self.engine, checkfirst=True)
 
     async def teardown(self) -> None:
@@ -53,17 +67,35 @@ class BaseDatabase(ABC):
 
     @contextmanager
     def enter_connection(self) -> Generator[Connection, None]:
+        """Provide a context manager for synchronous database connections.
+
+        Yields:
+            Generator[Connection, None]: Synchronous database connection.
+        """
         with self.engine.begin() as conn:
             yield conn
 
     @contextmanager
     def enter_session(self) -> Generator[Session, None]:
+        """Provide a context manager for synchronous database sessions.
+
+        Yields:
+            Generator[Session, None]: Synchronous database session.
+        """
         session = sessionmaker(bind=self.engine, autoflush=False, expire_on_commit=False)
         with session.begin() as session:
             yield session
 
     @contextmanager
     def must_enter_connection(self, connection: Connection | None = None) -> Generator[Connection, None]:
+        """Provide a context manager for synchronous database connections, optionally reusing an existing connection.
+
+        Args:
+            connection (Connection | None): Existing synchronous database connection.
+
+        Yields:
+            Generator[Connection, None]: Synchronous database connection.
+        """
         if connection:
             yield connection
         else:
@@ -72,6 +104,14 @@ class BaseDatabase(ABC):
 
     @contextmanager
     def must_enter_session(self, session: Session | None = None) -> Generator[Session, None]:
+        """Provide a context manager for synchronous database sessions, optionally reusing an existing session.
+
+        Args:
+            session (Session | None): Existing synchronous database session.
+
+        Yields:
+            Generator[Session, None]: Synchronous database session.
+        """
         if session:
             yield session
         else:
@@ -80,17 +120,35 @@ class BaseDatabase(ABC):
 
     @asynccontextmanager
     async def enter_async_connection(self) -> AsyncGenerator[AsyncConnection, None]:
+        """Provide a context manager for asynchronous database connections.
+
+        Yields:
+            AsyncGenerator[AsyncConnection, None]: Asynchronous database connection.
+        """
         async with self.async_engine.begin() as conn:
             yield conn
 
     @asynccontextmanager
     async def enter_async_session(self) -> AsyncGenerator[AsyncSession, None]:
+        """Provide a context manager for asynchronous database sessions.
+
+        Yields:
+            AsyncGenerator[AsyncSession, None]: Asynchronous database session.
+        """
         async_session = async_sessionmaker(bind=self.async_engine, autoflush=False, expire_on_commit=False)
         async with async_session.begin() as session:
             yield session
 
     @asynccontextmanager
     async def must_enter_async_connection(self, connection: AsyncConnection | None = None) -> AsyncGenerator[AsyncConnection, None]:
+        """Provide a context manager for asynchronous database connections, optionally reusing an existing connection.
+
+        Args:
+            connection (AsyncConnection | None): Existing asynchronous database connection.
+
+        Yields:
+            AsyncGenerator[AsyncConnection, None]: Asynchronous database connection.
+        """
         if connection:
             yield connection
         else:
@@ -99,6 +157,14 @@ class BaseDatabase(ABC):
 
     @asynccontextmanager
     async def must_enter_async_session(self, session: AsyncSession | None = None) -> AsyncGenerator[AsyncSession, None]:
+        """Provide a context manager for asynchronous database sessions, optionally reusing an existing session.
+
+        Args:
+            session (AsyncSession | None): Existing asynchronous database session.
+
+        Yields:
+            AsyncGenerator[AsyncSession, None]: Asynchronous database session.
+        """
         if session:
             yield session
         else:
@@ -107,16 +173,33 @@ class BaseDatabase(ABC):
 
     @property
     def async_engine(self) -> AsyncEngine:
+        """Get the asynchronous SQLAlchemy engine.
+
+        Returns:
+            AsyncEngine: Asynchronous SQLAlchemy engine.
+        """
         return self._async_engine
 
     @property
     def engine(self) -> Engine:
+        """Get the synchronous SQLAlchemy engine.
+
+        Returns:
+            Engine: Synchronous SQLAlchemy engine.
+        """
         return self._engine
 
     @property
     def repositories(self) -> list[BaseRepository[Any, Any]]:
+        """Get the list of repositories associated with the database.
+
+        Returns:
+            list[BaseRepository[Any, Any]]: List of repositories.
+        """
         return self._repositories
 
     @property
     @abstractmethod
-    def base_model(self) -> BaseModel: ...
+    def base_model(self) -> BaseModel:
+        """Get the base model for the database."""
+        pass
