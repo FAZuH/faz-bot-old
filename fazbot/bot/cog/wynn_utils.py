@@ -43,7 +43,7 @@ class WynnUtils(CogBase):
             min,max[,efficiency]
         """
         await InvokeCraftedProbability(
-                interaction, [ingredient1, ingredient2, ingredient3, ingredient4, ingredient5, ingredient6]
+                self._bot, interaction, [ingredient1, ingredient2, ingredient3, ingredient4, ingredient5, ingredient6]
         ).run()
 
     @nextcord.slash_command(name="convert_emerald")
@@ -55,7 +55,7 @@ class WynnUtils(CogBase):
         emerald_string: str
             Examples: "2x 1stx 1le 1eb 1e", "2.5stx 100.5le 100.2eb", "1/3x 1000eb"
         """
-        await InvokeConvertEmerald(interaction, emerald_string).run()
+        await InvokeConvertEmerald(self._bot, interaction, emerald_string).run()
 
     @nextcord.slash_command(name="ingredient_probability")
     async def ingredient_probability(self, interaction: Interaction[Any], base_chance: str, loot_bonus: int = 0, loot_quality: int = 0) -> None:
@@ -70,5 +70,5 @@ class WynnUtils(CogBase):
         loot_quality: int
             Loot quality value.
         """
-        await InvokeIngredientProbability(interaction, base_chance, loot_bonus, loot_quality).run()
+        await InvokeIngredientProbability(self._bot, interaction, base_chance, loot_bonus, loot_quality).run()
 

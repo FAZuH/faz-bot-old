@@ -10,14 +10,15 @@ from ._invoke import Invoke
 if TYPE_CHECKING:
     from nextcord import File
     from ._asset import Asset
+    from .. import Bot
 
 
 class InvokeConvertEmerald(Invoke):
 
     ASSET_LIQUIDEMERALD: Asset
 
-    def __init__(self, interaction: Interaction[Any], emerald_string: str) -> None:
-        super().__init__(interaction)
+    def __init__(self, bot: Bot, interaction: Interaction[Any], emerald_string: str) -> None:
+        super().__init__(bot, interaction)
         self._emerald_string = emerald_string
         self._emeralds = Emeralds.from_string(emerald_string)
         self._emeralds.simplify()

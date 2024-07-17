@@ -1,6 +1,6 @@
 from __future__ import annotations
 from datetime import datetime
-from typing import Any, Sized
+from typing import TYPE_CHECKING, Any, Sized
 
 from nextcord import (
     ApplicationCommandOption,
@@ -15,11 +15,14 @@ from nextcord.ui import Button, View, button
 
 from ._invoke import Invoke
 
+if TYPE_CHECKING:
+    from .. import Bot
+
 
 class InvokeHelp(Invoke):
 
-    def __init__(self, interaction: Interaction[Any], commands: list[BaseApplicationCommand]) -> None:
-        super().__init__(interaction)
+    def __init__(self, bot: Bot, interaction: Interaction[Any], commands: list[BaseApplicationCommand]) -> None:
+        super().__init__(bot, interaction)
         self._commands = commands
         self._cmds_per_page = 5
         self._embed_total_pages = 0

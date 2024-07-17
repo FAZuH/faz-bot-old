@@ -13,6 +13,7 @@ from ._invoke import Invoke
 if TYPE_CHECKING:
     from nextcord import File
     from ._asset import Asset
+    from .. import Bot
 
 
 class InvokeCraftedProbability(Invoke):
@@ -20,8 +21,8 @@ class InvokeCraftedProbability(Invoke):
     ASSET_CRAFTINGTABLE: Asset
     INGSTR_DEFAULT = "0,0,0"
 
-    def __init__(self, interaction: Interaction[Any], ing_strs: list[str]) -> None:
-        super().__init__(interaction)
+    def __init__(self, bot: Bot, interaction: Interaction[Any], ing_strs: list[str]) -> None:
+        super().__init__(bot, interaction)
         self._ing_strs = ing_strs
 
         self._cache = CacheUtil()

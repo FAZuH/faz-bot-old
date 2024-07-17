@@ -6,11 +6,13 @@ from ._asset import Asset
 
 if TYPE_CHECKING:
     from nextcord import Embed, File, Interaction
+    from .. import Bot
 
 
 class Invoke(ABC):
 
-    def __init__(self, interaction: Interaction[Any]) -> None:
+    def __init__(self, bot: Bot, interaction: Interaction[Any]) -> None:
+        self._bot = bot
         self._interaction = interaction
 
     @staticmethod

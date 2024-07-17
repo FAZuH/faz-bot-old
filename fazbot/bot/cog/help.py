@@ -15,5 +15,4 @@ class Help(CogBase):
             raise ApplicationException("You can only use this command in a guild channel.")
 
         cmds = [cmd for cmd in interaction.guild.get_application_commands()]
-        await InvokeHelp(interaction, cmds).run()
-
+        await InvokeHelp(self._bot, interaction, cmds).run()

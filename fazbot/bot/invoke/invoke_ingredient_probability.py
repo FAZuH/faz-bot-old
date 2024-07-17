@@ -13,14 +13,15 @@ from ._invoke import Invoke
 if TYPE_CHECKING:
     from nextcord import File
     from ._asset import Asset
-
+    from .. import Bot
+    
 
 class InvokeIngredientProbability(Invoke):
 
     ASSET_DECAYINGHEART: Asset
 
-    def __init__(self, interaction: Interaction[Any], base_chance: str, loot_bonus: int, loot_quality: int) -> None:
-        super().__init__(interaction)
+    def __init__(self, bot: Bot, interaction: Interaction[Any], base_chance: str, loot_bonus: int, loot_quality: int) -> None:
+        super().__init__(bot, interaction)
         self._base_chance = self._parse_base_chance(base_chance)
         self._loot_bonus = loot_bonus
         self._loot_quality = loot_quality
