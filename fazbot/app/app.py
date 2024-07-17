@@ -6,7 +6,7 @@ from typing import Generator
 from loguru import logger
 
 from fazbot.bot import Bot
-from fazbot.db import FazbotDatabase, FazdbDatabase, MangaNotifyDatabase
+from fazbot.db import FazbotDatabase, FazdbDatabase
 from fazbot.heartbeat import Heartbeat
 
 from ._logger_setup import LoggerSetup
@@ -65,16 +65,6 @@ class App:
             p.MYSQL_HOST,
             p.MYSQL_PORT,
             p.FAZDB_DB_NAME
-        )
-
-    def create_manga_notify_db(self) -> MangaNotifyDatabase:
-        p = self.properties
-        return MangaNotifyDatabase(
-            p.MYSQL_USERNAME,
-            p.MYSQL_PASSWORD,
-            p.MYSQL_HOST,
-            p.MYSQL_PORT,
-            p.MANGA_NOTIFY_DB_NAME
         )
 
     def _get_lock(self, key: str) -> Lock:

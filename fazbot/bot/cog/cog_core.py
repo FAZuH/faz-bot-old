@@ -1,7 +1,7 @@
 from __future__ import annotations
 from typing import Iterable, TYPE_CHECKING
 
-from . import Admin, Help, Info, Manga, WynnAnalyze, WynnStat, WynnTrack, WynnUtils
+from . import Admin, Help, Info, WynnAnalyze, WynnStat, WynnTrack, WynnUtils
 from ._cog_base import CogBase
 
 if TYPE_CHECKING:
@@ -17,7 +17,6 @@ class CogCore:
         self.admin = Admin(bot)
         self.help = Help(bot)
         self.info = Info(bot)
-        self.manga = Manga(bot)
         self.wynn_analyze = WynnAnalyze(bot)
         self.wynn_stat = WynnStat(bot)
         self.wynn_track = WynnTrack(bot)
@@ -27,7 +26,6 @@ class CogCore:
             self.admin,
             self.help,
             self.info,
-            self.manga,
             self.wynn_analyze,
             self.wynn_stat,
             self.wynn_track,

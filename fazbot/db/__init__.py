@@ -2,7 +2,6 @@ from typing import TYPE_CHECKING
 
 from .fazbot import FazbotDatabase
 from .fazdb import FazdbDatabase
-from .manga_notify import MangaNotifyDatabase
 
 
 if TYPE_CHECKING:

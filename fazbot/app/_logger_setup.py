@@ -19,7 +19,7 @@ class LoggerSetup:
         logger.add(sink=sys.stderr, level="DEBUG", backtrace=False, diagnose=False, enqueue=True)
 
         os.makedirs(log_directory, exist_ok=True)
-        log_file = os.path.join(log_directory, "fazdb.log")
+        log_file = os.path.join(log_directory, "logs.log")
         logger.add(sink=log_file, level="DEBUG", rotation="10 MB", compression="zip", enqueue=True, backtrace=True)
 
         default_disc = {"format": cls._discord_exception_formatter, "enqueue": True}

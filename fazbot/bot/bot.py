@@ -25,7 +25,6 @@ class Bot:
         self._app = app
 
         self._fazbot_db = app.create_fazbot_db()
-        self._manga_db = app.create_manga_notify_db()
 
         # set intents
         intents = Intents.default()
@@ -61,7 +60,6 @@ class Bot:
     async def _async_teardown(self) -> None:
         await self.client.close()
         await self.fazbot_db.teardown()
-        await self.manga_db.teardown()
 
     async def on_ready_setup(self) -> None:
         """Setup after the bot is ready."""
@@ -73,10 +71,6 @@ class Bot:
     @property
     def fazbot_db(self):
         return self._fazbot_db
-
-    @property
-    def manga_db(self):
-        return self._manga_db
 
     @property
     def asset_manager(self) -> AssetManager:

@@ -30,11 +30,9 @@ class Properties:
 
     FAZDB_DB_NAME: str
     FAZBOT_DB_NAME: str
-    MANGA_NOTIFY_DB_NAME: str
 
     FAZBOT_DB_MAX_RETRIES: int
     FAZDB_DB_MAX_RETRIES: int
-    MANGA_NOTIFY_DB_MAX_RETRIES: int
 
     # Additional application property classes
     ASSET: Asset
@@ -64,11 +62,9 @@ class Properties:
 
         cls.FAZBOT_DB_NAME = cls.__must_get_env("MYSQL_FAZBOT_DATABASE")
         cls.FAZDB_DB_NAME = cls.__must_get_env("MYSQL_FAZDB_DATABASE")
-        cls.MANGA_NOTIFY_DB_NAME = cls.__must_get_env("MANGA_NOTIFY_DB_NAME")
 
         cls.FAZBOT_DB_MAX_RETRIES = cls.__must_get_env("FAZBOT_DB_MAX_RETRIES", int)
         cls.FAZDB_DB_MAX_RETRIES = cls.__must_get_env("FAZDB_DB_MAX_RETRIES", int)
-        cls.MANGA_NOTIFY_DB_MAX_RETRIES = cls.__must_get_env("MANGA_NOTIFY_DB_MAX_RETRIES", int)
 
     @staticmethod
     def __must_get_env[T](key: str, type_strategy: Callable[[str], T] = str) -> T:

@@ -5,7 +5,6 @@ from typing import TYPE_CHECKING
 from loguru import logger
 
 from ._heartbeat_task import HeartbeatTask
-from .task import TaskMangaNotify
 
 if TYPE_CHECKING:
     from .task import ITask
@@ -17,9 +16,6 @@ class Heartbeat(Thread):
     def __init__(self, app: App) -> None:
         super().__init__(target=self.run, daemon=True)
         self._tasks: list[HeartbeatTask] = []
-
-        self._task_manga_notify = TaskMangaNotify(app)
-        self._add_task(self._task_manga_notify)
 
     def start(self) -> None:
         logger.info("Starting Heartbeat")
