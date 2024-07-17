@@ -1,17 +1,17 @@
 from decimal import Decimal
 from unittest import TestCase
 
-from fazbot.wynn import CraftedUtil, WynnIngredientValue
+from fazbot.wynn import CraftedUtil, IngredientField
 
 
 class TestCraftedUtil(TestCase):
 
     def test_crafted_util(self) -> None:
         # PREPARE
-        ing1 = WynnIngredientValue(1, 2, 50)
-        ing2 = WynnIngredientValue(1, 2, 50)
-        ing3 = WynnIngredientValue(1, 2, 50)
-        ing4 = WynnIngredientValue(1, 2, 50)
+        ing1 = IngredientField(1, 2, 50)
+        ing2 = IngredientField(1, 2, 50)
+        ing3 = IngredientField(1, 2, 50)
+        ing4 = IngredientField(1, 2, 50)
         craftedutil = CraftedUtil([ing1, ing2, ing3, ing4])
 
         # ASSERT

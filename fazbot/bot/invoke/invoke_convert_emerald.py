@@ -3,7 +3,7 @@ from typing import Any, TYPE_CHECKING
 
 from nextcord import Embed, Interaction
 
-from fazbot.wynn import EmeraldUtil, WynnEmeralds
+from fazbot.wynn import EmeraldUtil, Emeralds
 
 from ._invoke import Invoke
 
@@ -19,7 +19,7 @@ class InvokeConvertEmerald(Invoke):
     def __init__(self, interaction: Interaction[Any], emerald_string: str) -> None:
         super().__init__(interaction)
         self._emerald_string = emerald_string
-        self._emeralds = WynnEmeralds.from_string(emerald_string)
+        self._emeralds = Emeralds.from_string(emerald_string)
         self._emeralds.simplify()
 
     # override
@@ -28,10 +28,10 @@ class InvokeConvertEmerald(Invoke):
         cls.ASSET_LIQUIDEMERALD = cls._get_from_assets(assets, "liquidemerald.png")
 
     async def run(self):
-        embed_resp = self.__get_embed(self._interaction, self._emeralds)
+        embed_resp = self._get_embed(self._interaction, self._emeralds)
         await self._interaction.send(embed=embed_resp, file=self.ASSET_LIQUIDEMERALD.get_file_to_send())
 
-    def __get_embed(self, interaction: Interaction[Any], emeralds: WynnEmeralds) -> Embed:
+    def _get_embed(self, interaction: Interaction[Any], emeralds: Emeralds) -> Embed:
         set_price_tm, set_price_silverbull = EmeraldUtil.get_set_price(emeralds)
         set_price_tm.simplify()
         set_price_silverbull.simplify()
@@ -44,4 +44,3 @@ class InvokeConvertEmerald(Invoke):
         if interaction.user:
             embed_resp.set_author(name=interaction.user.display_name, icon_url=interaction.user.display_avatar.url)
         return embed_resp
-

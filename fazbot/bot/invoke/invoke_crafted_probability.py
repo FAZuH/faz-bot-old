@@ -5,8 +5,9 @@ from typing import Any, Callable, TYPE_CHECKING
 from nextcord import ButtonStyle, Embed, Interaction, ui
 
 from fazbot.util import CacheUtil
-from fazbot.wynn import CraftedUtil, WynnIngredientValue
+from fazbot.wynn import CraftedUtil, IngredientField
 
+from ..errors import *
 from ._invoke import Invoke
 
 if TYPE_CHECKING:
@@ -26,8 +27,8 @@ class InvokeCraftedProbability(Invoke):
         self._cache = CacheUtil()
         self._cache.register(self, [self._get_craftprobs_embed, self._get_atleast_embed, self._get_atmost_embed])
 
-        self._craftutil = CraftedUtil(self.__parse_ings_str(ing_strs))
-        self._view = self.__View(self)
+        self._craftutil = CraftedUtil(self._parse_ings_str(ing_strs))
+        self._view = self._View(self)
 
     # override
     @classmethod
@@ -38,31 +39,30 @@ class InvokeCraftedProbability(Invoke):
         embed = self._get_craftprobs_embed(self._interaction, self._craftutil)
         await self._interaction.send(embed=embed, view=self._view, file=self.ASSET_CRAFTINGTABLE.get_file_to_send())
 
-    def __parse_ings_str(self, ing_strs: list[str]) -> list[WynnIngredientValue]:
-        res: list[WynnIngredientValue] = []
+    def _parse_ings_str(self, ing_strs: list[str]) -> list[IngredientField]:
+        res: list[IngredientField] = []
         for ing_str in ing_strs:
             if ing_str == InvokeCraftedProbability.INGSTR_DEFAULT:
                 continue
             ing_str = ing_str.strip()
             ing_vals = ing_str.split(",")
             if len(ing_vals) not in {2, 3}:
-                raise ValueError("Invalid ingredient format. Must be in format of 'min,max[,efficiency]'")
-            parsed_ing_vals: list[int] = []
-            for val in ing_vals:
-                try:
-                    parsed_ing_vals.append(int(val))
-                except ValueError:
-                    raise ValueError(f"Exception occured while parsing ingredient value {val}")
-            res.append(WynnIngredientValue(*parsed_ing_vals))
-
+                raise BadArgument(f"Invalid format on {ing_str}. Value must be 'min,max[,efficiency]'")
+            try:
+                parsed_ing_vals: list[int] = [int(v) for v in ing_vals]
+            except ValueError:
+                raise BadArgument(f"Failed parsing ingredient value on {ing_str}")
+            try:
+                res.append(IngredientField(*parsed_ing_vals))
+            except ValueError as e:
+                raise BadArgument(e.args[0]) from e
         return res
 
-    def __get_base_embed(self, interaction: Interaction[Any], craftutil: CraftedUtil) -> Embed:
+    def _get_base_embed(self, interaction: Interaction[Any], craftutil: CraftedUtil) -> Embed:
         embed = Embed(title="Crafteds Probabilites Calculator", color=8894804)
         self._set_embed_thumbnail_with_asset(embed, self.ASSET_CRAFTINGTABLE.filename)
         if interaction.user:
             embed.set_author(name=interaction.user.display_name, icon_url=interaction.user.display_avatar.url)
-
         # Embed descriptions
         embed_desc = [f"Ingredients:"]
         for i, ing in enumerate(craftutil.ingredients, start=1):
@@ -73,7 +73,7 @@ class InvokeCraftedProbability(Invoke):
         return embed
 
     def _get_craftprobs_embed(self, interaction: Interaction[Any], craftutil: CraftedUtil) -> Embed:
-        embed = self.__get_base_embed(interaction, craftutil)
+        embed = self._get_base_embed(interaction, craftutil)
         embed_fields_values = ""
         is_first_embed = True
         for value, probability in craftutil.craft_probs.items():
@@ -88,7 +88,7 @@ class InvokeCraftedProbability(Invoke):
         return embed
 
     def _get_atleast_embed(self, interaction: Interaction[Any], craftutil: CraftedUtil) -> Embed:
-        embed = self.__get_base_embed(interaction, craftutil)
+        embed = self._get_base_embed(interaction, craftutil)
         field_value = ""
         cmlr_prob = 1
         is_first_embed = True
@@ -99,15 +99,13 @@ class InvokeCraftedProbability(Invoke):
                 embed.add_field(name="Probabilities" if is_first_embed else "", value=field_value, inline=False)
                 field_value = ""
                 is_first_embed = False
-
             cmlr_prob -= prob
             field_value += f"{line}\n"
-
         embed.add_field(name="Probabilities" if is_first_embed else "", value=field_value, inline=False)
         return embed
 
     def _get_atmost_embed(self, interaction: Interaction[Any], craftutil: CraftedUtil) -> Embed:
-        embed = self.__get_base_embed(interaction, craftutil)
+        embed = self._get_base_embed(interaction, craftutil)
         field_value = ""
         cml_prob = 0
         is_first_embed = True
@@ -119,13 +117,11 @@ class InvokeCraftedProbability(Invoke):
                 embed.add_field(name="Probabilities" if is_first_embed else "", value=field_value, inline=False)
                 field_value = ""
                 is_first_embed = False
-
             field_value += f"{line}\n"
-
         embed.add_field(name="Probabilities" if is_first_embed else "", value=field_value, inline=False)
         return embed
 
-    class __View(ui.View):
+    class _View(ui.View):
         def __init__(self, cmd: InvokeCraftedProbability):
             super().__init__(timeout=60)
             self._cmd = cmd
@@ -162,9 +158,8 @@ class InvokeCraftedProbability(Invoke):
             embed = embed_strategy(interaction, self._craftutil) if embed_strategy else None
             await interaction.edit_original_message(embed=embed, view=self)
 
-        def _click_button(self, button: ui.Button[InvokeCraftedProbability.__View]) -> None:
+        def _click_button(self, button: ui.Button[InvokeCraftedProbability._View]) -> None:
             for item in self.children:
                 if isinstance(item, ui.Button):
                     item.disabled = False
             button.disabled = True
-

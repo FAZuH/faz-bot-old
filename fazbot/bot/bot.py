@@ -35,7 +35,7 @@ class Bot:
         
         self._event_loop = asyncio.new_event_loop()
         asyncio.set_event_loop(self._event_loop)
-        self._discord_bot_thread = Thread(target=self._start, name=self.__get_cls_qualname())
+        self._discord_bot_thread = Thread(target=self._start, name=self._get_cls_qualname())
 
         # Define self._client before initializing the modules below
         self._asset_manager = AssetManager(self)
@@ -63,10 +63,10 @@ class Bot:
 
     async def on_ready_setup(self) -> None:
         """Setup after the bot is ready."""
-        await self.__whitelist_dev_guild()
-        whitelisted_guild_ids = await self.__get_whitelisted_guild_ids()
+        await self._whitelist_dev_guild()
+        whitelisted_guild_ids = await self._get_whitelisted_guild_ids()
         await self.cogs.setup(whitelisted_guild_ids)
-        await self.__sync_dev_guild()
+        await self._sync_dev_guild()
 
     @property
     def fazbot_db(self):
@@ -103,21 +103,21 @@ class Bot:
         self._event_loop.create_task(coro)
         self._event_loop.run_forever()
 
-    def __get_cls_qualname(self) -> str:
+    def _get_cls_qualname(self) -> str:
         return self.__class__.__qualname__
 
-    async def __get_whitelisted_guild_ids(self) -> list[int]:
+    async def _get_whitelisted_guild_ids(self) -> list[int]:
         db = self.fazbot_db
         guild_ids = await db.whitelisted_guild_repository.get_all_whitelisted_guild_ids()
         return list(guild_ids)
 
-    async def __sync_dev_guild(self) -> None:
+    async def _sync_dev_guild(self) -> None:
         """Synchronizes commands registered to dev guild into discord."""
         dev_server_id = self.app.properties.DEV_SERVER_ID
         await self.client.sync_application_commands(guild_id=dev_server_id)
         logger.info(f"Synchronized application commands for dev guild id {dev_server_id}")
 
-    async def __whitelist_dev_guild(self) -> None:
+    async def _whitelist_dev_guild(self) -> None:
         """Adds dev guild to whitelist database, if not already added."""
         guild = await Utils.must_get_guild(self.client, self.app.properties.DEV_SERVER_ID)
 

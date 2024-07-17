@@ -60,11 +60,11 @@ class BaseModel(AsyncAttrs, DeclarativeBase):
     def __repr__(self) -> str:
         items = self.to_dict()
         sorted_items = sorted(items.items(), key=lambda x: x[0])
-        params = ', '.join(f'{k}={self.__handle_repr_types(v)}' for k, v in sorted_items)
+        params = ', '.join(f'{k}={self._handle_repr_types(v)}' for k, v in sorted_items)
         return f"{self.__class__.__name__}({params})"
 
     @staticmethod
-    def __handle_repr_types(obj: object):
+    def _handle_repr_types(obj: object):
         if isinstance(obj, Decimal):
             return float(obj)
         return obj

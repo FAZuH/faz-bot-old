@@ -5,12 +5,12 @@ from typing import TYPE_CHECKING
 import numpy as np
 
 if TYPE_CHECKING:
-    from fazbot.wynn import WynnIngredientValue
+    from fazbot.wynn import IngredientField
 
 
 class CraftedUtil:
 
-    def __init__(self, ingredients: list[WynnIngredientValue]):
+    def __init__(self, ingredients: list[IngredientField]):
         self._ingredients = ingredients
 
         self._ing_prob_dists = []
@@ -37,7 +37,7 @@ class CraftedUtil:
         return self._craft_probs
 
     @property
-    def ingredients(self) -> list[WynnIngredientValue]:
+    def ingredients(self) -> list[IngredientField]:
         return self._ingredients
 
 

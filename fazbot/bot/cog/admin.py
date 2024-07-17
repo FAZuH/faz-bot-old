@@ -118,7 +118,7 @@ class Admin(CogBase):
         """
         channel = await Utils.must_get_channel(self._bot.client, channel_id)
 
-        if not self.__is_channel_sendable(channel):
+        if not self._is_channel_sendable(channel):
             raise ApplicationException(f"Channel of type `{type(channel)}` does not support sending messages.") 
 
         try:
@@ -265,5 +265,5 @@ class Admin(CogBase):
             )
             raise ApplicationException(err_msg)
 
-    def __is_channel_sendable(self, channel: object) -> bool:
+    def _is_channel_sendable(self, channel: object) -> bool:
         return hasattr(channel, "send")

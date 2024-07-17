@@ -26,12 +26,12 @@ class AssetManager:
         self.setup()
 
     def setup(self) -> None:
-        self._assets = self.__convert_asset_file_type(self._bot.app.properties.ASSET.files)
+        self._assets = self._convert_asset_file_type(self._bot.app.properties.ASSET.files)
         InvokeConvertEmerald.set_assets(self._assets)
         InvokeCraftedProbability.set_assets(self._assets)
         InvokeIngredientProbability.set_assets(self._assets)
 
-    def __convert_asset_file_type(self, assets: dict[Path, bytes]) -> dict[str, File]:
+    def _convert_asset_file_type(self, assets: dict[Path, bytes]) -> dict[str, File]:
         assets_: dict[str, File] = {}
         for fp, asset in assets.items():
             fileio = BytesIO(asset)

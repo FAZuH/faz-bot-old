@@ -3,7 +3,7 @@ from math import floor
 import re
 
 
-class WynnEmeralds:
+class Emeralds:
 
     def __init__(self, emeralds: int = 0, blocks: int = 0, liquids: int = 0, stacks: int = 0) -> None:
         self._emeralds = emeralds
@@ -26,7 +26,7 @@ class WynnEmeralds:
             self._liquids %= 64
 
     @classmethod
-    def from_string(cls, emerald_string: str) -> WynnEmeralds:
+    def from_string(cls, emerald_string: str) -> Emeralds:
         strings = emerald_string.split()
         if len(strings) == 1 and strings[0].isnumeric():
             return cls(emeralds=int(strings[0]))
@@ -94,8 +94,8 @@ class WynnEmeralds:
     def __repr__(self) -> str:
         return f"{self._stacks}stx {self._liquids}le {self._blocks}eb {self._emeralds}e"
 
-    def __eq__(self, other: WynnEmeralds | int | str | object) -> bool:
-        if isinstance(other, WynnEmeralds):
+    def __eq__(self, other: Emeralds | int | str | object) -> bool:
+        if isinstance(other, Emeralds):
             return self._total == other.total
         elif isinstance(other, int):
             return self._total == other
@@ -103,7 +103,7 @@ class WynnEmeralds:
             return str(self) == other
         return False
 
-    def __add__(self, other: WynnEmeralds | int) -> WynnEmeralds:
+    def __add__(self, other: Emeralds | int) -> Emeralds:
         if isinstance(other, int):
-            return WynnEmeralds(emeralds=self._emeralds + other)
-        return WynnEmeralds(emeralds=self._emeralds + other.total)
+            return Emeralds(emeralds=self._emeralds + other)
+        return Emeralds(emeralds=self._emeralds + other.total)

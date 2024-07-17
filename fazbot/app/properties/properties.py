@@ -40,34 +40,34 @@ class Properties:
     @classmethod
     def setup(cls) -> None:
         """Bootstraps application properties."""
-        cls.__read_env()
+        cls._read_env()
         cls.ASSET = Asset(cls.ASSET_DIR)
         cls.ASSET.read_all()
 
     @classmethod
-    def __read_env(cls) -> None:
+    def _read_env(cls) -> None:
         load_dotenv()
-        cls.DISCORD_BOT_TOKEN = cls.__must_get_env("DISCORD_BOT_TOKEN")
+        cls.DISCORD_BOT_TOKEN = cls._must_get_env("DISCORD_BOT_TOKEN")
 
-        cls.ADMIN_DISCORD_ID = cls.__must_get_env("ADMIN_DISCORD_ID", int)
-        cls.DEV_SERVER_ID = cls.__must_get_env("DEV_SERVER_ID", int)
+        cls.ADMIN_DISCORD_ID = cls._must_get_env("ADMIN_DISCORD_ID", int)
+        cls.DEV_SERVER_ID = cls._must_get_env("DEV_SERVER_ID", int)
 
-        cls.DISCORD_LOG_WEBHOOK = cls.__must_get_env("DISCORD_LOG_WEBHOOK")
-        cls.DISCORD_STATUS_WEBHOOK = cls.__must_get_env("DISCORD_STATUS_WEBHOOK")
+        cls.DISCORD_LOG_WEBHOOK = cls._must_get_env("DISCORD_LOG_WEBHOOK")
+        cls.DISCORD_STATUS_WEBHOOK = cls._must_get_env("DISCORD_STATUS_WEBHOOK")
 
-        cls.MYSQL_HOST = cls.__must_get_env("MYSQL_HOST")
-        cls.MYSQL_PORT = cls.__must_get_env("MYSQL_PORT", int)
-        cls.MYSQL_USERNAME = cls.__must_get_env("MYSQL_USER")
-        cls.MYSQL_PASSWORD = cls.__must_get_env("MYSQL_PASSWORD")
+        cls.MYSQL_HOST = cls._must_get_env("MYSQL_HOST")
+        cls.MYSQL_PORT = cls._must_get_env("MYSQL_PORT", int)
+        cls.MYSQL_USERNAME = cls._must_get_env("MYSQL_USER")
+        cls.MYSQL_PASSWORD = cls._must_get_env("MYSQL_PASSWORD")
 
-        cls.FAZBOT_DB_NAME = cls.__must_get_env("MYSQL_FAZBOT_DATABASE")
-        cls.FAZDB_DB_NAME = cls.__must_get_env("MYSQL_FAZDB_DATABASE")
+        cls.FAZBOT_DB_NAME = cls._must_get_env("MYSQL_FAZBOT_DATABASE")
+        cls.FAZDB_DB_NAME = cls._must_get_env("MYSQL_FAZDB_DATABASE")
 
-        cls.FAZBOT_DB_MAX_RETRIES = cls.__must_get_env("FAZBOT_DB_MAX_RETRIES", int)
-        cls.FAZDB_DB_MAX_RETRIES = cls.__must_get_env("FAZDB_DB_MAX_RETRIES", int)
+        cls.FAZBOT_DB_MAX_RETRIES = cls._must_get_env("FAZBOT_DB_MAX_RETRIES", int)
+        cls.FAZDB_DB_MAX_RETRIES = cls._must_get_env("FAZDB_DB_MAX_RETRIES", int)
 
     @staticmethod
-    def __must_get_env[T](key: str, type_strategy: Callable[[str], T] = str) -> T:
+    def _must_get_env[T](key: str, type_strategy: Callable[[str], T] = str) -> T:
         try:
             env = os.getenv(key)
             return type_strategy(env)  # type: ignore

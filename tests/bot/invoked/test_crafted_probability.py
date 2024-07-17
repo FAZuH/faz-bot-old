@@ -8,7 +8,7 @@ class TestCraftedProbability(unittest.IsolatedAsyncioTestCase):
 
     def setUp(self) -> None:
         self.image_asset = MagicMock()
-        InvokeCraftedProbability.__View = MagicMock
+        InvokeCraftedProbability._View = MagicMock
         InvokeCraftedProbability.ASSET_CRAFTINGTABLE = self.image_asset
         return super().setUp()
 

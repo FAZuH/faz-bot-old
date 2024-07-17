@@ -25,12 +25,12 @@ class InvokeHelp(Invoke):
         self._embed_total_pages = 0
 
     async def run(self) -> None:
-        self._embed_total_pages = self.__get_embed_total_pages(self._commands)
-        embed = self.__get_embed_page(self._commands, 1)
+        self._embed_total_pages = self._get_embed_total_pages(self._commands)
+        embed = self._get_embed_page(self._commands, 1)
         view = self._View(self, self._interaction, self._embed_total_pages, self._commands)
         await self._interaction.send(embed=embed, view=view)
 
-    def __get_embed_page(self, commands: list[BaseApplicationCommand], page: int) -> Embed:
+    def _get_embed_page(self, commands: list[BaseApplicationCommand], page: int) -> Embed:
         """ Generates embed page for page nth-page """
         embed = Embed(
             title=f"Commands List : Page [{page}/{self._embed_total_pages}]",
@@ -42,7 +42,7 @@ class InvokeHelp(Invoke):
         min_idx = self._cmds_per_page * (page - 1)
         max_idx = self._cmds_per_page * page
         for cmd in commands[min_idx:max_idx]:
-            parameter_msg = self.__get_parameters(cmd.options)
+            parameter_msg = self._get_parameters(cmd.options)
             embed.add_field(
                 name=f"/{cmd.qualified_name}{parameter_msg}" ,
                 value=cmd.description or "No brief description given",
@@ -50,10 +50,10 @@ class InvokeHelp(Invoke):
             )
         return embed
 
-    def __get_embed_total_pages(self, commands: Sized) -> int:
+    def _get_embed_total_pages(self, commands: Sized) -> int:
         return (len(commands) - 1) // self._cmds_per_page + 1
 
-    def __get_parameters(self, parameters: dict[str, ApplicationCommandOption]) -> str:
+    def _get_parameters(self, parameters: dict[str, ApplicationCommandOption]) -> str:
         if not parameters:
             # NOTE: case no params
             return ""
@@ -98,7 +98,7 @@ class InvokeHelp(Invoke):
         @button(style=ButtonStyle.blurple, emoji="⏮️")
         async def first_page_callback(self, button: Button[Any], interaction: Interaction[Any]) -> None:
             self._current_page = 1
-            self._embed_content = self._command.__get_embed_page(self._commands, self._current_page)
+            self._embed_content = self._command._get_embed_page(self._commands, self._current_page)
             await interaction.response.edit_message(embed=self._embed_content)
 
         @button(style=ButtonStyle.blurple, emoji="◀️")
@@ -106,7 +106,7 @@ class InvokeHelp(Invoke):
             self._current_page -= 1
             if self._current_page == 0:
                 self._current_page = self._help_embed_max_page
-            self._embed_content = self._command.__get_embed_page(self._commands, self._current_page)
+            self._embed_content = self._command._get_embed_page(self._commands, self._current_page)
             await interaction.response.edit_message(embed=self._embed_content)
 
         @button(style=ButtonStyle.red, emoji="⏹️")
@@ -118,12 +118,12 @@ class InvokeHelp(Invoke):
             self._current_page += 1
             if self._current_page == (self._help_embed_max_page + 1):
                 self._current_page = 1
-            self._embed_content = self._command.__get_embed_page(self._commands, self._current_page)
+            self._embed_content = self._command._get_embed_page(self._commands, self._current_page)
             await interaction.response.edit_message(embed=self._embed_content)
 
         @button(style=ButtonStyle.blurple, emoji="⏭️")
         async def last_page(self, button: Button[Any], interaction: Interaction[Any]) -> None:
             self._current_page = self._help_embed_max_page
-            self._embed_content = self._command.__get_embed_page(self._commands, self._current_page)
+            self._embed_content = self._command._get_embed_page(self._commands, self._current_page)
             await interaction.response.edit_message(embed=self._embed_content)
 

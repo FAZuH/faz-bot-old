@@ -7,6 +7,7 @@ from nextcord import Embed, Interaction
 
 from fazbot.wynn import IngredientUtil
 
+from ..errors import *
 from ._invoke import Invoke
 
 if TYPE_CHECKING:
@@ -31,23 +32,23 @@ class InvokeIngredientProbability(Invoke):
         cls.ASSET_DECAYINGHEART = cls._get_from_assets(assets, "decayingheart.png")
 
     async def run(self) -> None:
-        embed_resp = self.__get_embed(self._ing_util, self._interaction)
+        embed_resp = self._get_embed(self._ing_util, self._interaction)
         await self._interaction.send(embed=embed_resp, file=self.ASSET_DECAYINGHEART.get_file_to_send())
 
-    def __get_embed(self, ing_util: IngredientUtil, interaction: Interaction[Any]) -> Embed:
+    def _get_embed(self, ing_util: IngredientUtil, interaction: Interaction[Any]) -> Embed:
         one_in_n = 1 / ing_util.boosted_probability
 
         embed_resp = Embed(title="Ingredient Chance Calculator", color=472931)
         self._set_embed_thumbnail_with_asset(embed_resp, self.ASSET_DECAYINGHEART.filename)
         embed_resp.description = (
-            f"Drop Chance: **{ing_util.base_probability:.2%}**\n"
-            f"Loot Bonus: **{ing_util.loot_bonus}%**\n"
-            f"Loot Quality: **{ing_util.loot_quality}%**\n"
-            f"Loot Boost: **{ing_util.loot_boost}%**"
+            f"` Drop Chance  :` **{ing_util.base_probability:.2%}**\n"
+            f"` Loot Bonus   :` **{ing_util.loot_bonus}%**\n"
+            f"` Loot Quality :` **{ing_util.loot_quality}%**\n"
+            f"` Loot Boost   :` **{ing_util.loot_boost}%**"
         )
         embed_resp.add_field(
             name="Boosted Drop Chance",
-            value=f"Drop Chance: \n**{ing_util.boosted_probability:.2%}** OR **1 in {one_in_n:.2f}** mobs"
+            value=f"**{ing_util.boosted_probability:.2%}** OR **1 in {one_in_n:.2f}** mobs"
         )
         if interaction.user:
             embed_resp.set_author(name=interaction.user.display_name, icon_url=interaction.user.display_avatar.url)
@@ -64,7 +65,6 @@ class InvokeIngredientProbability(Invoke):
                 denominator = float(match.group(2))
                 return Decimal(numerator) / Decimal(denominator)
             else:
-                raise ValueError("An exception occured while trying to parse fractions: Invalid format.")
+                raise BadArgument("Invalid format: .")
         else:
             return Decimal(base_chance)
-

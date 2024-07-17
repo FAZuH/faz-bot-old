@@ -41,10 +41,10 @@ class Events:
             await self._bot.on_ready_setup()
 
     async def on_application_command_completion(self, interaction: Interaction[Any]) -> None:
-        await self.__log_event(interaction, self.on_application_command_completion.__name__)
+        await self._log_event(interaction, self.on_application_command_completion.__name__)
 
     async def on_application_command_error(self, interaction: Interaction[Any], error: Exception) -> None:
-        await self.__log_event(interaction, self.on_application_command_error.__name__)
+        await self._log_event(interaction, self.on_application_command_error.__name__)
         # NOTE: Error is being wrapped by ApplicationInvokeError. Unwrap is first
         if isinstance(error, errors.ApplicationInvokeError) and isinstance(error.original, ApplicationException):
             error = error.original
@@ -55,15 +55,15 @@ class Events:
                 ephemeral=True
             )
         elif isinstance(error, ApplicationException):
-            await self.__send_expected_error(interaction, error)
+            await self._send_expected_error(interaction, error)
         else:
-            await self.__send_unexpected_error(interaction, error)
+            await self._send_unexpected_error(interaction, error)
 
     async def before_application_invoke(self, interaction: Interaction[Any]) -> None:
         # await self.__log_event(interaction, self.before_application_invoke.__name__)
-        self.__ratelimit(interaction)
+        self._ratelimit(interaction)
 
-    def __ratelimit(self, interaction: Interaction[Any]) -> None:
+    def _ratelimit(self, interaction: Interaction[Any]) -> None:
         if not interaction.message:
             return
 
@@ -72,7 +72,7 @@ class Events:
         if retry_after:
             raise commands.CommandOnCooldown(bucket, retry_after, self._cooldown.type)  # type: ignore
 
-    async def __log_event(self, interaction: Interaction[Any], event: str = '') -> None:
+    async def _log_event(self, interaction: Interaction[Any], event: str = '') -> None:
         if not interaction.application_command:
             return
         cmdname = interaction.application_command.name
@@ -102,7 +102,7 @@ class Events:
         
         logger.info(message, discord=True)
 
-    async def __send_unexpected_error(self, interaction: Interaction[Any], exception: Exception) -> None:
+    async def _send_unexpected_error(self, interaction: Interaction[Any], exception: Exception) -> None:
         description = f"An unexpected error occurred while executing the command: \n**{exception}**"
         embed = Embed(title="Unexpected Error", description=description, color=Colour.red())
         embed.add_field(name="Timestamp", value=f"<t:{int(datetime.now().timestamp())}:F>", inline=False)
@@ -115,7 +115,7 @@ class Events:
         await interaction.send(embed=embed)
         logger.opt(exception=exception).error(description)
 
-    async def __send_expected_error(self, interaction: Interaction[Any], exception: ApplicationException) -> None:
+    async def _send_expected_error(self, interaction: Interaction[Any], exception: ApplicationException) -> None:
         description = f"**{exception}**"
         embed = Embed(title="Error", description=description, color=Colour.red())
         embed.add_field(name="Timestamp", value=f"<t:{int(datetime.now().timestamp())}:F>", inline=False)
