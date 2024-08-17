@@ -1,6 +1,5 @@
 from __future__ import annotations
 import asyncio
-from datetime import datetime
 from threading import Thread
 from typing import TYPE_CHECKING
 
@@ -25,6 +24,7 @@ class Bot:
         self._app = app
 
         self._fazbot_db = app.create_fazbot_db()
+        self._fazdb_db = app.create_fazdb_db()
 
         # set intents
         intents = Intents.default()
@@ -44,6 +44,7 @@ class Bot:
         self._events = Events(self)
 
         self.fazbot_db.create_all()
+        self.fazdb_db.create_all()
 
     def start(self) -> None:
         logger.info(f"Starting Bot")
@@ -60,6 +61,7 @@ class Bot:
     async def _async_teardown(self) -> None:
         await self.client.close()
         await self.fazbot_db.teardown()
+        await self.fazdb_db.teardown()
 
     async def on_ready_setup(self) -> None:
         """Setup after the bot is ready."""
@@ -71,6 +73,10 @@ class Bot:
     @property
     def fazbot_db(self):
         return self._fazbot_db
+
+    @property
+    def fazdb_db(self):
+        return self._fazdb_db
 
     @property
     def asset_manager(self) -> AssetManager:

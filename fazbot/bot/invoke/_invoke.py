@@ -1,5 +1,5 @@
 from __future__ import annotations
-from abc import ABC
+from abc import ABC, abstractmethod
 from typing import Any, TYPE_CHECKING
 
 from ._asset import Asset
@@ -14,6 +14,9 @@ class Invoke(ABC):
     def __init__(self, bot: Bot, interaction: Interaction[Any]) -> None:
         self._bot = bot
         self._interaction = interaction
+
+    @abstractmethod
+    async def run(self): ...
 
     @staticmethod
     def _set_embed_thumbnail_with_asset(embed: Embed, filename: str) -> None:
