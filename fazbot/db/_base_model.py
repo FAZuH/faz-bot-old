@@ -11,6 +11,8 @@ if TYPE_CHECKING:
 
 class BaseModel(AsyncAttrs, DeclarativeBase):
     __abstract__ = True
+    __column_attribute_names__ = None
+    __primarykey_attribute_names__ = None
 
     @classmethod
     def get_table(cls) -> Table:
@@ -33,17 +35,21 @@ class BaseModel(AsyncAttrs, DeclarativeBase):
 
     @classmethod
     def get_column_attribute_names(cls, *, includes_primary_key: bool = True) -> Generator[str, None, None]:
-        return (
-            p.key for p in class_mapper(cls).iterate_properties
-            if isinstance(p, ColumnProperty) and (includes_primary_key or not p.columns[0].primary_key)
-        )
+        if cls.__column_attribute_names__ is None:
+            cls.__column_attribute_names__ = (
+                p.key for p in class_mapper(cls).iterate_properties
+                if isinstance(p, ColumnProperty) and (includes_primary_key or not p.columns[0].primary_key)
+            )
+        return cls.__column_attribute_names__
 
     @classmethod
     def get_primarykey_attribute_names(cls) -> Generator[str, None, None]:
-        return (
-            p.key for p in class_mapper(cls).iterate_properties
-            if isinstance(p, ColumnProperty) and p.columns[0].primary_key
-        )
+        if cls.__primarykey_attribute_names__ is None:
+            cls.__primarykey_attribute_names__ = (
+                p.key for p in class_mapper(cls).iterate_properties
+                if isinstance(p, ColumnProperty) and p.columns[0].primary_key
+            )
+        return cls.__primarykey_attribute_names__
 
     def __eq__(self, other: object) -> bool:
         primary_key = self.get_table().primary_key
