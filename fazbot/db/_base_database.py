@@ -82,9 +82,10 @@ class BaseDatabase(ABC):
         Yields:
             Generator[Session, None]: Synchronous database session.
         """
-        session = sessionmaker(bind=self.engine, autoflush=False, expire_on_commit=False)
-        with session.begin() as session:
-            yield session
+        with self.enter_connection() as conn:
+            session = sessionmaker(bind=conn, autoflush=False, expire_on_commit=False)
+            with session.begin() as session:
+                yield session
 
     @contextmanager
     def must_enter_connection(self, connection: Connection | None = None) -> Generator[Connection, None]:
@@ -135,9 +136,10 @@ class BaseDatabase(ABC):
         Yields:
             AsyncGenerator[AsyncSession, None]: Asynchronous database session.
         """
-        async_session = async_sessionmaker(bind=self.async_engine, autoflush=False, expire_on_commit=False)
-        async with async_session.begin() as session:
-            yield session
+        async with self.enter_async_connection() as conn:
+            async_session = async_sessionmaker(bind=conn, autoflush=False, expire_on_commit=False)
+            async with async_session.begin() as session:
+                yield session
 
     @asynccontextmanager
     async def must_enter_async_connection(self, connection: AsyncConnection | None = None) -> AsyncGenerator[AsyncConnection, None]:
