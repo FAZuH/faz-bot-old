@@ -1,12 +1,14 @@
-# faz-bot (IN DEVELOPMENT)
+# faz-bot-old (ARCHIVED)
 
-Wynncraft's Utility and Statistics Bot.
+This repository is archived, and the source code has been merged to [faz-bot](https://github.com/FAZuH/faz-bot)
 
-This repository is currently in the development phase and may undergo many breaking changes.
+~~Wynncraft's Utility and Statistics Bot.~~
 
-## Installation & Production
+~~This repository is currently in the development phase and may undergo many breaking changes.~~
 
-View [faz-docker](https://github.com/FAZuH/faz-docker)
+~~## Installation & Production~~
+
+~~View [faz-docker](https://github.com/FAZuH/faz-docker)~~
 
 <!-- ## Todo -->
 <!---->
